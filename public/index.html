@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Grindly Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d1a;--surface:#12121f;--border:#1e1e32;
+  --text:#e2e2ef;--muted:#7070a0;
+  --accent:#00ff88;--accent2:#7c6cff;--danger:#ff4d6d;
+  --warn:#ffd166;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;width:320px;text-align:center}
+.login-box h1{font-size:22px;margin-bottom:4px}
+.login-box p{color:var(--muted);font-size:13px;margin-bottom:24px}
+.login-box input{width:100%;padding:10px 14px;background:#0d0d1a;border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px}
+.login-box input:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+.btn-primary{background:var(--accent);color:#0d0d1a}
+.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{opacity:.85}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text)/30}
+.login-box .btn{width:100%}
+#login-error{color:var(--danger);font-size:12px;margin-top:8px;min-height:18px}
+
+/* App shell */
+#app{display:none;flex-direction:column;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surface)}
+.topbar h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.topbar h1 span{color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+#last-refresh{color:var(--muted);font-size:12px}
+
+/* Nav tabs */
+.tabs{display:flex;gap:2px;padding:12px 28px 0;border-bottom:1px solid var(--border);background:var(--surface)}
+.tab-btn{padding:8px 16px;border-radius:8px 8px 0 0;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{background:var(--bg);color:var(--accent);border-top:2px solid var(--accent)}
+
+/* Content */
+.content{flex:1;padding:28px;overflow-y:auto}
+.page{display:none}
+.page.active{display:block}
+
+/* Stat cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card-label{color:var(--muted);font-size:12px;margin-bottom:6px}
+.card-value{font-size:28px;font-weight:700;letter-spacing:-.5px}
+.card-value.green{color:var(--accent)}
+.card-value.purple{color:var(--accent2)}
+.card-value.red{color:var(--danger)}
+.card-value.yellow{color:var(--warn)}
+
+/* Chart grid */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.chart-box h3{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+.chart-wrap{position:relative;height:240px}
+
+/* Table */
+.table-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px}
+.table-box h3{font-size:13px;font-weight:600;color:var(--muted);padding:14px 18px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 18px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600}
+td{padding:10px 18px;font-size:13px;border-bottom:1px solid var(--border)/50}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.025)}
+.badge{display:inline-block;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-green{background:var(--accent)/15;color:var(--accent)}
+.badge-muted{background:var(--border);color:var(--muted)}
+
+/* Announcements */
+.ann-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.ann-form h3{font-size:14px;font-weight:600;margin-bottom:16px}
+.form-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.form-row input,.form-row textarea,.form-row select{flex:1;min-width:160px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.form-row input:focus,.form-row textarea:focus{border-color:var(--accent)}
+.form-row textarea{resize:vertical;min-height:72px}
+.ann-list{display:flex;flex-direction:column;gap:10px}
+.ann-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+.ann-icon{font-size:22px;line-height:1;flex-shrink:0}
+.ann-content{flex:1;min-width:0}
+.ann-title{font-weight:600;font-size:14px;margin-bottom:2px}
+.ann-body{color:var(--muted);font-size:13px;margin-bottom:4px}
+.ann-meta{font-size:11px;color:var(--border)}
+.ann-delete{flex-shrink:0;align-self:center}
+#ann-status{font-size:12px;color:var(--accent);margin-top:6px;min-height:18px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{color:var(--muted);text-align:center;padding:28px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ── Login ─────────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>⚡ Grindly</h1>
+    <p>Admin dashboard</p>
+    <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password"/>
+    <button class="btn btn-primary" id="login-btn" onclick="doLogin()">Sign in</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── App ───────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <h1>⚡ <span>Grindly</span> Admin</h1>
+    <div class="topbar-right">
+      <span id="last-refresh"></span>
+      <button class="btn btn-ghost" onclick="loadStats()">↻ Refresh</button>
+      <button class="btn btn-ghost" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+    <button class="tab-btn" onclick="showTab('users',this)">Users</button>
+    <button class="tab-btn" onclick="showTab('announcements',this)">Announcements</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Overview ─────────────────────────────────────────────────────── -->
+    <div class="page active" id="page-overview">
+      <div class="cards">
+        <div class="card">
+          <div class="card-label">Total Users</div>
+          <div class="card-value green" id="stat-users">—</div>
+        </div>
+        <div class="card">
+          <div class="card-label">DAU Today</div>
+          <div class="card-value purple" id="stat-dau">—</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Sessions Today</div>
+          <div class="card-value yellow" id="stat-sessions">—</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Events Today</div>
+          <div class="card-value" id="stat-events">—</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-box" style="grid-column:1/-1">
+          <h3>Daily Active Users — last 30 days</h3>
+          <div class="chart-wrap"><canvas id="chart-dau"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>Sessions per Day — last 30 days</h3>
+          <div class="chart-wrap"><canvas id="chart-sessions"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h3>Tab Clicks Distribution</h3>
+          <div class="chart-wrap"><canvas id="chart-tabs"></canvas></div>
+        </div>
+        <div class="chart-box" style="grid-column:1/-1">
+          <h3>Top Actions (last 30d)</h3>
+          <div class="chart-wrap" style="height:300px"><canvas id="chart-events"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Users ─────────────────────────────────────────────────────────── -->
+    <div class="page" id="page-users">
+      <div class="table-box">
+        <h3>Recent Users (by last activity)</h3>
+        <table>
+          <thead><tr>
+            <th>Username</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Last Seen</th>
+          </tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Announcements ─────────────────────────────────────────────────── -->
+    <div class="page" id="page-announcements">
+      <div class="ann-form">
+        <h3>Send announcement to all users</h3>
+        <div class="form-row">
+          <input id="ann-icon"  placeholder="Icon (emoji)" value="📢" style="max-width:120px"/>
+          <input id="ann-title" placeholder="Title (e.g. Patch 1.2.0 released)"/>
+        </div>
+        <div class="form-row">
+          <textarea id="ann-body" placeholder="Body text…"></textarea>
+        </div>
+        <div class="form-row">
+          <input type="datetime-local" id="ann-expires" title="Expires at (optional — leave blank = never)"/>
+          <button class="btn btn-primary" onclick="sendAnnouncement()">Send announcement</button>
+        </div>
+        <div id="ann-status"></div>
+      </div>
+
+      <div class="table-box" style="border:none;background:transparent">
+        <h3 style="padding:0;margin-bottom:14px">Past announcements</h3>
+        <div class="ann-list" id="ann-list"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ── State ───────────────────────────────────────────────────────────────────
+let charts = {}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } }
+  if (body) opts.body = JSON.stringify(body)
+  const r = await fetch(path, opts)
+  return r.json()
+}
+
+function fmt(d) {
+  const dt = new Date(d)
+  const now = new Date()
+  const diff = (now - dt) / 1000
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`
+  return dt.toLocaleDateString()
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+  document.getElementById('page-' + id).classList.add('active')
+  btn.classList.add('active')
+  if (id === 'announcements') loadAnnouncements()
+}
+
+// ── Login ────────────────────────────────────────────────────────────────────
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin()
+})
+
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value
+  const btn = document.getElementById('login-btn')
+  const err = document.getElementById('login-error')
+  btn.textContent = '…'
+  btn.disabled = true
+  const r = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) })
+  btn.textContent = 'Sign in'
+  btn.disabled = false
+  if (r.ok) {
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('app').style.display = 'flex'
+    loadStats()
+    loadAnnouncements()
+  } else {
+    err.textContent = 'Wrong password'
+  }
+}
+
+async function doLogout() {
+  await fetch('/logout', { method: 'POST' })
+  location.reload()
+}
+
+// ── Stats ────────────────────────────────────────────────────────────────────
+async function loadStats() {
+  document.getElementById('last-refresh').textContent = 'Loading…'
+  const d = await api('GET', '/api/stats')
+
+  // Stat cards
+  document.getElementById('stat-users').textContent    = d.totalUsers ?? '—'
+  document.getElementById('stat-sessions').textContent = d.sessionsToday ?? '—'
+  document.getElementById('stat-events').textContent   = d.eventsToday ?? '—'
+
+  // DAU today
+  const today = new Date().toISOString().slice(0, 10)
+  const todayDau = (d.dau || []).find(r => r.day === today)
+  document.getElementById('stat-dau').textContent = todayDau ? todayDau.users : 0
+
+  // Charts
+  renderDauChart(d.dau || [])
+  renderSessionsChart(d.sessionsPerDay || [])
+  renderTabsChart(d.tabClicks || [])
+  renderEventsChart(d.topEvents || [])
+
+  // Users table
+  renderUsersTable(d.recentUsers || [])
+
+  document.getElementById('last-refresh').textContent =
+    'Updated ' + new Date().toLocaleTimeString()
+}
+
+function makeChart(id, type, labels, datasets, opts = {}) {
+  if (charts[id]) charts[id].destroy()
+  const ctx = document.getElementById(id).getContext('2d')
+  charts[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1e1e32' }, ticks: { color: '#7070a0', maxRotation: 30 } },
+        y: { grid: { color: '#1e1e32' }, ticks: { color: '#7070a0' }, beginAtZero: true },
+      },
+      ...opts,
+    },
+  })
+}
+
+function renderDauChart(rows) {
+  // Fill in zeros for missing days
+  const days = []
+  const vals = []
+  const map = {}
+  rows.forEach(r => { map[r.day] = Number(r.users) })
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i)
+    const k = d.toISOString().slice(0, 10)
+    days.push(k.slice(5)) // MM-DD
+    vals.push(map[k] ?? 0)
+  }
+  makeChart('chart-dau', 'line', days, [{
+    data: vals,
+    borderColor: '#00ff88',
+    backgroundColor: 'rgba(0,255,136,.08)',
+    tension: 0.35,
+    fill: true,
+    pointRadius: 3,
+    pointBackgroundColor: '#00ff88',
+  }])
+}
+
+function renderSessionsChart(rows) {
+  const map = {}
+  rows.forEach(r => { map[r.day] = Number(r.sessions) })
+  const days = [], vals = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i)
+    const k = d.toISOString().slice(0, 10)
+    days.push(k.slice(5))
+    vals.push(map[k] ?? 0)
+  }
+  makeChart('chart-sessions', 'bar', days, [{
+    data: vals,
+    backgroundColor: 'rgba(124,108,255,.6)',
+    borderColor: '#7c6cff',
+    borderWidth: 1,
+    borderRadius: 3,
+  }])
+}
+
+function renderTabsChart(rows) {
+  if (!rows.length) return
+  const labels = rows.map(r => r.tab || '?')
+  const vals   = rows.map(r => Number(r.cnt))
+  const colors = ['#00ff88','#7c6cff','#ffd166','#ff4d6d','#06d6a0','#ef476f','#118ab2','#073b4c']
+  if (charts['chart-tabs']) charts['chart-tabs'].destroy()
+  const ctx = document.getElementById('chart-tabs').getContext('2d')
+  charts['chart-tabs'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'right', labels: { color: '#e2e2ef', font: { size: 12 } } },
+      },
+    },
+  })
+}
+
+function renderEventsChart(rows) {
+  if (!rows.length) return
+  const labels = rows.map(r => r.event_name)
+  const vals   = rows.map(r => Number(r.cnt))
+  makeChart('chart-events', 'bar', labels, [{
+    data: vals,
+    backgroundColor: 'rgba(0,255,136,.5)',
+    borderColor: '#00ff88',
+    borderWidth: 1,
+    borderRadius: 4,
+  }], {
+    indexAxis: 'y',
+    scales: {
+      x: { grid: { color: '#1e1e32' }, ticks: { color: '#7070a0' }, beginAtZero: true },
+      y: { grid: { display: false }, ticks: { color: '#e2e2ef', font: { size: 12 } } },
+    },
+  })
+}
+
+function renderUsersTable(rows) {
+  const tbody = document.getElementById('users-tbody')
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No users yet</td></tr>'; return }
+  tbody.innerHTML = rows.map(u => `
+    <tr>
+      <td>${u.username ?? '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${u.level ?? 1}</td>
+      <td>${u.is_online
+        ? '<span class="badge badge-green">Online</span>'
+        : '<span class="badge badge-muted">Offline</span>'}</td>
+      <td style="color:var(--muted)">${u.updated_at ? fmt(u.updated_at) : '—'}</td>
+    </tr>
+  `).join('')
+}
+
+// ── Announcements ─────────────────────────────────────────────────────────────
+async function loadAnnouncements() {
+  const list = document.getElementById('ann-list')
+  list.innerHTML = '<div class="empty"><span class="spinner"></span></div>'
+  const rows = await api('GET', '/api/announcements')
+  if (!Array.isArray(rows) || !rows.length) {
+    list.innerHTML = '<div class="empty">No announcements yet</div>'
+    return
+  }
+  list.innerHTML = rows.map(a => `
+    <div class="ann-item">
+      <div class="ann-icon">${a.icon || '📢'}</div>
+      <div class="ann-content">
+        <div class="ann-title">${esc(a.title)}</div>
+        <div class="ann-body">${esc(a.body)}</div>
+        <div class="ann-meta">${new Date(a.created_at).toLocaleString()}${a.expires_at ? ' · expires ' + new Date(a.expires_at).toLocaleString() : ''}</div>
+      </div>
+      <div class="ann-delete">
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 10px" onclick="deleteAnn('${a.id}',this)">Delete</button>
+      </div>
+    </div>
+  `).join('')
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+async function sendAnnouncement() {
+  const title = document.getElementById('ann-title').value.trim()
+  const body  = document.getElementById('ann-body').value.trim()
+  const icon  = document.getElementById('ann-icon').value.trim() || '📢'
+  const exp   = document.getElementById('ann-expires').value
+  const status = document.getElementById('ann-status')
+
+  if (!title || !body) { status.style.color='var(--danger)'; status.textContent='Title and body are required.'; return }
+  status.style.color='var(--accent)'; status.textContent='Sending…'
+
+  const payload = { title, body, icon }
+  if (exp) payload.expires_at = new Date(exp).toISOString()
+
+  const r = await api('POST', '/api/announcements', payload)
+  if (r.error) { status.style.color='var(--danger)'; status.textContent='Error: ' + r.error; return }
+
+  status.textContent = '✓ Sent! Users will see it in their notification bell.'
+  document.getElementById('ann-title').value = ''
+  document.getElementById('ann-body').value  = ''
+  document.getElementById('ann-expires').value = ''
+  loadAnnouncements()
+}
+
+async function deleteAnn(id, btn) {
+  if (!confirm('Delete this announcement?')) return
+  btn.textContent = '…'
+  btn.disabled = true
+  await api('DELETE', '/api/announcements/' + id)
+  loadAnnouncements()
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+;(async () => {
+  const me = await fetch('/me').then(r => r.json()).catch(() => ({}))
+  if (me.authed) {
+    document.getElementById('login-screen').style.display = 'none'
+    document.getElementById('app').style.display = 'flex'
+    loadStats()
+    loadAnnouncements()
+  }
+})()
+</script>
+</body>
+</html>
