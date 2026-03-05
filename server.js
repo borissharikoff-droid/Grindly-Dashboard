@@ -110,6 +110,7 @@ app.get('/me', (req, res) => {
 
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
+    if (req.query.force === '1') invalidate('stats')
     const data = await cached('stats', 5 * 60 * 1000, async () => {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
       const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1)
@@ -190,13 +191,22 @@ app.get('/api/stats', requireAuth, async (req, res) => {
 
 app.get('/api/users', requireAuth, async (req, res) => {
   try {
-    const search = String(req.query.search ?? '').trim()
+    const search     = String(req.query.search ?? '').trim()
+    const onlineOnly = req.query.online === '1'
+    const lim        = Math.min(parseInt(req.query.limit ?? '150', 10) || 150, 500)
+    const sortParam  = req.query.sort   // level | streak | username | last_seen
+    const ascending  = req.query.order === 'asc'
+    const sortCol    = sortParam === 'level'    ? 'level'
+                     : sortParam === 'streak'   ? 'streak_count'
+                     : sortParam === 'username' ? 'username'
+                     : 'updated_at'
     let q = supabase
       .from('profiles')
       .select('id, username, level, xp, is_online, current_activity, streak_count, updated_at')
-      .order('updated_at', { ascending: false })
-      .limit(150)
-    if (search) q = q.ilike('username', `%${search}%`)
+      .order(sortCol, { ascending })
+      .limit(lim)
+    if (search)     q = q.ilike('username', `%${search}%`)
+    if (onlineOnly) q = q.eq('is_online', true)
     const { data, error } = await q
     if (error) return res.status(500).json({ error: error.message })
     res.json(data ?? [])
@@ -234,6 +244,33 @@ app.delete('/api/announcements/:id', requireAuth, async (req, res) => {
   const { error } = await supabase.from('announcements').delete().eq('id', req.params.id)
   if (error) return res.status(500).json({ error: error.message })
   res.json({ ok: true })
+})
+
+// ── Diagnose ──────────────────────────────────────────────────────────────────
+
+const REQUIRED_TABLES = ['analytics_events', 'session_summaries', 'profiles', 'announcements']
+const REQUIRED_RPCS   = [
+  'admin_dau_30d', 'admin_user_growth_30d', 'admin_sessions_per_day',
+  'admin_session_stats', 'admin_top_events', 'admin_tab_clicks',
+  'admin_hourly_activity', 'admin_feature_adoption', 'admin_skill_breakdown',
+  'admin_level_distribution', 'admin_streak_stats',
+]
+
+app.get('/api/diagnose', requireAuth, async (_req, res) => {
+  const checks = []
+
+  for (const table of REQUIRED_TABLES) {
+    const { error } = await supabase.from(table).select('id', { head: true, count: 'exact' }).limit(1)
+    checks.push({ name: `table:${table}`, ok: !error, detail: error?.message ?? 'exists' })
+  }
+
+  for (const fn of REQUIRED_RPCS) {
+    const params = fn === 'admin_top_events' ? { lim: 1 } : {}
+    const { error } = await supabase.rpc(fn, params)  // eslint-disable-line no-await-in-loop
+    checks.push({ name: `rpc:${fn}`, ok: !error, detail: error?.message ?? 'exists' })
+  }
+
+  res.json({ ok: checks.every(c => c.ok), checks })
 })
 
 // ── Static ────────────────────────────────────────────────────────────────────

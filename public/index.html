@@ -13,8 +13,13 @@
   --green:#00ff88;--purple:#7c6cff;--yellow:#ffd166;--red:#ff4d6d;
   --blue:#06aed4;--orange:#ff6b35;--pink:#f72585;
   --font:'Segoe UI',system-ui,sans-serif;
+  --row-h:44px;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;line-height:1.5}
+body.compact{--row-h:34px}
+body.compact td,body.compact th{padding:6px 16px}
+body.compact .card-val{font-size:22px}
+body.compact .card{padding:14px 16px}
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -39,21 +44,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .btn-green:hover{opacity:.85}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted2)}
 .btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+.btn-ghost.active-pill{color:var(--green);border-color:var(--green);background:rgba(0,255,136,.08)}
 .btn-red{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.25)}
 .btn-red:hover{background:rgba(255,77,109,.25)}
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-icon{padding:7px;line-height:1;font-size:14px}
 
 /* ── App shell ───────────────────────────────────────────────────────────────  */
 #app{display:none;flex-direction:column;min-height:100vh}
 
 /* Topbar */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50}
-.topbar-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;gap:12px}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;flex-shrink:0}
 .topbar-logo span{color:var(--green)}
-.topbar-right{display:flex;align-items:center;gap:10px}
-#last-refresh{color:var(--muted);font-size:12px}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#last-refresh{color:var(--muted);font-size:12px;white-space:nowrap}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.interval-select{background:var(--bg);border:1px solid var(--border);color:var(--muted2);border-radius:8px;padding:5px 8px;font-size:12px;font-family:var(--font);cursor:pointer;outline:none}
+.interval-select:focus{border-color:var(--green)}
+
+/* Settings popover */
+.settings-wrap{position:relative}
+.settings-panel{position:absolute;top:calc(100% + 8px);right:0;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:210px;display:none;z-index:100;box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.settings-panel.open{display:block}
+.settings-panel h4{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;gap:10px}
+.setting-row:last-child{margin-bottom:0}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.toggle{appearance:none;width:34px;height:18px;background:var(--border);border-radius:9px;cursor:pointer;position:relative;transition:background .15s;outline:none;border:none}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle:checked{background:var(--green)}
+.toggle:checked::after{left:18px}
+.kbd-hint{font-size:11px;color:var(--muted);background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px}
 
 /* Tabs */
 .tabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto}
@@ -68,7 +92,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* ── Stat cards ──────────────────────────────────────────────────────────────  */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;cursor:default}
+.card.copyable{cursor:pointer}
+.card.copyable:hover{border-color:rgba(255,255,255,.15)}
+.card.copied::after{content:'Copied!';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,255,136,.12);color:var(--green);font-size:13px;font-weight:700;border-radius:14px;pointer-events:none}
 .card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.015) 0%,transparent 60%);pointer-events:none}
 .card-icon{font-size:20px;margin-bottom:8px;line-height:1}
 .card-label{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
@@ -115,10 +142,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* ── Table ───────────────────────────────────────────────────────────────────  */
 .table-box{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
-.table-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
 .table-header h3{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px}
+.table-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;padding:10px 20px;font-size:11px;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
+th{text-align:left;padding:10px 20px;font-size:11px;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none;transition:color .12s}
+th.sortable:hover{color:var(--text)}
+th.sort-asc::after{content:' ↑';color:var(--green)}
+th.sort-desc::after{content:' ↓';color:var(--green)}
 td{padding:10px 20px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03)}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(255,255,255,.018)}
@@ -160,6 +192,14 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .ann-meta{font-size:11px;color:var(--muted);margin-top:5px}
 .ann-del{flex-shrink:0;align-self:center}
 .empty{color:var(--muted);text-align:center;padding:32px;font-size:13px}
+.char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:2px}
+.char-count.warn{color:var(--yellow)}
+.char-count.over{color:var(--red)}
+
+/* Preview banner */
+.ann-preview{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;display:none}
+.ann-preview.visible{display:flex;align-items:flex-start;gap:14px}
+.ann-preview-label{font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 
 /* ── Utils ───────────────────────────────────────────────────────────────────  */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
@@ -171,6 +211,16 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .mini-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
 .mini-card .lbl{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px}
 .mini-card .val{font-size:20px;font-weight:700}
+
+/* ── Diagnose banner ─────────────────────────────────────────────────────────  */
+#diag-banner{display:none;background:rgba(255,77,109,.08);border-bottom:1px solid rgba(255,77,109,.25);padding:10px 24px;font-size:12px;color:#ff4d6d}
+#diag-banner b{font-weight:700}
+#diag-banner ul{margin:6px 0 0 16px;color:rgba(255,150,165,.9);line-height:1.7}
+#diag-banner .diag-actions{display:flex;gap:10px;margin-top:8px}
+
+/* ── Skeleton loading ────────────────────────────────────────────────────────  */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:800px 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:6px;display:inline-block}
 </style>
 </head>
 <body>
@@ -190,6 +240,16 @@ tr:hover td{background:rgba(255,255,255,.018)}
 <!-- ── App ───────────────────────────────────────────────────────────────── -->
 <div id="app">
 
+  <!-- Diagnostics banner -->
+  <div id="diag-banner">
+    <b>⚠ DB setup incomplete — some stats will show as zero</b>
+    <ul id="diag-issues"></ul>
+    <div class="diag-actions">
+      <button class="btn btn-ghost btn-sm" onclick="runDiagnose()">↻ Re-check</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('diag-banner').style.display='none'">Dismiss</button>
+    </div>
+  </div>
+
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-logo">
@@ -198,18 +258,51 @@ tr:hover td{background:rgba(255,255,255,.018)}
     </div>
     <div class="topbar-right">
       <span id="last-refresh"></span>
-      <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
-      <button class="btn btn-ghost" onclick="doLogout()">Logout</button>
+      <select class="interval-select" id="interval-select" onchange="setRefreshInterval(this.value)" title="Auto-refresh interval">
+        <option value="0">Off</option>
+        <option value="60">1 min</option>
+        <option value="300" selected>5 min</option>
+        <option value="900">15 min</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="forceRefresh()" title="Force refresh (R)">↻ Refresh</button>
+      <div class="settings-wrap">
+        <button class="btn btn-ghost btn-icon" id="settings-btn" onclick="toggleSettings()" title="Settings">⚙</button>
+        <div class="settings-panel" id="settings-panel">
+          <h4>Display</h4>
+          <div class="setting-row">
+            <span>Compact mode</span>
+            <label class="toggle-wrap">
+              <input type="checkbox" class="toggle" id="compact-toggle" onchange="setCompact(this.checked)"/>
+            </label>
+          </div>
+          <div class="setting-row" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <span style="color:var(--muted2);font-size:11px">Keyboard shortcuts</span>
+          </div>
+          <div class="setting-row" style="margin-bottom:4px">
+            <span style="font-size:12px;color:var(--muted2)">Switch tabs</span>
+            <span class="kbd-hint">1 – 5</span>
+          </div>
+          <div class="setting-row" style="margin-bottom:4px">
+            <span style="font-size:12px;color:var(--muted2)">Force refresh</span>
+            <span class="kbd-hint">R</span>
+          </div>
+          <div class="setting-row">
+            <span style="font-size:12px;color:var(--muted2)">Close panel</span>
+            <span class="kbd-hint">Esc</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Logout</button>
     </div>
   </header>
 
   <!-- Tabs -->
   <nav class="tabs">
-    <button class="tab-btn active" onclick="showTab('overview',this)">📊 Overview</button>
-    <button class="tab-btn" onclick="showTab('analytics',this)">🔍 Analytics</button>
-    <button class="tab-btn" onclick="showTab('skills',this)">⚡ Skills</button>
-    <button class="tab-btn" onclick="showTab('users',this)">👥 Users</button>
-    <button class="tab-btn" onclick="showTab('announcements',this)">📢 Announcements</button>
+    <button class="tab-btn active" data-tab="overview"      onclick="showTab('overview',this)">📊 Overview</button>
+    <button class="tab-btn"        data-tab="analytics"     onclick="showTab('analytics',this)">🔍 Analytics</button>
+    <button class="tab-btn"        data-tab="skills"        onclick="showTab('skills',this)">⚡ Skills</button>
+    <button class="tab-btn"        data-tab="users"         onclick="showTab('users',this)">👥 Users</button>
+    <button class="tab-btn"        data-tab="announcements" onclick="showTab('announcements',this)">📢 Announce</button>
   </nav>
 
   <!-- Content -->
@@ -218,15 +311,14 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <!-- ── Overview ─────────────────────────────────────────────────────── -->
     <div class="page active" id="page-overview">
       <div class="cards" id="overview-cards">
-        <div class="card c-purple"><div class="card-icon">👥</div><div class="card-label">Total Users</div><div class="card-val" id="c-users">—</div><div class="card-trend" id="t-users"></div></div>
-        <div class="card c-green"><div class="card-icon">🟢</div><div class="card-label">Online Now</div><div class="card-val" id="c-online">—</div><div class="card-trend trend-neutral" id="t-online">live</div></div>
-        <div class="card c-blue"><div class="card-icon">📅</div><div class="card-label">DAU Today</div><div class="card-val" id="c-dau">—</div><div class="card-trend" id="t-dau"></div></div>
-        <div class="card c-yellow"><div class="card-icon">⏱</div><div class="card-label">Sessions Today</div><div class="card-val" id="c-sessions">—</div><div class="card-trend" id="t-sessions"></div></div>
-        <div class="card c-orange"><div class="card-icon">⚡</div><div class="card-label">Avg Session</div><div class="card-val" id="c-avg">—</div><div class="card-trend trend-neutral">duration</div></div>
-        <div class="card c-pink"><div class="card-icon">🏆</div><div class="card-label">Total Hours</div><div class="card-val" id="c-hours">—</div><div class="card-trend trend-neutral">all time</div></div>
+        <div class="card c-purple copyable" onclick="copyCard(this,'c-users')"><div class="card-icon">👥</div><div class="card-label">Total Users</div><div class="card-val" id="c-users">—</div><div class="card-trend" id="t-users"></div></div>
+        <div class="card c-green copyable"  onclick="copyCard(this,'c-online')"><div class="card-icon">🟢</div><div class="card-label">Online Now</div><div class="card-val" id="c-online">—</div><div class="card-trend trend-neutral" id="t-online">live</div></div>
+        <div class="card c-blue copyable"   onclick="copyCard(this,'c-dau')"><div class="card-icon">📅</div><div class="card-label">DAU Today</div><div class="card-val" id="c-dau">—</div><div class="card-trend" id="t-dau"></div></div>
+        <div class="card c-yellow copyable" onclick="copyCard(this,'c-sessions')"><div class="card-icon">⏱</div><div class="card-label">Sessions Today</div><div class="card-val" id="c-sessions">—</div><div class="card-trend" id="t-sessions"></div></div>
+        <div class="card c-orange copyable" onclick="copyCard(this,'c-avg')"><div class="card-icon">⚡</div><div class="card-label">Avg Session</div><div class="card-val" id="c-avg">—</div><div class="card-trend trend-neutral">duration</div></div>
+        <div class="card c-pink copyable"   onclick="copyCard(this,'c-hours')"><div class="card-icon">🏆</div><div class="card-label">Total Hours</div><div class="card-val" id="c-hours">—</div><div class="card-trend trend-neutral">all time</div></div>
       </div>
 
-      <!-- DAU + User Growth -->
       <div class="chart-grid g2">
         <div class="chart-box">
           <div class="box-title">Daily Active Users — 30 days</div>
@@ -238,7 +330,6 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
       </div>
 
-      <!-- Sessions + Level distribution -->
       <div class="chart-grid g3">
         <div class="chart-box">
           <div class="box-title">Sessions per Day — 30 days</div>
@@ -253,19 +344,16 @@ tr:hover td{background:rgba(255,255,255,.018)}
 
     <!-- ── Analytics ─────────────────────────────────────────────────────── -->
     <div class="page" id="page-analytics">
-      <!-- Top actions -->
       <div class="chart-box" style="margin-bottom:14px">
         <div class="box-title">Top Actions — last 30 days</div>
         <div class="chart-wrap h300"><canvas id="ch-events"></canvas></div>
       </div>
 
       <div class="chart-grid g2" style="margin-bottom:14px">
-        <!-- Tab clicks -->
         <div class="chart-box">
           <div class="box-title">Tab Click Distribution</div>
           <div class="chart-wrap h260"><canvas id="ch-tabs"></canvas></div>
         </div>
-        <!-- Hourly heatmap -->
         <div class="chart-box">
           <div class="box-title">Activity by Hour of Day (UTC, 30d)</div>
           <div style="margin-top:8px">
@@ -280,7 +368,6 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
       </div>
 
-      <!-- Feature adoption -->
       <div class="chart-box">
         <div class="box-title">Feature Adoption — distinct users (30d)</div>
         <div style="margin-top:4px" id="adoption-list"></div>
@@ -301,7 +388,6 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
       </div>
 
-      <!-- Streak stats -->
       <div class="chart-box" style="margin-top:14px">
         <div class="box-title">Streak Stats</div>
         <div class="cards" id="streak-cards" style="margin-bottom:0;margin-top:4px">
@@ -319,18 +405,25 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div class="table-box">
         <div class="table-header">
           <h3>Users</h3>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input class="input" id="user-search" placeholder="Search username…" style="width:200px;padding:6px 10px" oninput="searchUsers()"/>
+          <div class="table-controls">
+            <input class="input" id="user-search" placeholder="Search username…" style="width:180px;padding:6px 10px" oninput="searchUsers()"/>
+            <button class="btn btn-ghost btn-sm" id="online-filter" onclick="toggleOnlineFilter()" title="Show online users only">🟢 Online</button>
+            <select class="interval-select" id="limit-select" onchange="loadUsers()" title="Row limit">
+              <option value="50">50 rows</option>
+              <option value="150" selected>150 rows</option>
+              <option value="300">300 rows</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()" title="Export as CSV">⬇ CSV</button>
           </div>
         </div>
         <table>
           <thead><tr>
-            <th>User</th>
-            <th>Level</th>
+            <th class="sortable" data-col="username" onclick="sortBy('username')">User</th>
+            <th class="sortable" data-col="level"    onclick="sortBy('level')">Level</th>
             <th>XP Progress</th>
-            <th>Streak</th>
+            <th class="sortable" data-col="streak"   onclick="sortBy('streak')">Streak</th>
             <th>Activity</th>
-            <th>Last Seen</th>
+            <th class="sortable" data-col="last_seen" onclick="sortBy('last_seen')">Last Seen</th>
           </tr></thead>
           <tbody id="users-tbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody>
         </table>
@@ -349,19 +442,43 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
 
         <div class="form-row">
-          <input class="input" id="ann-title" placeholder="Title — e.g. Patch 1.2.0 released 🚀"/>
+          <div style="flex:1">
+            <input class="input" id="ann-title" placeholder="Title — e.g. Patch 1.2.0 released" maxlength="120" oninput="updateCharCount('ann-title','ann-title-count',80)"/>
+            <div class="char-count" id="ann-title-count">0 / 80</div>
+          </div>
         </div>
         <div class="form-row">
-          <textarea class="input" id="ann-body" placeholder="What's new? Describe the update, feature, or note…"></textarea>
+          <div style="flex:1">
+            <textarea class="input" id="ann-body" placeholder="What's new? Describe the update, feature, or note…" maxlength="600" oninput="updateCharCount('ann-body','ann-body-count',400)"></textarea>
+            <div class="char-count" id="ann-body-count">0 / 400</div>
+          </div>
         </div>
+
         <div class="form-row" style="align-items:center">
           <div style="flex:1">
             <div class="sec-title" style="margin-bottom:4px">Expires (optional)</div>
             <input class="input" type="datetime-local" id="ann-expires"/>
           </div>
-          <button class="btn btn-green" style="align-self:flex-end;padding:10px 20px" onclick="sendAnnouncement()">Send announcement</button>
+          <div style="display:flex;gap:8px;align-self:flex-end">
+            <button class="btn btn-ghost" onclick="togglePreview()">👁 Preview</button>
+            <button class="btn btn-green" style="padding:10px 20px" onclick="sendAnnouncement()">Send</button>
+          </div>
         </div>
         <div id="ann-status"></div>
+      </div>
+
+      <!-- Preview -->
+      <div class="ann-preview" id="ann-preview">
+        <div style="flex:1">
+          <div class="ann-preview-label">Preview — how users see it</div>
+          <div class="ann-item" style="background:var(--bg);margin:0">
+            <div class="ann-emoji" id="prev-icon">📢</div>
+            <div class="ann-content">
+              <div class="ann-title" id="prev-title" style="color:var(--muted2)">—</div>
+              <div class="ann-body"  id="prev-body"  style="color:var(--muted)">—</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="sec-title">Past announcements</div>
@@ -406,10 +523,15 @@ let selEmoji = '📢'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let statsData  = null
-let allUsers   = []
-let charts     = {}
-let searchTimer = null
+let statsData    = null
+let allUsers     = []
+let charts       = {}
+let searchTimer  = null
+let refreshTimer = null
+let userSortCol  = 'last_seen'
+let userSortAsc  = false
+let onlineOnly   = false
+let activeTab    = 'overview'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -489,6 +611,110 @@ function mkChart(id, type, labels, datasets, opts = {}) {
   })
 }
 
+// ── Click-to-copy cards ───────────────────────────────────────────────────────
+
+function copyCard(cardEl, valId) {
+  const val = document.getElementById(valId)?.textContent
+  if (!val || val === '—') return
+  navigator.clipboard?.writeText(val).catch(() => {})
+  cardEl.classList.add('copied')
+  setTimeout(() => cardEl.classList.remove('copied'), 1200)
+}
+
+// ── Auto-refresh ──────────────────────────────────────────────────────────────
+
+function setRefreshInterval(seconds) {
+  clearInterval(refreshTimer)
+  refreshTimer = null
+  const s = parseInt(seconds, 10)
+  if (s > 0) refreshTimer = setInterval(loadAll, s * 1000)
+  try { localStorage.setItem('dash_refresh_interval', String(s)) } catch {}
+}
+
+function restoreRefreshInterval() {
+  let saved = 300
+  try { saved = parseInt(localStorage.getItem('dash_refresh_interval') ?? '300', 10) } catch {}
+  const sel = document.getElementById('interval-select')
+  if (sel) sel.value = String(saved)
+  setRefreshInterval(saved)
+}
+
+async function forceRefresh() {
+  document.getElementById('last-refresh').textContent = 'Refreshing…'
+  const [stats] = await Promise.all([
+    apiFetch('GET', '/api/stats?force=1'),
+    loadUsers(),
+  ])
+  statsData = stats
+  renderOverview(stats)
+  renderAnalytics(stats)
+  renderSkills(stats)
+  document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
+  runDiagnose()
+}
+
+// ── Settings panel ────────────────────────────────────────────────────────────
+
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel')
+  panel.classList.toggle('open')
+}
+
+function setCompact(on) {
+  document.body.classList.toggle('compact', on)
+  try { localStorage.setItem('dash_compact', on ? '1' : '0') } catch {}
+}
+
+function restoreCompact() {
+  let on = false
+  try { on = localStorage.getItem('dash_compact') === '1' } catch {}
+  document.body.classList.toggle('compact', on)
+  const t = document.getElementById('compact-toggle')
+  if (t) t.checked = on
+}
+
+// Close settings panel on outside click
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('settings-btn')?.closest('.settings-wrap')
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('settings-panel')?.classList.remove('open')
+  }
+})
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+  const tabs = document.querySelectorAll('.tab-btn')
+  if (e.key >= '1' && e.key <= '5') {
+    const idx = parseInt(e.key, 10) - 1
+    if (tabs[idx]) tabs[idx].click()
+  }
+  if (e.key === 'r' || e.key === 'R') forceRefresh()
+  if (e.key === 'Escape') document.getElementById('settings-panel')?.classList.remove('open')
+})
+
+// ── Diagnose ──────────────────────────────────────────────────────────────────
+
+async function runDiagnose() {
+  try {
+    const d = await apiFetch('GET', '/api/diagnose')
+    const banner  = document.getElementById('diag-banner')
+    const issueEl = document.getElementById('diag-issues')
+    const failed  = (d.checks || []).filter(c => !c.ok)
+    if (failed.length === 0) { banner.style.display = 'none'; return }
+    issueEl.innerHTML = failed.map(c => {
+      const hint = c.name.startsWith('table:') ? ' — run migration SQL in Supabase'
+                 : c.name.startsWith('rpc:')   ? ' — run migration_analytics_rpc*.sql in Supabase'
+                 : ''
+      return `<li><code>${c.name}</code>: ${c.detail}${hint}</li>`
+    }).join('')
+    banner.style.display = 'block'
+  } catch (e) {
+    console.error('Diagnose failed', e)
+  }
+}
+
 // ── Login ─────────────────────────────────────────────────────────────────────
 
 document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() })
@@ -501,8 +727,7 @@ async function doLogin() {
   if (r.ok) {
     document.getElementById('login-screen').style.display = 'none'
     document.getElementById('app').style.display = 'flex'
-    loadAll()
-    buildEmojiPicker()
+    initApp()
   } else {
     err.textContent = 'Wrong password'
   }
@@ -513,13 +738,25 @@ async function doLogout() {
   location.reload()
 }
 
+function initApp() {
+  buildEmojiPicker()
+  restoreCompact()
+  restoreRefreshInterval()
+  loadAll()
+  loadAnnouncements()
+  setInterval(runDiagnose, 60 * 60 * 1000)
+}
+
 // ── Tabs ──────────────────────────────────────────────────────────────────────
+
+const TAB_NAMES = ['overview','analytics','skills','users','announcements']
 
 function showTab(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
   document.getElementById('page-' + id).classList.add('active')
   btn.classList.add('active')
+  activeTab = id
   if (id === 'announcements') loadAnnouncements()
   if (id === 'users' && allUsers.length === 0) loadUsers()
 }
@@ -537,17 +774,18 @@ async function loadAll() {
   renderAnalytics(stats)
   renderSkills(stats)
   document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
+  runDiagnose()
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 
 function renderOverview(d) {
-  document.getElementById('c-users').textContent   = d.totalUsers ?? '—'
-  document.getElementById('c-online').textContent  = d.onlineNow ?? 0
-  document.getElementById('c-dau').textContent     = d.dauToday ?? 0
+  document.getElementById('c-users').textContent    = d.totalUsers ?? '—'
+  document.getElementById('c-online').textContent   = d.onlineNow ?? 0
+  document.getElementById('c-dau').textContent      = d.dauToday ?? 0
   document.getElementById('c-sessions').textContent = d.sessionsToday ?? 0
-  document.getElementById('c-avg').textContent     = fmtDur(d.sessionStats?.avg_seconds)
-  document.getElementById('c-hours').textContent   = d.sessionStats?.total_hours ? d.sessionStats.total_hours + 'h' : '—'
+  document.getElementById('c-avg').textContent      = fmtDur(d.sessionStats?.avg_seconds)
+  document.getElementById('c-hours').textContent    = d.sessionStats?.total_hours ? d.sessionStats.total_hours + 'h' : '—'
 
   document.getElementById('t-dau').innerHTML      = trendHtml(d.dauToday, d.dauYesterday)
   document.getElementById('t-sessions').innerHTML = trendHtml(d.sessionsToday, d.sessionsYesterday)
@@ -561,20 +799,16 @@ function renderOverview(d) {
     backgroundColor: 'rgba(124,108,255,.1)', tension: 0.4, fill: true,
     pointRadius: 3, pointBackgroundColor: '#7c6cff',
   }])
-
   mkChart('ch-growth', 'line', grow.labels, [{
     data: grow.vals, borderColor: '#00ff88',
     backgroundColor: 'rgba(0,255,136,.1)', tension: 0.4, fill: true,
     pointRadius: 3, pointBackgroundColor: '#00ff88',
   }])
-
   mkChart('ch-sessions', 'bar', ses.labels, [{
     data: ses.vals,
     backgroundColor: 'rgba(255,209,102,.5)', borderColor: '#ffd166', borderWidth: 1,
     borderRadius: 3,
   }])
-
-  // Level distribution
   const lvl = d.levelDistribution || []
   mkChart('ch-levels', 'bar', lvl.map(r => r.bucket), [{
     data: lvl.map(r => Number(r.user_count)),
@@ -586,7 +820,6 @@ function renderOverview(d) {
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 function renderAnalytics(d) {
-  // Top events (horizontal bar)
   const ev = (d.topEvents || []).slice(0, 12)
   mkChart('ch-events', 'bar', ev.map(r => r.event_name), [{
     data: ev.map(r => Number(r.cnt)),
@@ -598,7 +831,6 @@ function renderAnalytics(d) {
     plugins: { legend: { display: false } },
   })
 
-  // Tab clicks (doughnut)
   const tabs = d.tabClicks || []
   if (tabs.length && charts['ch-tabs']) charts['ch-tabs'].destroy()
   if (tabs.length) {
@@ -622,7 +854,6 @@ function renderAnalytics(d) {
     }
   }
 
-  // Hourly heatmap
   const hourly = d.hourlyActivity || []
   const hmap = {}
   hourly.forEach(r => { hmap[Number(r.hour)] = Number(r.cnt) })
@@ -630,8 +861,7 @@ function renderAnalytics(d) {
   const grid = document.getElementById('heatmap-grid')
   const lbls = document.getElementById('heatmap-labels')
   if (grid) {
-    grid.innerHTML = ''
-    lbls.innerHTML = ''
+    grid.innerHTML = ''; lbls.innerHTML = ''
     for (let h = 0; h < 24; h++) {
       const cnt = hmap[h] ?? 0
       const intensity = cnt / maxH
@@ -642,7 +872,6 @@ function renderAnalytics(d) {
         ? `rgba(0, ${Math.round(80 + 175 * intensity)}, ${Math.round(40 + 96 * intensity)}, ${0.15 + intensity * 0.85})`
         : 'rgba(255,255,255,0.035)'
       grid.appendChild(cell)
-
       const lbl = document.createElement('div')
       lbl.className = 'hm-label'
       lbl.textContent = h % 3 === 0 ? `${h}h` : ''
@@ -650,7 +879,6 @@ function renderAnalytics(d) {
     }
   }
 
-  // Feature adoption
   const adoption = d.featureAdoption || []
   const maxA = Math.max(...adoption.map(r => Number(r.users)), 1)
   const el = document.getElementById('adoption-list')
@@ -673,7 +901,6 @@ function renderSkills(d) {
   const skills = d.skillBreakdown || []
   const streak = d.streakStats || {}
 
-  // Mini stats
   const totalSkillXP = skills.reduce((s, r) => s + Number(r.total_xp), 0)
   const topSkill = skills[0]
   const sm = document.getElementById('skill-mini')
@@ -683,7 +910,6 @@ function renderSkills(d) {
     <div class="mini-card"><div class="lbl">Active Skills</div><div class="val">${skills.length}</div></div>
   `
 
-  // XP chart (horizontal bar)
   const colors = skills.map(r => SKILLS[r.skill_id]?.color ?? '#7c6cff')
   mkChart('ch-skills', 'bar',
     skills.map(r => (SKILLS[r.skill_id]?.icon ?? '') + ' ' + (SKILLS[r.skill_id]?.label ?? r.skill_id)),
@@ -691,7 +917,6 @@ function renderSkills(d) {
     { indexAxis: 'y', scales: AXIS_OPTS_FLIP }
   )
 
-  // User count bars
   const maxU = Math.max(...skills.map(r => Number(r.user_count)), 1)
   const barsEl = document.getElementById('skill-bars')
   if (barsEl) {
@@ -709,7 +934,6 @@ function renderSkills(d) {
     }).join('')
   }
 
-  // Streak
   document.getElementById('s1').textContent   = streak.streak_1plus ?? '—'
   document.getElementById('s7').textContent   = streak.streak_7plus ?? '—'
   document.getElementById('s30').textContent  = streak.streak_30plus ?? '—'
@@ -718,10 +942,40 @@ function renderSkills(d) {
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 
+function toggleOnlineFilter() {
+  onlineOnly = !onlineOnly
+  const btn = document.getElementById('online-filter')
+  if (btn) btn.classList.toggle('active-pill', onlineOnly)
+  loadUsers()
+}
+
+function sortBy(col) {
+  if (userSortCol === col) {
+    userSortAsc = !userSortAsc
+  } else {
+    userSortCol = col
+    userSortAsc = col === 'username'
+  }
+  updateSortHeaders()
+  loadUsers()
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc')
+    if (th.dataset.col === userSortCol) {
+      th.classList.add(userSortAsc ? 'sort-asc' : 'sort-desc')
+    }
+  })
+}
+
 async function loadUsers() {
   const search = document.getElementById('user-search')?.value ?? ''
-  const url = '/api/users' + (search ? `?search=${encodeURIComponent(search)}` : '')
-  const data = await apiFetch('GET', url)
+  const limit  = document.getElementById('limit-select')?.value ?? '150'
+  const params = new URLSearchParams({ sort: userSortCol, order: userSortAsc ? 'asc' : 'desc', limit })
+  if (search)     params.set('search', search)
+  if (onlineOnly) params.set('online', '1')
+  const data = await apiFetch('GET', '/api/users?' + params)
   if (Array.isArray(data)) {
     allUsers = data
     renderUsersTable(data)
@@ -738,21 +992,19 @@ function renderUsersTable(users) {
   if (!tbody) return
   if (!users.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No users found</td></tr>'; return }
 
-  // Mini stats
   const online = users.filter(u => u.is_online).length
   const maxLvl = Math.max(...users.map(u => u.level ?? 1))
   const um = document.getElementById('user-mini')
   if (um && statsData) {
     um.innerHTML = `
       <div class="mini-card"><div class="lbl">Total Users</div><div class="val">${statsData.totalUsers}</div></div>
-      <div class="mini-card"><div class="lbl">Online Now</div><div class="val c-green" style="color:var(--green)">${statsData.onlineNow}</div></div>
+      <div class="mini-card"><div class="lbl">Online Now</div><div class="val" style="color:var(--green)">${statsData.onlineNow ?? online}</div></div>
       <div class="mini-card"><div class="lbl">Highest Level</div><div class="val">${maxLvl}</div></div>
       <div class="mini-card"><div class="lbl">Shown</div><div class="val">${users.length}</div></div>
     `
   }
 
   tbody.innerHTML = users.map(u => {
-    // XP progress within current level (approx)
     const lvl = u.level ?? 1
     const xpFull = Math.floor(Math.pow(lvl / 99, 2.2) * 3_600_000)
     const xpNext = Math.floor(Math.pow((lvl + 1) / 99, 2.2) * 3_600_000)
@@ -778,6 +1030,26 @@ function renderUsersTable(users) {
   }).join('')
 }
 
+function exportCSV() {
+  if (!allUsers.length) return
+  const header = ['username','level','xp','online','streak','activity','last_seen']
+  const rows = allUsers.map(u => [
+    u.username ?? '',
+    u.level ?? '',
+    u.xp ?? '',
+    u.is_online ? 'yes' : 'no',
+    u.streak_count ?? 0,
+    (u.current_activity ?? '').replace(/,/g,' '),
+    u.updated_at ?? '',
+  ])
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `grindly-users-${new Date().toISOString().slice(0,10)}.csv`
+  a.click()
+}
+
 // ── Announcements ─────────────────────────────────────────────────────────────
 
 function buildEmojiPicker() {
@@ -790,6 +1062,35 @@ function pickEmoji(btn, emoji) {
   selEmoji = emoji
   document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('sel'))
   btn.classList.add('sel')
+  updatePreview()
+}
+
+function updateCharCount(inputId, countId, softMax) {
+  const input = document.getElementById(inputId)
+  const count = document.getElementById(countId)
+  if (!input || !count) return
+  const len = input.value.length
+  count.textContent = `${len} / ${softMax}`
+  count.classList.remove('warn','over')
+  if (len > softMax) count.classList.add('over')
+  else if (len > softMax * 0.8) count.classList.add('warn')
+  updatePreview()
+}
+
+function togglePreview() {
+  const el = document.getElementById('ann-preview')
+  el.classList.toggle('visible')
+  if (el.classList.contains('visible')) updatePreview()
+}
+
+function updatePreview() {
+  const el = document.getElementById('ann-preview')
+  if (!el.classList.contains('visible')) return
+  const title = document.getElementById('ann-title')?.value || '—'
+  const body  = document.getElementById('ann-body')?.value  || '—'
+  document.getElementById('prev-icon').textContent  = selEmoji
+  document.getElementById('prev-title').textContent = title
+  document.getElementById('prev-body').textContent  = body
 }
 
 async function loadAnnouncements() {
@@ -822,34 +1123,31 @@ async function sendAnnouncement() {
   const status = document.getElementById('ann-status')
 
   if (!title || !body) {
-    status.className = 'status-err'
-    status.textContent = 'Title and body are required.'
-    return
+    status.className = 'status-err'; status.textContent = 'Title and body are required.'; return
   }
-  status.className = ''
-  status.textContent = 'Sending…'
+  status.className = ''; status.textContent = 'Sending…'
 
   const payload = { title, body, icon: selEmoji }
   if (exp) payload.expires_at = new Date(exp).toISOString()
 
   const r = await apiFetch('POST', '/api/announcements', payload)
   if (r.error) {
-    status.className = 'status-err'
-    status.textContent = 'Error: ' + r.error
-    return
+    status.className = 'status-err'; status.textContent = 'Error: ' + r.error; return
   }
   status.className = 'status-ok'
   status.textContent = '✓ Sent! Users will see it in their notification bell instantly.'
-  document.getElementById('ann-title').value = ''
-  document.getElementById('ann-body').value  = ''
+  document.getElementById('ann-title').value   = ''
+  document.getElementById('ann-body').value    = ''
   document.getElementById('ann-expires').value = ''
+  updateCharCount('ann-title','ann-title-count',80)
+  updateCharCount('ann-body','ann-body-count',400)
+  document.getElementById('ann-preview')?.classList.remove('visible')
   loadAnnouncements()
 }
 
 async function deleteAnn(id, btn) {
   if (!confirm('Delete this announcement?')) return
-  btn.textContent = '…'
-  btn.disabled = true
+  btn.textContent = '…'; btn.disabled = true
   await apiFetch('DELETE', '/api/announcements/' + id)
   loadAnnouncements()
 }
@@ -861,11 +1159,7 @@ async function deleteAnn(id, btn) {
   if (me.authed) {
     document.getElementById('login-screen').style.display = 'none'
     document.getElementById('app').style.display = 'flex'
-    buildEmojiPicker()
-    loadAll()
-    loadAnnouncements()
-    // Auto-refresh every 5 minutes
-    setInterval(loadAll, 5 * 60 * 1000)
+    initApp()
   }
 })()
 </script>
