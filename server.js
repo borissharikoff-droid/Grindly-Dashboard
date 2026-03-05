@@ -1,5 +1,5 @@
 'use strict'
-
+// v2
 require('dotenv').config()
 
 const express       = require('express')
@@ -31,8 +31,8 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
 // ── App setup ─────────────────────────────────────────────────────────────────
 
 const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: false, limit: '10mb' }))
 app.use(cookieSession({
   name:   'grindly_admin',
   keys:   [SESSION_SECRET],
@@ -57,6 +57,9 @@ function invalidate(key) { _cache.delete(key) }
 
 // ── Supabase helpers ──────────────────────────────────────────────────────────
 
+// Matches the client-side ONLINE_STALE_MS in useFriends.ts
+const ONLINE_STALE_MS = 3 * 60 * 1000
+
 async function rpc(name, params = {}) {
   const { data, error } = await supabase.rpc(name, params)
   if (error) {
@@ -71,6 +74,20 @@ async function count(table, filter = {}) {
   for (const [col, val] of Object.entries(filter)) q = q.eq(col, val)
   const { count: n, error } = await q
   if (error) { console.warn(`[count] ${table} →`, error.message); return 0 }
+  return n ?? 0
+}
+
+// Count users with is_online=true AND updated_at fresh within ONLINE_STALE_MS.
+// This mirrors the client-side isFreshOnlinePresence() logic so stale flags
+// (from crashes / force-quits that skipped beforeunload) are excluded.
+async function countOnline() {
+  const staleThreshold = new Date(Date.now() - ONLINE_STALE_MS).toISOString()
+  const { count: n, error } = await supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_online', true)
+    .gte('updated_at', staleThreshold)
+  if (error) { console.warn('[countOnline]', error.message); return 0 }
   return n ?? 0
 }
 
@@ -111,13 +128,15 @@ app.get('/me', (req, res) => {
 app.get('/api/stats', requireAuth, async (req, res) => {
   try {
     if (req.query.force === '1') invalidate('stats')
+    // onlineNow is a live metric — fetch fresh every 30 s, not with the 5-min cache.
+    const onlineNow = await cached('online_now', 30 * 1000, countOnline)
+
     const data = await cached('stats', 5 * 60 * 1000, async () => {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
       const yesterdayStart = new Date(todayStart); yesterdayStart.setDate(yesterdayStart.getDate() - 1)
 
       const [
         totalUsers,
-        onlineNow,
         dau,
         userGrowth,
         sessionsPerDay,
@@ -135,7 +154,6 @@ app.get('/api/stats', requireAuth, async (req, res) => {
         sessionsYesterday,
       ] = await Promise.all([
         count('profiles'),
-        count('profiles', { is_online: true }),
         rpc('admin_dau_30d'),
         rpc('admin_user_growth_30d'),
         rpc('admin_sessions_per_day'),
@@ -160,7 +178,6 @@ app.get('/api/stats', requireAuth, async (req, res) => {
 
       return {
         totalUsers,
-        onlineNow,
         dau,
         userGrowth,
         sessionsPerDay,
@@ -180,7 +197,7 @@ app.get('/api/stats', requireAuth, async (req, res) => {
         dauYesterday,
       }
     })
-    res.json(data)
+    res.json({ ...data, onlineNow })
   } catch (err) {
     console.error('/api/stats', err)
     res.status(500).json({ error: String(err) })
@@ -246,31 +263,70 @@ app.delete('/api/announcements/:id', requireAuth, async (req, res) => {
   res.json({ ok: true })
 })
 
-// ── Diagnose ──────────────────────────────────────────────────────────────────
+// ── Admin Game Config ─────────────────────────────────────────────────────────
 
-const REQUIRED_TABLES = ['analytics_events', 'session_summaries', 'profiles', 'announcements']
-const REQUIRED_RPCS   = [
-  'admin_dau_30d', 'admin_user_growth_30d', 'admin_sessions_per_day',
-  'admin_session_stats', 'admin_top_events', 'admin_tab_clicks',
-  'admin_hourly_activity', 'admin_feature_adoption', 'admin_skill_breakdown',
-  'admin_level_distribution', 'admin_streak_stats',
-]
+app.get('/api/admin-config', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('admin_config')
+    .select('config')
+    .eq('id', 'singleton')
+    .maybeSingle()
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data?.config ?? {})
+})
 
-app.get('/api/diagnose', requireAuth, async (_req, res) => {
-  const checks = []
-
-  for (const table of REQUIRED_TABLES) {
-    const { error } = await supabase.from(table).select('id', { head: true, count: 'exact' }).limit(1)
-    checks.push({ name: `table:${table}`, ok: !error, detail: error?.message ?? 'exists' })
+app.post('/api/admin-config', requireAuth, async (req, res) => {
+  const config = req.body
+  if (typeof config !== 'object' || Array.isArray(config)) {
+    return res.status(400).json({ error: 'config must be a plain object' })
   }
+  const { error } = await supabase
+    .from('admin_config')
+    .upsert({ id: 'singleton', config, updated_at: new Date().toISOString() })
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
+})
 
-  for (const fn of REQUIRED_RPCS) {
-    const params = fn === 'admin_top_events' ? { lim: 1 } : {}
-    const { error } = await supabase.rpc(fn, params)  // eslint-disable-line no-await-in-loop
-    checks.push({ name: `rpc:${fn}`, ok: !error, detail: error?.message ?? 'exists' })
+app.get('/api/economy', requireAuth, async (req, res) => {
+  try {
+    const [goldRes, holdersRes, listingsRes] = await Promise.all([
+      supabase.from('profiles').select('gold'),
+      supabase.from('profiles').select('username,gold').order('gold', { ascending: false }).limit(10),
+      supabase.from('marketplace_listings').select('price_gold,quantity').eq('status', 'active'),
+    ])
+    if (goldRes.error) return res.status(500).json({ error: goldRes.error.message })
+
+    const goldArr = (goldRes.data || []).map(r => Number(r.gold) || 0)
+    const totalGold = goldArr.reduce((a, b) => a + b, 0)
+    const avgGold   = goldArr.length ? totalGold / goldArr.length : 0
+
+    const listings      = listingsRes.data || []
+    const activeListings = listings.length
+    const listingsValue  = listings.reduce((a, r) => a + (Number(r.price_gold) || 0) * (Number(r.quantity) || 1), 0)
+
+    // Gold distribution buckets
+    const buckets = [0, 100, 500, 1000, 5000, 10000, 50000, Infinity]
+    const bucketLabels = ['0', '100', '500', '1K', '5K', '10K', '50K+']
+    const counts = new Array(bucketLabels.length).fill(0)
+    for (const g of goldArr) {
+      for (let i = 0; i < buckets.length - 1; i++) {
+        if (g >= buckets[i] && g < buckets[i + 1]) { counts[i]++; break }
+      }
+    }
+    const goldBuckets = bucketLabels.map((label, i) => ({ label, count: counts[i] }))
+
+    res.json({
+      totalGold,
+      avgGold,
+      activeListings,
+      listingsValue,
+      topHolders: holdersRes.data || [],
+      goldBuckets,
+    })
+  } catch (err) {
+    console.error('/api/economy', err)
+    res.status(500).json({ error: String(err) })
   }
-
-  res.json({ ok: checks.every(c => c.ok), checks })
 })
 
 // ── Static ────────────────────────────────────────────────────────────────────
