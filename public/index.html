@@ -1698,26 +1698,36 @@ const ITEM_CATALOG = [
   {"id":"essence_vial","name":"Essence Vial","slot":"material","rarity":"rare","icon":"🧪","description":"Concentrated magic essence.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"ancient_dust","name":"Ancient Dust","slot":"material","rarity":"rare","icon":"💨","description":"Ground ancient scales.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"void_fragment","name":"Void Fragment","slot":"material","rarity":"epic","icon":"💠","description":"Refined void crystal shard.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
-  // ── Bag-drop gear (common) ──
-  {"id":"canvas_cap","name":"Canvas Cap","slot":"head","rarity":"common","icon":"🧢","description":"A simple cap.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
-  {"id":"plain_tee","name":"Plain Tee","slot":"body","rarity":"common","icon":"👕","description":"A plain cotton shirt.","perkType":"hp_boost","perkValue":15,"perkDescription":"+15 HP"},
-  {"id":"worn_bracelet","name":"Worn Bracelet","slot":"ring","rarity":"common","icon":"📿","description":"A worn leather bracelet.","perkType":"hp_regen_boost","perkValue":0.5,"perkDescription":"+0.5 HP Regen"},
-  {"id":"code_wraps","name":"Code Wraps","slot":"legs","rarity":"common","icon":"🩹","description":"Tape-wrapped leg guards.","perkType":"atk_boost","perkValue":1,"perkDescription":"+1 ATK"},
-  // ── Bag-drop gear (rare) ──
-  {"id":"zen_beanie","name":"Zen Beanie","slot":"head","rarity":"rare","icon":"🎿","description":"A calm-inducing knit beanie.","perkType":"atk_boost","perkValue":4,"perkDescription":"+4 ATK"},
-  {"id":"cozy_sweater","name":"Cozy Sweater","slot":"body","rarity":"rare","icon":"🧥","description":"Thick wool sweater.","perkType":"hp_boost","perkValue":35,"perkDescription":"+35 HP"},
-  {"id":"social_ring","name":"Social Ring","slot":"ring","rarity":"rare","icon":"💍","description":"A ring that glows when friends are near.","perkType":"hp_regen_boost","perkValue":1.5,"perkDescription":"+1.5 HP Regen"},
-  {"id":"task_vest","name":"Task Vest","slot":"body","rarity":"rare","icon":"🦺","description":"Utility vest. Boosts XP gain.","perkType":"xp_skill_boost","perkValue":0.05,"perkDescription":"+5% Developer XP"},
-  // ── Bag-drop gear (epic) ──
-  {"id":"neon_visor","name":"Neon Visor","slot":"head","rarity":"epic","icon":"🥽","description":"A glowing visor pulsing with data streams.","perkType":"atk_boost","perkValue":7,"perkDescription":"+7 ATK"},
-  {"id":"hacker_jacket","name":"Hacker Jacket","slot":"body","rarity":"epic","icon":"🧥","description":"Reinforced jacket with hidden circuitry.","perkType":"hp_boost","perkValue":50,"perkDescription":"+50 HP"},
-  {"id":"scholar_cape","name":"Scholar Cape","slot":"body","rarity":"epic","icon":"🧣","description":"A flowing cape favored by knowledge seekers.","perkType":"xp_skill_boost","perkValue":0.08,"perkDescription":"+8% Researcher XP"},
-  {"id":"sonic_loop","name":"Sonic Loop","slot":"ring","rarity":"epic","icon":"🔗","description":"Vibrating loop that accelerates reflexes.","perkType":"atk_boost","perkValue":5,"perkDescription":"+5 ATK"},
-  // ── Bag-drop gear (legendary) ──
-  {"id":"phantom_cloak","name":"Phantom Cloak","slot":"body","rarity":"legendary","icon":"👻","description":"A cloak that phases between realities.","perkType":"hp_boost","perkValue":80,"perkDescription":"+80 HP"},
-  {"id":"chrono_visor","name":"Chrono Visor","slot":"head","rarity":"legendary","icon":"⏱️","description":"Bends time around the wearer.","perkType":"atk_boost","perkValue":8,"perkDescription":"+8 ATK"},
-  // ── Bag-drop gear (mythic) ──
-  {"id":"void_aura","name":"Void Aura","slot":"ring","rarity":"mythic","icon":"🌀","description":"An aura forged from pure void energy.","perkType":"atk_boost","perkValue":10,"perkDescription":"+10 ATK"},
+  // ── Common — Wooden Set ──
+  {"id":"wooden_helm","name":"Wooden Helm","slot":"head","rarity":"common","icon":"🪖","description":"A crude helm carved from hardwood.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
+  {"id":"wooden_plate","name":"Wooden Plate","slot":"body","rarity":"common","icon":"🪵","description":"Wooden planks strapped together as armor.","perkType":"hp_boost","perkValue":15,"perkDescription":"+15 HP"},
+  {"id":"wooden_sword","name":"Wooden Sword","slot":"weapon","rarity":"common","icon":"🗡️","description":"A practice sword. Splinters on contact.","perkType":"atk_boost","perkValue":3,"perkDescription":"+3 ATK"},
+  {"id":"wooden_legs","name":"Wooden Legs","slot":"legs","rarity":"common","icon":"🦿","description":"Wooden shin guards. Better than bare legs.","perkType":"atk_boost","perkValue":1,"perkDescription":"+1 ATK"},
+  {"id":"wooden_ring","name":"Wooden Ring","slot":"ring","rarity":"common","icon":"📿","description":"A whittled ring with faint natural energy.","perkType":"hp_regen_boost","perkValue":0.5,"perkDescription":"+0.5 HP Regen"},
+  // ── Rare — Copper Set ──
+  {"id":"copper_helm","name":"Copper Helm","slot":"head","rarity":"rare","icon":"⛑️","description":"A polished copper helm.","perkType":"atk_boost","perkValue":4,"perkDescription":"+4 ATK"},
+  {"id":"copper_plate","name":"Copper Plate","slot":"body","rarity":"rare","icon":"🛡️","description":"Hammered copper chestplate.","perkType":"hp_boost","perkValue":35,"perkDescription":"+35 HP"},
+  {"id":"copper_sword","name":"Copper Sword","slot":"weapon","rarity":"rare","icon":"⚔️","description":"A copper blade with a keen edge.","perkType":"atk_boost","perkValue":6,"perkDescription":"+6 ATK"},
+  {"id":"copper_legs","name":"Copper Legs","slot":"legs","rarity":"rare","icon":"🦿","description":"Copper greaves forged for agility.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
+  {"id":"copper_ring","name":"Copper Ring","slot":"ring","rarity":"rare","icon":"💍","description":"A copper band humming with warmth.","perkType":"hp_regen_boost","perkValue":1.5,"perkDescription":"+1.5 HP Regen"},
+  // ── Epic — Shadow Set ──
+  {"id":"shadow_helm","name":"Shadow Helm","slot":"head","rarity":"epic","icon":"🪖","description":"A helm wreathed in living shadow.","perkType":"atk_boost","perkValue":7,"perkDescription":"+7 ATK · +15 HP"},
+  {"id":"shadow_plate","name":"Shadow Plate","slot":"body","rarity":"epic","icon":"🛡️","description":"Dark armor that absorbs incoming strikes.","perkType":"hp_boost","perkValue":50,"perkDescription":"+50 HP · +3 ATK"},
+  {"id":"shadow_sword","name":"Shadow Sword","slot":"weapon","rarity":"epic","icon":"⚔️","description":"A blade forged in darkness.","perkType":"atk_boost","perkValue":10,"perkDescription":"+10 ATK · +2 HP Regen"},
+  {"id":"shadow_legs","name":"Shadow Legs","slot":"legs","rarity":"epic","icon":"🦿","description":"Greaves that let you move like a phantom.","perkType":"atk_boost","perkValue":5,"perkDescription":"+5 ATK · +20 HP"},
+  {"id":"shadow_ring","name":"Shadow Ring","slot":"ring","rarity":"epic","icon":"🔗","description":"A ring pulsing with dark energy.","perkType":"atk_boost","perkValue":5,"perkDescription":"+5 ATK · +2 HP Regen"},
+  // ── Legendary — Golden Set ──
+  {"id":"golden_helm","name":"Golden Helm","slot":"head","rarity":"legendary","icon":"👑","description":"A crown-helm of pure gold.","perkType":"atk_boost","perkValue":8,"perkDescription":"+8 ATK · +30 HP · +5% Global XP"},
+  {"id":"golden_plate","name":"Golden Plate","slot":"body","rarity":"legendary","icon":"🛡️","description":"Legendary golden armor.","perkType":"hp_boost","perkValue":80,"perkDescription":"+80 HP · +5 ATK · Streak Shield"},
+  {"id":"golden_sword","name":"Golden Sword","slot":"weapon","rarity":"legendary","icon":"⚔️","description":"A blade of gleaming gold.","perkType":"atk_boost","perkValue":12,"perkDescription":"+12 ATK · +3 HP Regen"},
+  {"id":"golden_legs","name":"Golden Legs","slot":"legs","rarity":"legendary","icon":"🦿","description":"Golden greaves that bolster the wearer.","perkType":"atk_boost","perkValue":7,"perkDescription":"+7 ATK · +40 HP"},
+  {"id":"golden_ring","name":"Golden Ring","slot":"ring","rarity":"legendary","icon":"💍","description":"A ring of ancient kings.","perkType":"atk_boost","perkValue":6,"perkDescription":"+6 ATK · +15% Focus"},
+  // ── Mythic — Void Set ──
+  {"id":"void_helm","name":"Void Helm","slot":"head","rarity":"mythic","icon":"🌀","description":"A helm torn from the void itself.","perkType":"atk_boost","perkValue":12,"perkDescription":"+12 ATK · +50 HP · +8% Global XP"},
+  {"id":"void_plate","name":"Void Plate","slot":"body","rarity":"mythic","icon":"👻","description":"Armor woven from void threads.","perkType":"hp_boost","perkValue":120,"perkDescription":"+120 HP · +8 ATK · Streak Shield"},
+  {"id":"void_sword","name":"Void Sword","slot":"weapon","rarity":"mythic","icon":"⚔️","description":"A blade of pure void energy.","perkType":"atk_boost","perkValue":15,"perkDescription":"+15 ATK · +5 HP Regen"},
+  {"id":"void_legs","name":"Void Legs","slot":"legs","rarity":"mythic","icon":"🦿","description":"Greaves that phase through attacks.","perkType":"atk_boost","perkValue":10,"perkDescription":"+10 ATK · +60 HP"},
+  {"id":"void_ring","name":"Void Ring","slot":"ring","rarity":"mythic","icon":"🌀","description":"A ring forged from pure void energy.","perkType":"atk_boost","perkValue":10,"perkDescription":"+10 ATK · +4 HP Regen · +8% Global XP"},
   // ── Crafted gear ──
   {"id":"craft_iron_helm","name":"Iron Helm","slot":"head","rarity":"common","icon":"⛑️","description":"A sturdy helm forged from iron bars.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
   {"id":"craft_fang_dagger","name":"Fang Dagger","slot":"weapon","rarity":"common","icon":"🗡️","description":"A blade carved from refined fang shards.","perkType":"atk_boost","perkValue":3,"perkDescription":"+3 ATK"},
@@ -1804,10 +1814,10 @@ const CRAFT_RECIPE_CATALOG = [
 ]
 
 const CHEST_CATALOG = [
-  { id:'common_chest',    name:'Common Bag',    icon:'📦', itemWeights:[{itemId:'canvas_cap',weight:3},{itemId:'plain_tee',weight:3},{itemId:'worn_bracelet',weight:3},{itemId:'code_wraps',weight:3}] },
-  { id:'rare_chest',      name:'Rare Bag',      icon:'🎁', itemWeights:[{itemId:'canvas_cap',weight:2},{itemId:'plain_tee',weight:2},{itemId:'worn_bracelet',weight:2},{itemId:'code_wraps',weight:2},{itemId:'zen_beanie',weight:3},{itemId:'cozy_sweater',weight:3},{itemId:'social_ring',weight:3},{itemId:'task_vest',weight:3}] },
-  { id:'epic_chest',      name:'Epic Bag',      icon:'🪙', itemWeights:[{itemId:'zen_beanie',weight:2},{itemId:'cozy_sweater',weight:2},{itemId:'neon_visor',weight:3},{itemId:'hacker_jacket',weight:3},{itemId:'scholar_cape',weight:3},{itemId:'sonic_loop',weight:3},{itemId:'atk_potion',weight:1},{itemId:'hp_potion',weight:1},{itemId:'regen_potion',weight:1}] },
-  { id:'legendary_chest', name:'Legendary Bag', icon:'💎', itemWeights:[{itemId:'neon_visor',weight:2},{itemId:'hacker_jacket',weight:2},{itemId:'sonic_loop',weight:2},{itemId:'phantom_cloak',weight:3},{itemId:'chrono_visor',weight:3},{itemId:'void_aura',weight:1},{itemId:'atk_potion',weight:2},{itemId:'hp_potion',weight:2},{itemId:'regen_potion',weight:2}] },
+  { id:'common_chest',    name:'Common Bag',    icon:'📦', itemWeights:[{itemId:'wooden_helm',weight:3},{itemId:'wooden_plate',weight:3},{itemId:'wooden_sword',weight:3},{itemId:'wooden_legs',weight:3},{itemId:'wooden_ring',weight:3}] },
+  { id:'rare_chest',      name:'Rare Bag',      icon:'🎁', itemWeights:[{itemId:'wooden_helm',weight:2},{itemId:'wooden_plate',weight:2},{itemId:'wooden_sword',weight:2},{itemId:'wooden_legs',weight:2},{itemId:'wooden_ring',weight:2},{itemId:'copper_helm',weight:3},{itemId:'copper_plate',weight:3},{itemId:'copper_sword',weight:3},{itemId:'copper_legs',weight:3},{itemId:'copper_ring',weight:3}] },
+  { id:'epic_chest',      name:'Epic Bag',      icon:'🪙', itemWeights:[{itemId:'copper_helm',weight:2},{itemId:'copper_plate',weight:2},{itemId:'copper_sword',weight:2},{itemId:'copper_legs',weight:2},{itemId:'copper_ring',weight:2},{itemId:'shadow_helm',weight:3},{itemId:'shadow_plate',weight:3},{itemId:'shadow_sword',weight:3},{itemId:'shadow_legs',weight:3},{itemId:'shadow_ring',weight:3},{itemId:'atk_potion',weight:1},{itemId:'hp_potion',weight:1},{itemId:'regen_potion',weight:1}] },
+  { id:'legendary_chest', name:'Legendary Bag', icon:'💎', itemWeights:[{itemId:'shadow_helm',weight:2},{itemId:'shadow_plate',weight:2},{itemId:'shadow_sword',weight:2},{itemId:'shadow_legs',weight:2},{itemId:'shadow_ring',weight:2},{itemId:'golden_helm',weight:3},{itemId:'golden_plate',weight:3},{itemId:'golden_sword',weight:3},{itemId:'golden_legs',weight:3},{itemId:'golden_ring',weight:3},{itemId:'void_helm',weight:1},{itemId:'void_plate',weight:1},{itemId:'void_sword',weight:1},{itemId:'void_legs',weight:1},{itemId:'void_ring',weight:1},{itemId:'atk_potion',weight:2},{itemId:'hp_potion',weight:2},{itemId:'regen_potion',weight:2}] },
 ]
 
 let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, zoneOverrides:{}, craftOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{} }
@@ -3235,11 +3245,13 @@ function gcRenderCraft() {
       const rarityCol = {'common':'#9CA3AF','rare':'#38BDF8','epic':'#C084FC','legendary':'#FACC15','mythic':'#F472B6'}[out?.rarity] || '#9CA3AF'
       const ings = r.ingredients.map(ing => {
         const d = findItem(ing.id)
-        return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:8px;font-size:11px"><span>${d?.icon??'?'}</span> <span style="color:var(--text)">${d?.name??ing.id}</span> <span style="color:var(--muted2)">×${ing.qty}</span></span>`
+        const ingImg = gcConfig.itemOverrides?.[ing.id]?.image || d?.image
+        const ingIcon = ingImg ? `<img src="${ingImg}" style="width:14px;height:14px;object-fit:contain;vertical-align:middle">` : (d?.icon??'?')
+        return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:8px;font-size:11px"><span>${ingIcon}</span> <span style="color:var(--text)">${d?.name??ing.id}</span> <span style="color:var(--muted2)">×${ing.qty}</span></span>`
       }).join('')
       html += `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:8px;min-width:160px">
-          <span style="font-size:20px">${out?.icon??'?'}</span>
+          ${(out?.image || (gcConfig.itemOverrides?.[r.output]?.image)) ? `<img src="${gcConfig.itemOverrides?.[r.output]?.image || out?.image}" style="width:24px;height:24px;object-fit:contain">` : `<span style="font-size:20px">${out?.icon??'?'}</span>`}
           <div>
             <div style="font-size:12px;font-weight:600;color:var(--text)">${out?.name??r.output}${hasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</div>
             <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${rarityCol}">${out?.rarity??''} ${out?.slot??''}</div>
