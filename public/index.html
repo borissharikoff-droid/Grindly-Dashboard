@@ -815,6 +815,16 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <input type="hidden" id="gc-mob-id"/>
         <div class="gc-field"><label>Name</label><input class="input" id="gc-m-name"/></div>
         <div class="gc-field"><label>Icon (emoji)</label><input class="input" id="gc-m-icon" maxlength="8" style="width:90px"/></div>
+        <div class="gc-field"><label>Custom Image</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <img id="gc-m-img-preview" src="" style="display:none;width:48px;height:48px;object-fit:contain;border:1px solid var(--border);border-radius:8px"/>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <input type="file" id="gc-m-img-file" accept="image/*" onchange="gcReadImage('mob')" style="font-size:12px;color:var(--muted2)"/>
+              <button class="btn btn-ghost btn-sm" onclick="gcClearImage('mob')" id="gc-m-img-clear" style="display:none">Clear image</button>
+            </div>
+          </div>
+          <input type="hidden" id="gc-m-img"/>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div class="gc-field"><label>HP</label><input class="input" type="number" id="gc-m-hp" min="1"/></div>
           <div class="gc-field"><label>ATK (dmg/s)</label><input class="input" type="number" id="gc-m-atk" min="0" step="0.1"/></div>
@@ -838,6 +848,33 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="btn btn-green" style="flex:1" onclick="gcSaveMob()">Save</button>
           <button class="btn btn-ghost btn-sm" onclick="gcResetMob()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone edit modal -->
+    <div id="gc-zone-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 id="gc-zone-modal-title" style="font-size:15px">Edit Zone</h3>
+          <button onclick="gcCloseZoneModal()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <input type="hidden" id="gc-zone-id"/>
+        <div class="gc-field"><label>Name</label><input class="input" id="gc-z-name"/></div>
+        <div class="gc-field"><label>Icon (emoji)</label><input class="input" id="gc-z-icon" maxlength="8" style="width:90px"/></div>
+        <div class="gc-field"><label>Custom Image</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <img id="gc-z-img-preview" src="" style="display:none;width:48px;height:48px;object-fit:contain;border:1px solid var(--border);border-radius:8px"/>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <input type="file" id="gc-z-img-file" accept="image/*" onchange="gcReadImage('zone')" style="font-size:12px;color:var(--muted2)"/>
+              <button class="btn btn-ghost btn-sm" onclick="gcClearImage('zone')" id="gc-z-img-clear" style="display:none">Clear image</button>
+            </div>
+          </div>
+          <input type="hidden" id="gc-z-img"/>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-green" style="flex:1" onclick="gcSaveZone()">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="gcResetZone()">Reset</button>
         </div>
       </div>
     </div>
@@ -2169,7 +2206,7 @@ function gcRenderBosses() {
       const mHasOv = Object.keys(mOv).length > 0
       const mat = findItem(mEff.materialDropId)
       return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:11px;flex-wrap:wrap">
-        <span style="font-size:14px">${mEff.icon}</span>
+        ${mEff.image ? `<img src="${mEff.image}" style="width:24px;height:24px;object-fit:contain;border-radius:4px"/>` : `<span style="font-size:14px">${mEff.icon}</span>`}
         <span style="color:var(--text);font-weight:500;min-width:100px">${esc(mEff.name)}${mHasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</span>
         <span style="color:var(--muted2)">HP ${fmtHP(mEff.hp)}</span>
         <span style="color:#f87171">ATK ${mEff.atk}</span>
@@ -2184,7 +2221,7 @@ function gcRenderBosses() {
     if (bEff) {
       const bMat = findItem(bEff.materialDropId)
       bossHtml = `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid ${z.themeColor}44;border-radius:10px;font-size:12px;flex-wrap:wrap">
-        <span style="font-size:18px">${bEff.icon}</span>
+        ${bEff.image ? `<img src="${bEff.image}" style="width:32px;height:32px;object-fit:contain;border-radius:6px"/>` : `<span style="font-size:18px">${bEff.icon}</span>`}
         <span style="color:var(--text);font-weight:700;min-width:120px">${esc(bEff.name)}${bHasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</span>
         <span style="color:var(--muted2)">HP ${fmtHP(bEff.hp)}</span>
         <span style="color:#f87171">ATK ${bEff.atk}/s</span>
@@ -2195,13 +2232,15 @@ function gcRenderBosses() {
       </div>`
     }
 
+    const zEff = { ...z, ...(zOv.name ? { name: zOv.name } : {}), ...(zOv.icon ? { icon: zOv.icon } : {}), ...(zOv.image ? { image: zOv.image } : {}) }
     return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:22px">${z.icon}</span>
+        ${zEff.image ? `<img src="${zEff.image}" style="width:36px;height:36px;object-fit:contain;border-radius:8px"/>` : `<span style="font-size:22px">${zEff.icon}</span>`}
         <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:${z.themeColor}">${z.name}</div>
+          <div style="font-size:14px;font-weight:700;color:${z.themeColor}">${esc(zEff.name)}${zHasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</div>
           <div style="font-size:10px;color:var(--muted2)">Warrior Lv ${z.warriorLevel} · Gate: ${gateStr}</div>
         </div>
+        <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="gcOpenZoneModal('${z.id}')">Edit Zone</button>
       </div>
       <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Mobs</div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">${mobsHtml}</div>
@@ -2495,8 +2534,19 @@ function gcResetCombatBase() {
 
 // ─── Image helpers ────────────────────────────────────────────────────────────
 
+const IMG_EL_MAP = {
+  item:    { file:'gc-f-img-file',    preview:'gc-f-img-preview',    hidden:'gc-f-img',    clear:'gc-f-img-clear'    },
+  boss:    { file:'gc-b-img-file',    preview:'gc-b-img-preview',    hidden:'gc-b-img',    clear:'gc-b-img-clear'    },
+  chest:   { file:'gc-ce-img-file',   preview:'gc-ce-img-preview',   hidden:'gc-ce-img',   clear:'gc-ce-img-clear'   },
+  mob:     { file:'gc-m-img-file',    preview:'gc-m-img-preview',    hidden:'gc-m-img',    clear:'gc-m-img-clear'    },
+  seedzip: { file:'gc-szm-img-file',  preview:'gc-szm-img-preview',  hidden:'gc-szm-img',  clear:'gc-szm-img-clear'  },
+  seed:    { file:'gc-s-img-file',   preview:'gc-s-img-preview',   hidden:'gc-s-img',   clear:'gc-s-img-clear'   },
+  zone:    { file:'gc-z-img-file',   preview:'gc-z-img-preview',   hidden:'gc-z-img',   clear:'gc-z-img-clear'   },
+}
+
 function gcReadImage(scope) {
-  const fileInput = document.getElementById(scope === 'item' ? 'gc-f-img-file' : scope === 'chest' ? 'gc-ce-img-file' : 'gc-b-img-file')
+  const ids = IMG_EL_MAP[scope] || IMG_EL_MAP.item
+  const fileInput = document.getElementById(ids.file)
   const file = fileInput?.files?.[0]
   if (!file) return
   if (file.size > 20 * 1024 * 1024) { alert('Image must be under 20 MB'); return }
@@ -2528,24 +2578,24 @@ function gcReadImage(scope) {
 }
 
 function gcSetImagePreview(scope, dataUrl) {
-  const preview  = document.getElementById(scope === 'item' ? 'gc-f-img-preview' : scope === 'chest' ? 'gc-ce-img-preview' : 'gc-b-img-preview')
-  const hidden   = document.getElementById(scope === 'item' ? 'gc-f-img'         : scope === 'chest' ? 'gc-ce-img'         : 'gc-b-img')
-  const clearBtn = document.getElementById(scope === 'item' ? 'gc-f-img-clear'   : scope === 'chest' ? 'gc-ce-img-clear'   : 'gc-b-img-clear')
+  const ids = IMG_EL_MAP[scope] || IMG_EL_MAP.item
+  const preview  = document.getElementById(ids.preview)
+  const hidden   = document.getElementById(ids.hidden)
+  const clearBtn = document.getElementById(ids.clear)
   if (dataUrl) {
-    preview.src = dataUrl
-    preview.style.display = ''
-    hidden.value = dataUrl
-    clearBtn.style.display = ''
+    if (preview) { preview.src = dataUrl; preview.style.display = '' }
+    if (hidden)  hidden.value = dataUrl
+    if (clearBtn) clearBtn.style.display = ''
   } else {
-    preview.src = ''
-    preview.style.display = 'none'
-    hidden.value = ''
-    clearBtn.style.display = 'none'
+    if (preview) { preview.src = ''; preview.style.display = 'none' }
+    if (hidden)  hidden.value = ''
+    if (clearBtn) clearBtn.style.display = 'none'
   }
 }
 
 function gcClearImage(scope) {
-  const fileInput = document.getElementById(scope === 'item' ? 'gc-f-img-file' : scope === 'chest' ? 'gc-ce-img-file' : 'gc-b-img-file')
+  const ids = IMG_EL_MAP[scope] || IMG_EL_MAP.item
+  const fileInput = document.getElementById(ids.file)
   if (fileInput) fileInput.value = ''
   gcSetImagePreview(scope, '')
 }
@@ -2927,81 +2977,11 @@ function gcCloseSeedZipModal() {
   document.getElementById('gc-seed-zip-modal').style.display = 'none'
 }
 
-function gcReadSeedZipImage() {
-  const fileInput = document.getElementById('gc-szm-img-file')
-  const file = fileInput?.files?.[0]
-  if (!file) return
-  if (file.size > 20 * 1024 * 1024) { alert('Image must be under 20 MB'); return }
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      const MAX = 200
-      let w = img.width, h = img.height
-      if (w > MAX || h > MAX) {
-        if (w >= h) { h = Math.round(h * MAX / w); w = MAX }
-        else        { w = Math.round(w * MAX / h); h = MAX }
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      const fmt    = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg'
-      const dataUrl = canvas.toDataURL(fmt, 0.82)
-      const preview  = document.getElementById('gc-szm-img-preview')
-      const hidden   = document.getElementById('gc-szm-img')
-      const clearBtn = document.getElementById('gc-szm-img-clear')
-      preview.src = dataUrl; preview.style.display = ''; hidden.value = dataUrl; clearBtn.style.display = ''
-    }
-    img.src = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
+function gcReadSeedZipImage() { gcReadImage('seedzip') }
+function gcClearSeedZipImage() { gcClearImage('seedzip') }
 
-function gcClearSeedZipImage() {
-  document.getElementById('gc-szm-img-file').value = ''
-  const preview  = document.getElementById('gc-szm-img-preview')
-  const hidden   = document.getElementById('gc-szm-img')
-  const clearBtn = document.getElementById('gc-szm-img-clear')
-  preview.src = ''; preview.style.display = 'none'; hidden.value = ''; clearBtn.style.display = 'none'
-}
-
-function gcReadSeedImage() {
-  const fileInput = document.getElementById('gc-s-img-file')
-  const file = fileInput?.files?.[0]
-  if (!file) return
-  if (file.size > 20 * 1024 * 1024) { alert('Image must be under 20 MB'); return }
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      const MAX = 200
-      let w = img.width, h = img.height
-      if (w > MAX || h > MAX) {
-        if (w >= h) { h = Math.round(h * MAX / w); w = MAX }
-        else        { w = Math.round(w * MAX / h); h = MAX }
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      const fmt    = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg'
-      const dataUrl = canvas.toDataURL(fmt, 0.82)
-      const preview  = document.getElementById('gc-s-img-preview')
-      const hidden   = document.getElementById('gc-s-img')
-      const clearBtn = document.getElementById('gc-s-img-clear')
-      preview.src = dataUrl; preview.style.display = ''; hidden.value = dataUrl; clearBtn.style.display = ''
-    }
-    img.src = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
-
-function gcClearSeedImage() {
-  document.getElementById('gc-s-img-file').value = ''
-  const preview  = document.getElementById('gc-s-img-preview')
-  const hidden   = document.getElementById('gc-s-img')
-  const clearBtn = document.getElementById('gc-s-img-clear')
-  preview.src = ''; preview.style.display = 'none'; hidden.value = ''; clearBtn.style.display = 'none'
-}
+function gcReadSeedImage() { gcReadImage('seed') }
+function gcClearSeedImage() { gcClearImage('seed') }
 
 function gcSaveSeedZip() {
   const tier = document.getElementById('gc-szm-tier').value
@@ -3373,6 +3353,7 @@ function gcOpenMobModal(zoneId, mobId) {
   document.getElementById('gc-m-gold-max').value = eff.goldMax
   document.getElementById('gc-m-mat-chance').value = eff.materialDropChance ?? ''
   document.getElementById('gc-m-mat-qty').value = eff.materialDropQty ?? 1
+  gcSetImagePreview('mob', eff.image ?? '')
 
   // Populate material dropdown
   const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
@@ -3398,6 +3379,7 @@ function gcSaveMob() {
   const ov = {}
   const name = document.getElementById('gc-m-name').value
   const icon = document.getElementById('gc-m-icon').value
+  const img  = document.getElementById('gc-m-img').value
   const hp   = Number(document.getElementById('gc-m-hp').value)
   const atk  = Number(document.getElementById('gc-m-atk').value)
   const xp   = Number(document.getElementById('gc-m-xp').value)
@@ -3409,6 +3391,7 @@ function gcSaveMob() {
 
   if (name !== baseMob.name)     ov.name = name
   if (icon !== baseMob.icon)     ov.icon = icon
+  if (img)                       ov.image = img
   if (hp   !== baseMob.hp)       ov.hp = hp
   if (atk  !== baseMob.atk)      ov.atk = atk
   if (xp   !== baseMob.xpReward) ov.xpReward = xp
@@ -3435,6 +3418,59 @@ function gcResetMob() {
     gcSetDirty()
   }
   gcCloseMobModal()
+  gcRenderBosses()
+}
+
+// ─── Zone edit ──────────────────────────────────────────────────────────────
+
+function gcOpenZoneModal(zoneId) {
+  const zone = ZONE_CATALOG.find(z => z.id === zoneId)
+  if (!zone) return
+  const zOv = (gcConfig.zoneOverrides ?? {})[zoneId] ?? {}
+  const eff = { ...zone, ...zOv }
+  document.getElementById('gc-zone-modal-title').textContent = 'Edit Zone — ' + zone.name
+  document.getElementById('gc-zone-id').value = zoneId
+  document.getElementById('gc-z-name').value = eff.name ?? zone.name
+  document.getElementById('gc-z-icon').value = eff.icon ?? zone.icon
+  gcSetImagePreview('zone', eff.image ?? '')
+  document.getElementById('gc-zone-modal').style.display = 'flex'
+}
+
+function gcCloseZoneModal() {
+  document.getElementById('gc-zone-modal').style.display = 'none'
+}
+
+function gcSaveZone() {
+  const zoneId = document.getElementById('gc-zone-id').value
+  const zone = ZONE_CATALOG.find(z => z.id === zoneId)
+  if (!zone) return
+  if (!gcConfig.zoneOverrides) gcConfig.zoneOverrides = {}
+  if (!gcConfig.zoneOverrides[zoneId]) gcConfig.zoneOverrides[zoneId] = {}
+  const ov = gcConfig.zoneOverrides[zoneId]
+  const name = document.getElementById('gc-z-name').value
+  const icon = document.getElementById('gc-z-icon').value
+  const img  = document.getElementById('gc-z-img').value
+  if (name !== zone.name) ov.name = name; else delete ov.name
+  if (icon !== zone.icon) ov.icon = icon; else delete ov.icon
+  if (img) ov.image = img; else delete ov.image
+  gcSetDirty()
+  gcCloseZoneModal()
+  gcRenderBosses()
+}
+
+function gcResetZone() {
+  const zoneId = document.getElementById('gc-zone-id').value
+  if (gcConfig.zoneOverrides?.[zoneId]) {
+    // Keep mob overrides but remove zone-level overrides
+    const mobs = gcConfig.zoneOverrides[zoneId].mobs
+    if (mobs && Object.keys(mobs).length) {
+      gcConfig.zoneOverrides[zoneId] = { mobs }
+    } else {
+      delete gcConfig.zoneOverrides[zoneId]
+    }
+    gcSetDirty()
+  }
+  gcCloseZoneModal()
   gcRenderBosses()
 }
 
