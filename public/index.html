@@ -504,6 +504,8 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-ghost gc-subtab"        data-tab="bosses"  onclick="gcTab('bosses')">👹 Bosses</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="chests"  onclick="gcTab('chests')">📦 Chests</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="seeds"   onclick="gcTab('seeds')">🌱 Seeds & Farm</button>
+          <button class="btn btn-ghost gc-subtab"        data-tab="craft"   onclick="gcTab('craft')">⚒️ Crafting</button>
+          <button class="btn btn-ghost gc-subtab"        data-tab="zones"   onclick="gcTab('zones')">🗺️ Zones</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="gc-status" style="font-size:12px;color:var(--muted2)"></span>
@@ -680,6 +682,22 @@ tr:hover td{background:rgba(255,255,255,.018)}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Crafting sub-tab -->
+      <div id="gc-craft" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">All crafting recipes. Read-only reference — shows current game data.</div>
+          <div id="gc-craft-list"></div>
+        </div>
+      </div>
+
+      <!-- Zones sub-tab -->
+      <div id="gc-zones" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">Arena zones with mobs and bosses. Read-only reference — shows current game data.</div>
+          <div id="gc-zone-list"></div>
         </div>
       </div>
     </div>
@@ -1547,9 +1565,11 @@ async function deleteAnn(id, btn) {
 // ── Game Config ───────────────────────────────────────────────────────────────
 
 const ITEM_CATALOG = [
+  // ── Potions (consumable) ──
   {"id":"atk_potion","name":"Attack Potion","slot":"consumable","rarity":"mythic","icon":"⚗️","description":"Permanently increases attack power.","perkType":"atk_boost","perkValue":1,"perkDescription":"+1 permanent ATK (max 50)"},
   {"id":"hp_potion","name":"Vitality Potion","slot":"consumable","rarity":"mythic","icon":"💊","description":"Permanently reinforces your max HP.","perkType":"hp_boost","perkValue":1,"perkDescription":"+1 permanent HP (max 50)"},
   {"id":"regen_potion","name":"Regen Potion","slot":"consumable","rarity":"mythic","icon":"💉","description":"Permanently boosts your HP regeneration.","perkType":"hp_regen_boost","perkValue":1,"perkDescription":"+1 permanent HP Regen/s (max 50)"},
+  // ── Harvested Plants (farm) ──
   {"id":"wheat","name":"Wheat","slot":"plant","rarity":"common","icon":"🌾","description":"Golden wheat harvested from your farm.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
   {"id":"herbs","name":"Herbs","slot":"plant","rarity":"common","icon":"🌿","description":"Fresh herbs harvested from your farm.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
   {"id":"apples","name":"Apples","slot":"plant","rarity":"rare","icon":"🍎","description":"Crisp apples grown with care.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
@@ -1558,23 +1578,140 @@ const ITEM_CATALOG = [
   {"id":"orchids","name":"Orchids","slot":"plant","rarity":"epic","icon":"🌺","description":"Exotic orchids requiring patience to grow.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
   {"id":"star_bloom","name":"Star Bloom","slot":"plant","rarity":"legendary","icon":"🌟","description":"A radiant bloom said to hold cosmic energy.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
   {"id":"crystal_root","name":"Crystal Root","slot":"plant","rarity":"legendary","icon":"💎","description":"A crystalline root pulsing with energy.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
-  {"id":"void_blossom","name":"Void Blossom","slot":"plant","rarity":"mythic","icon":"🔮","description":"A flower from beyond — grown from a Void Spore.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."}
+  {"id":"void_blossom","name":"Void Blossom","slot":"plant","rarity":"mythic","icon":"🔮","description":"A flower from beyond — grown from a Void Spore.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Farm harvest. Sell on the Marketplace."},
+  // ── Arena mob materials ──
+  {"id":"slime_gel","name":"Slime Gel","slot":"plant","rarity":"common","icon":"🫧","description":"Dropped by slimes. Craft into Slime Shield.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Slime Cavern"},
+  {"id":"goblin_tooth","name":"Goblin Tooth","slot":"plant","rarity":"common","icon":"🦷","description":"Dropped by goblins. Craft into Goblin Blade.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Goblin Outpost"},
+  {"id":"wolf_fang","name":"Wolf Fang","slot":"plant","rarity":"rare","icon":"🐺","description":"Dropped by wolves. Craft into Wolf Fang Pendant.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Wild Forest"},
+  {"id":"orc_shard","name":"Orc Shard","slot":"plant","rarity":"rare","icon":"🪨","description":"Dropped by orcs. Craft into Orc Plate.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Orc Stronghold"},
+  {"id":"troll_hide","name":"Troll Hide","slot":"plant","rarity":"epic","icon":"🧌","description":"Dropped by trolls. Craft into Troll Cloak.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Troll Bridge"},
+  {"id":"dragon_scale","name":"Dragon Scale","slot":"plant","rarity":"legendary","icon":"🐉","description":"Dropped by dragons. Craft into Dragon Crown.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Dragon Lair"},
+  // ── Boss-exclusive materials ──
+  {"id":"warlord_sigil","name":"Warlord Sigil","slot":"material","rarity":"epic","icon":"🔱","description":"Torn from the Orc Warlord.","perkType":"cosmetic","perkValue":0,"perkDescription":"Boss material — Orc Warlord"},
+  {"id":"troll_heart","name":"Troll Heart","slot":"material","rarity":"legendary","icon":"💜","description":"A still-beating heart from the Troll Overlord.","perkType":"cosmetic","perkValue":0,"perkDescription":"Boss material — Troll Overlord"},
+  {"id":"dragon_heart","name":"Dragon Heart","slot":"material","rarity":"legendary","icon":"❤️‍🔥","description":"The blazing core of the Ancient Dragon.","perkType":"cosmetic","perkValue":0,"perkDescription":"Boss material — Ancient Dragon"},
+  // ── Raw crafting materials (from chests/sessions) ──
+  {"id":"ore_iron","name":"Iron Ore","slot":"material","rarity":"common","icon":"🪨","description":"Raw iron ore. Used in basic smithing recipes.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
+  {"id":"monster_fang","name":"Monster Fang","slot":"material","rarity":"common","icon":"🦷","description":"A sharp fang dropped by arena monsters.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
+  {"id":"magic_essence","name":"Magic Essence","slot":"material","rarity":"rare","icon":"💧","description":"Distilled magical residue from powerful creatures.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
+  {"id":"ancient_scale","name":"Ancient Scale","slot":"material","rarity":"rare","icon":"🐉","description":"A scale shed by an ancient beast.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
+  {"id":"void_crystal","name":"Void Crystal","slot":"material","rarity":"epic","icon":"🔮","description":"A crystallised fragment of the void.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
+  // ── Intermediate crafting materials ──
+  {"id":"iron_bar","name":"Iron Bar","slot":"material","rarity":"common","icon":"⬛","description":"Smelted iron. Used to forge equipment.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  {"id":"fang_shard","name":"Fang Shard","slot":"material","rarity":"common","icon":"🦴","description":"Ground monster fangs. Used in blade crafting.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  {"id":"essence_vial","name":"Essence Vial","slot":"material","rarity":"rare","icon":"🧪","description":"Concentrated magic essence.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  {"id":"ancient_dust","name":"Ancient Dust","slot":"material","rarity":"rare","icon":"💨","description":"Ground ancient scales.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  {"id":"void_fragment","name":"Void Fragment","slot":"material","rarity":"epic","icon":"💠","description":"Refined void crystal shard.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  // ── Bag-drop gear (common) ──
+  {"id":"canvas_cap","name":"Canvas Cap","slot":"head","rarity":"common","icon":"🧢","description":"A simple cap.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
+  {"id":"plain_tee","name":"Plain Tee","slot":"body","rarity":"common","icon":"👕","description":"A plain cotton shirt.","perkType":"hp_boost","perkValue":15,"perkDescription":"+15 HP"},
+  {"id":"worn_bracelet","name":"Worn Bracelet","slot":"ring","rarity":"common","icon":"📿","description":"A worn leather bracelet.","perkType":"hp_regen_boost","perkValue":0.5,"perkDescription":"+0.5 HP Regen"},
+  {"id":"code_wraps","name":"Code Wraps","slot":"legs","rarity":"common","icon":"🩹","description":"Tape-wrapped leg guards.","perkType":"atk_boost","perkValue":1,"perkDescription":"+1 ATK"},
+  // ── Bag-drop gear (rare) ──
+  {"id":"zen_beanie","name":"Zen Beanie","slot":"head","rarity":"rare","icon":"🎿","description":"A calm-inducing knit beanie.","perkType":"atk_boost","perkValue":4,"perkDescription":"+4 ATK"},
+  {"id":"cozy_sweater","name":"Cozy Sweater","slot":"body","rarity":"rare","icon":"🧥","description":"Thick wool sweater.","perkType":"hp_boost","perkValue":35,"perkDescription":"+35 HP"},
+  {"id":"social_ring","name":"Social Ring","slot":"ring","rarity":"rare","icon":"💍","description":"A ring that glows when friends are near.","perkType":"hp_regen_boost","perkValue":1.5,"perkDescription":"+1.5 HP Regen"},
+  {"id":"task_vest","name":"Task Vest","slot":"body","rarity":"rare","icon":"🦺","description":"Utility vest. Boosts XP gain.","perkType":"xp_skill_boost","perkValue":0.05,"perkDescription":"+5% Developer XP"},
+  // ── Bag-drop gear (epic) ──
+  {"id":"neon_visor","name":"Neon Visor","slot":"head","rarity":"epic","icon":"🥽","description":"A glowing visor pulsing with data streams.","perkType":"atk_boost","perkValue":7,"perkDescription":"+7 ATK"},
+  {"id":"hacker_jacket","name":"Hacker Jacket","slot":"body","rarity":"epic","icon":"🧥","description":"Reinforced jacket with hidden circuitry.","perkType":"hp_boost","perkValue":50,"perkDescription":"+50 HP"},
+  {"id":"scholar_cape","name":"Scholar Cape","slot":"body","rarity":"epic","icon":"🧣","description":"A flowing cape favored by knowledge seekers.","perkType":"xp_skill_boost","perkValue":0.08,"perkDescription":"+8% Researcher XP"},
+  {"id":"sonic_loop","name":"Sonic Loop","slot":"ring","rarity":"epic","icon":"🔗","description":"Vibrating loop that accelerates reflexes.","perkType":"atk_boost","perkValue":5,"perkDescription":"+5 ATK"},
+  // ── Bag-drop gear (legendary) ──
+  {"id":"phantom_cloak","name":"Phantom Cloak","slot":"body","rarity":"legendary","icon":"👻","description":"A cloak that phases between realities.","perkType":"hp_boost","perkValue":80,"perkDescription":"+80 HP"},
+  {"id":"chrono_visor","name":"Chrono Visor","slot":"head","rarity":"legendary","icon":"⏱️","description":"Bends time around the wearer.","perkType":"atk_boost","perkValue":8,"perkDescription":"+8 ATK"},
+  // ── Bag-drop gear (mythic) ──
+  {"id":"void_aura","name":"Void Aura","slot":"ring","rarity":"mythic","icon":"🌀","description":"An aura forged from pure void energy.","perkType":"atk_boost","perkValue":10,"perkDescription":"+10 ATK"},
+  // ── Crafted gear ──
+  {"id":"craft_iron_helm","name":"Iron Helm","slot":"head","rarity":"common","icon":"⛑️","description":"A sturdy helm forged from iron bars.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
+  {"id":"craft_fang_dagger","name":"Fang Dagger","slot":"weapon","rarity":"common","icon":"🗡️","description":"A blade carved from refined fang shards.","perkType":"atk_boost","perkValue":3,"perkDescription":"+3 ATK"},
+  {"id":"craft_slime_shield","name":"Slime Shield","slot":"body","rarity":"common","icon":"🛡️","description":"A rubbery shield coated in hardened slime gel.","perkType":"hp_boost","perkValue":8,"perkDescription":"+8 HP"},
+  {"id":"craft_goblin_blade","name":"Goblin Blade","slot":"weapon","rarity":"common","icon":"🔪","description":"A crude but effective weapon studded with goblin teeth.","perkType":"atk_boost","perkValue":4,"perkDescription":"+4 ATK"},
+  {"id":"craft_essence_ring","name":"Essence Ring","slot":"ring","rarity":"rare","icon":"💍","description":"A ring imbued with concentrated magic essence.","perkType":"xp_skill_boost","perkValue":1.08,"perkDescription":"+8% XP to all skills"},
+  {"id":"craft_scale_robe","name":"Scale Robe","slot":"body","rarity":"rare","icon":"🥋","description":"A robe woven from ancient dust.","perkType":"hp_boost","perkValue":20,"perkDescription":"+20 HP"},
+  {"id":"craft_wolf_pendant","name":"Wolf Fang Pendant","slot":"ring","rarity":"rare","icon":"🐺","description":"A pendant strung with wolf fangs.","perkType":"hp_regen_boost","perkValue":3,"perkDescription":"+3 HP Regen/s"},
+  {"id":"craft_orc_plate","name":"Orc Plate","slot":"body","rarity":"rare","icon":"🪨","description":"Heavy armor forged from orc shards.","perkType":"hp_boost","perkValue":15,"perkDescription":"+15 HP · +3 ATK"},
+  {"id":"craft_void_blade","name":"Void Blade","slot":"weapon","rarity":"epic","icon":"⚔️","description":"A weapon forged from void fragments.","perkType":"atk_boost","perkValue":12,"perkDescription":"+12 ATK"},
+  {"id":"craft_troll_cloak","name":"Troll Cloak","slot":"body","rarity":"epic","icon":"🧌","description":"A thick cloak of troll hide.","perkType":"hp_boost","perkValue":25,"perkDescription":"+25 HP · +5 HP Regen/s"},
+  {"id":"craft_warlord_gauntlets","name":"Warlord Gauntlets","slot":"ring","rarity":"epic","icon":"🔱","description":"Gauntlets infused with the Warlord\\u0027s sigil.","perkType":"atk_boost","perkValue":6,"perkDescription":"+6 ATK · +10 HP"},
+  {"id":"craft_dragon_crown","name":"Dragon Crown","slot":"head","rarity":"legendary","icon":"👑","description":"A crown forged from dragon scales.","perkType":"atk_boost","perkValue":8,"perkDescription":"+8 ATK · +30 HP"},
+  {"id":"craft_troll_aegis","name":"Troll Aegis","slot":"body","rarity":"legendary","icon":"💜","description":"Armor fueled by a troll heart.","perkType":"hp_boost","perkValue":40,"perkDescription":"+40 HP · +8 HP Regen/s"},
+  {"id":"craft_dragonfire_blade","name":"Dragonfire Blade","slot":"weapon","rarity":"mythic","icon":"🔥","description":"Forged in dragonfire — the ultimate weapon.","perkType":"atk_boost","perkValue":20,"perkDescription":"+20 ATK · +15 HP · +5 HP Regen/s"}
 ]
 
 const BOSS_CATALOG = [
-  { id:'slime',  name:'Slime',  icon:'💧', hp:600,    atk:0.5,  rewards:{chestTier:'common_chest'} },
-  { id:'goblin', name:'Goblin', icon:'👺', hp:5400,   atk:3,    rewards:{chestTier:'rare_chest'} },
-  { id:'wolf',   name:'Wolf',   icon:'🐺', hp:13200,  atk:5,    rewards:{chestTier:'rare_chest'} },
-  { id:'orc',    name:'Orc',    icon:'👹', hp:43200,  atk:8,    rewards:{chestTier:'epic_chest'} },
-  { id:'troll',  name:'Troll',  icon:'🧌', hp:90000,  atk:13,   rewards:{chestTier:'epic_chest'} },
-  { id:'dragon', name:'Dragon', icon:'🐉', hp:189000, atk:20,   rewards:{chestTier:'legendary_chest'} },
+  { id:'slime',  name:'Slime King',     icon:'💧', hp:14400,  atk:1.5, rewards:{chestTier:'common_chest'},    materialDropId:'slime_gel',     materialDropQty:5 },
+  { id:'goblin', name:'Goblin Chief',   icon:'👺', hp:21600,  atk:3,   rewards:{chestTier:'rare_chest'},      materialDropId:'goblin_tooth',  materialDropQty:4, requirements:{minAtk:9,minHpRegen:3} },
+  { id:'wolf',   name:'Forest Wolf',    icon:'🐺', hp:52800,  atk:5,   rewards:{chestTier:'rare_chest'},      materialDropId:'wolf_fang',     materialDropQty:3, requirements:{minAtk:11,minHp:200,minHpRegen:5} },
+  { id:'orc',    name:'Orc Warlord',    icon:'👹', hp:129600, atk:8,   rewards:{chestTier:'epic_chest'},      materialDropId:'warlord_sigil', materialDropQty:1, requirements:{minAtk:18,minHp:280,minHpRegen:8} },
+  { id:'troll',  name:'Troll Overlord', icon:'🧌', hp:270000, atk:13,  rewards:{chestTier:'epic_chest'},      materialDropId:'troll_heart',   materialDropQty:1, requirements:{minAtk:25,minHp:380,minHpRegen:13} },
+  { id:'dragon', name:'Ancient Dragon', icon:'🐉', hp:567000, atk:20,  rewards:{chestTier:'legendary_chest'}, materialDropId:'dragon_heart',  materialDropQty:1, requirements:{minAtk:35,minHp:500,minHpRegen:20} },
+]
+
+const ZONE_CATALOG = [
+  { id:'zone1', name:'Slime Cavern',   icon:'🌊', themeColor:'#22d3ee', bossId:'slime',  warriorLevel:0,  gateItems:[], mobs:[
+    { id:'slime_scout', name:'Slime Scout', icon:'🫧', hp:1200,  atk:0.2, xpReward:30,   goldMin:5,   goldMax:12,  materialDropId:'slime_gel', materialDropChance:0.3 },
+    { id:'slime_guard', name:'Slime Guard', icon:'🫧', hp:2100,  atk:0.3, xpReward:55,   goldMin:8,   goldMax:15,  materialDropId:'slime_gel', materialDropChance:0.4 },
+    { id:'slime_brute', name:'Slime Brute', icon:'🫧', hp:3000,  atk:0.4, xpReward:90,   goldMin:10,  goldMax:20,  materialDropId:'slime_gel', materialDropChance:0.5 },
+  ]},
+  { id:'zone2', name:'Goblin Outpost',  icon:'🏕️', themeColor:'#84cc16', bossId:'goblin', warriorLevel:3,  gateItems:[], mobs:[
+    { id:'goblin_scout',   name:'Goblin Scout',   icon:'👺', hp:3200,  atk:1.0, xpReward:120,  goldMin:15, goldMax:30,  materialDropId:'goblin_tooth', materialDropChance:0.3 },
+    { id:'goblin_warrior', name:'Goblin Warrior',  icon:'👺', hp:5600,  atk:1.8, xpReward:220,  goldMin:25, goldMax:40,  materialDropId:'goblin_tooth', materialDropChance:0.4 },
+    { id:'goblin_shaman',  name:'Goblin Shaman',  icon:'👺', hp:8000,  atk:2.2, xpReward:350,  goldMin:30, goldMax:55,  materialDropId:'goblin_tooth', materialDropChance:0.5 },
+  ]},
+  { id:'zone3', name:'Wild Forest',     icon:'🌲', themeColor:'#16a34a', bossId:'wolf',   warriorLevel:8,  gateItems:['craft_slime_shield'], mobs:[
+    { id:'wolf_young', name:'Young Wolf', icon:'🐺', hp:8000,  atk:2.0, xpReward:500,   goldMin:40,  goldMax:80,   materialDropId:'wolf_fang', materialDropChance:0.3 },
+    { id:'wolf_pack',  name:'Pack Wolf',  icon:'🐺', hp:14000, atk:3.0, xpReward:900,   goldMin:65,  goldMax:100,  materialDropId:'wolf_fang', materialDropChance:0.4 },
+    { id:'wolf_alpha', name:'Alpha Wolf', icon:'🐺', hp:20000, atk:3.5, xpReward:1400,  goldMin:80,  goldMax:130,  materialDropId:'wolf_fang', materialDropChance:0.5 },
+  ]},
+  { id:'zone4', name:'Orc Stronghold',  icon:'🪨', themeColor:'#d97706', bossId:'orc',    warriorLevel:15, gateItems:['craft_goblin_blade'], mobs:[
+    { id:'orc_grunt',  name:'Orc Grunt',  icon:'👹', hp:15000,  atk:3.5, xpReward:2000,  goldMin:100, goldMax:200, materialDropId:'orc_shard', materialDropChance:0.3, materialDropQty:2 },
+    { id:'orc_brute',  name:'Orc Brute',  icon:'👹', hp:27000,  atk:5.5, xpReward:3500,  goldMin:180, goldMax:280, materialDropId:'orc_shard', materialDropChance:0.4, materialDropQty:2 },
+    { id:'orc_shaman', name:'Orc Shaman', icon:'👹', hp:39000,  atk:6.5, xpReward:5000,  goldMin:250, goldMax:380, materialDropId:'orc_shard', materialDropChance:0.5, materialDropQty:3 },
+  ]},
+  { id:'zone5', name:'Troll Bridge',    icon:'🌉', themeColor:'#7c3aed', bossId:'troll',  warriorLevel:25, gateItems:['craft_wolf_pendant','craft_orc_plate'], mobs:[
+    { id:'troll_bridge', name:'Bridge Troll', icon:'🧌', hp:36000,  atk:6.0,  xpReward:8000,   goldMin:300,  goldMax:550,  materialDropId:'troll_hide', materialDropChance:0.3, materialDropQty:2 },
+    { id:'troll_stone',  name:'Stone Troll',  icon:'🧌', hp:66000,  atk:9.0,  xpReward:14000,  goldMin:550,  goldMax:800,  materialDropId:'troll_hide', materialDropChance:0.4, materialDropQty:3 },
+    { id:'troll_ancient',name:'Ancient Troll', icon:'🧌', hp:96000,  atk:11.0, xpReward:20000,  goldMin:750,  goldMax:1100, materialDropId:'troll_hide', materialDropChance:0.5, materialDropQty:3 },
+  ]},
+  { id:'zone6', name:'Dragon Lair',     icon:'🔥', themeColor:'#ef4444', bossId:'dragon', warriorLevel:40, gateItems:['craft_troll_cloak'], mobs:[
+    { id:'dragon_whelp', name:'Dragon Whelp', icon:'🐉', hp:90000,  atk:10.0, xpReward:30000,  goldMin:800,   goldMax:1500, materialDropId:'dragon_scale', materialDropChance:0.3, materialDropQty:2 },
+    { id:'dragon_guard', name:'Dragon Guard', icon:'🐉', hp:180000, atk:15.0, xpReward:55000,  goldMin:1500,  goldMax:2500, materialDropId:'dragon_scale', materialDropChance:0.4, materialDropQty:3 },
+    { id:'dragon_elder', name:'Elder Dragon', icon:'🐉', hp:300000, atk:18.0, xpReward:90000,  goldMin:2200,  goldMax:3500, materialDropId:'dragon_scale', materialDropChance:0.5, materialDropQty:4 },
+  ]},
+]
+
+const CRAFT_RECIPE_CATALOG = [
+  // Tier 1 — Refine raw → intermediate
+  { id:'recipe_iron_bar',      output:'iron_bar',          outputQty:1, isIntermediate:true,  ingredients:[{id:'ore_iron',qty:5}],                                                     levelRequired:0,  xpPerItem:45,   secPerItem:8 },
+  { id:'recipe_fang_shard',    output:'fang_shard',        outputQty:1, isIntermediate:true,  ingredients:[{id:'monster_fang',qty:4}],                                                  levelRequired:0,  xpPerItem:55,   secPerItem:10 },
+  { id:'recipe_essence_vial',  output:'essence_vial',      outputQty:1, isIntermediate:true,  ingredients:[{id:'magic_essence',qty:3}],                                                 levelRequired:15, xpPerItem:20,   secPerItem:120 },
+  { id:'recipe_ancient_dust',  output:'ancient_dust',      outputQty:1, isIntermediate:true,  ingredients:[{id:'ancient_scale',qty:2}],                                                 levelRequired:30, xpPerItem:35,   secPerItem:150 },
+  { id:'recipe_void_fragment', output:'void_fragment',     outputQty:1, isIntermediate:true,  ingredients:[{id:'void_crystal',qty:2}],                                                  levelRequired:55, xpPerItem:60,   secPerItem:240 },
+  // Tier 2 — Craft gear from intermediates + plants
+  { id:'recipe_iron_helm',     output:'craft_iron_helm',   outputQty:1, isIntermediate:false, ingredients:[{id:'iron_bar',qty:2},{id:'wheat',qty:3}],                                    levelRequired:3,  xpPerItem:40,   secPerItem:20 },
+  { id:'recipe_fang_dagger',   output:'craft_fang_dagger', outputQty:1, isIntermediate:false, ingredients:[{id:'fang_shard',qty:2},{id:'herbs',qty:3}],                                  levelRequired:15, xpPerItem:70,   secPerItem:300 },
+  { id:'recipe_essence_ring',  output:'craft_essence_ring', outputQty:1, isIntermediate:false,ingredients:[{id:'essence_vial',qty:2},{id:'blossoms',qty:2}],                             levelRequired:30, xpPerItem:130,  secPerItem:600 },
+  { id:'recipe_scale_robe',    output:'craft_scale_robe',  outputQty:1, isIntermediate:false, ingredients:[{id:'ancient_dust',qty:2},{id:'orchids',qty:2}],                              levelRequired:45, xpPerItem:260,  secPerItem:1200 },
+  { id:'recipe_void_blade',    output:'craft_void_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'void_fragment',qty:2},{id:'star_bloom',qty:2}],                          levelRequired:65, xpPerItem:650,  secPerItem:2700 },
+  // Tier 3 — Zone-drop gear
+  { id:'recipe_slime_shield',  output:'craft_slime_shield', outputQty:1, isIntermediate:false, ingredients:[{id:'slime_gel',qty:5},{id:'wheat',qty:3}],                                  levelRequired:0,  xpPerItem:25,   secPerItem:15 },
+  { id:'recipe_goblin_blade',  output:'craft_goblin_blade', outputQty:1, isIntermediate:false, ingredients:[{id:'goblin_tooth',qty:4},{id:'herbs',qty:3}],                               levelRequired:5,  xpPerItem:50,   secPerItem:25 },
+  { id:'recipe_wolf_pendant',  output:'craft_wolf_pendant', outputQty:1, isIntermediate:false, ingredients:[{id:'wolf_fang',qty:3},{id:'iron_bar',qty:1},{id:'blossoms',qty:2}],         levelRequired:20, xpPerItem:100,  secPerItem:480 },
+  { id:'recipe_orc_plate',     output:'craft_orc_plate',   outputQty:1, isIntermediate:false, ingredients:[{id:'orc_shard',qty:3},{id:'fang_shard',qty:2},{id:'orchids',qty:2}],         levelRequired:35, xpPerItem:200,  secPerItem:900 },
+  { id:'recipe_troll_cloak',   output:'craft_troll_cloak', outputQty:1, isIntermediate:false, ingredients:[{id:'troll_hide',qty:3},{id:'essence_vial',qty:1},{id:'orchids',qty:2}],      levelRequired:50, xpPerItem:400,  secPerItem:1800 },
+  { id:'recipe_dragon_crown',  output:'craft_dragon_crown', outputQty:1, isIntermediate:false,ingredients:[{id:'dragon_scale',qty:3},{id:'void_fragment',qty:1},{id:'star_bloom',qty:2}], levelRequired:70, xpPerItem:850,  secPerItem:3600 },
+  // Tier 4 — Boss-material gear
+  { id:'recipe_warlord_gauntlets', output:'craft_warlord_gauntlets', outputQty:1, isIntermediate:false, ingredients:[{id:'warlord_sigil',qty:2},{id:'orc_shard',qty:5},{id:'clovers',qty:3}],               levelRequired:40, xpPerItem:350,  secPerItem:1500 },
+  { id:'recipe_troll_aegis',       output:'craft_troll_aegis',       outputQty:1, isIntermediate:false, ingredients:[{id:'troll_heart',qty:2},{id:'troll_hide',qty:5},{id:'ancient_dust',qty:2},{id:'crystal_root',qty:1}], levelRequired:60, xpPerItem:700,  secPerItem:3000 },
+  { id:'recipe_dragonfire_blade',  output:'craft_dragonfire_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'dragon_heart',qty:2},{id:'dragon_scale',qty:5},{id:'void_fragment',qty:2},{id:'star_bloom',qty:3}], levelRequired:80, xpPerItem:1500, secPerItem:5400 },
 ]
 
 const CHEST_CATALOG = [
-  { id:'common_chest',    name:'Common Chest',    icon:'📦', itemWeights:[] },
-  { id:'rare_chest',      name:'Rare Chest',      icon:'🎁', itemWeights:[] },
-  { id:'epic_chest',      name:'Epic Chest',      icon:'🪙', itemWeights:[{itemId:'atk_potion',weight:1},{itemId:'hp_potion',weight:1},{itemId:'regen_potion',weight:1}] },
-  { id:'legendary_chest', name:'Legendary Chest', icon:'💎', itemWeights:[{itemId:'atk_potion',weight:3},{itemId:'hp_potion',weight:3},{itemId:'regen_potion',weight:3}] },
+  { id:'common_chest',    name:'Common Bag',    icon:'📦', itemWeights:[{itemId:'canvas_cap',weight:3},{itemId:'plain_tee',weight:3},{itemId:'worn_bracelet',weight:3},{itemId:'code_wraps',weight:3}] },
+  { id:'rare_chest',      name:'Rare Bag',      icon:'🎁', itemWeights:[{itemId:'canvas_cap',weight:2},{itemId:'plain_tee',weight:2},{itemId:'worn_bracelet',weight:2},{itemId:'code_wraps',weight:2},{itemId:'zen_beanie',weight:3},{itemId:'cozy_sweater',weight:3},{itemId:'social_ring',weight:3},{itemId:'task_vest',weight:3}] },
+  { id:'epic_chest',      name:'Epic Bag',      icon:'🪙', itemWeights:[{itemId:'zen_beanie',weight:2},{itemId:'cozy_sweater',weight:2},{itemId:'neon_visor',weight:3},{itemId:'hacker_jacket',weight:3},{itemId:'scholar_cape',weight:3},{itemId:'sonic_loop',weight:3},{itemId:'atk_potion',weight:1},{itemId:'hp_potion',weight:1},{itemId:'regen_potion',weight:1}] },
+  { id:'legendary_chest', name:'Legendary Bag', icon:'💎', itemWeights:[{itemId:'neon_visor',weight:2},{itemId:'hacker_jacket',weight:2},{itemId:'sonic_loop',weight:2},{itemId:'phantom_cloak',weight:3},{itemId:'chrono_visor',weight:3},{itemId:'void_aura',weight:1},{itemId:'atk_potion',weight:2},{itemId:'hp_potion',weight:2},{itemId:'regen_potion',weight:2}] },
 ]
 
 let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{} }
@@ -1589,6 +1726,10 @@ function gcTab(tab) {
   document.getElementById('gc-bosses').style.display = tab === 'bosses' ? '' : 'none'
   document.getElementById('gc-chests').style.display = tab === 'chests' ? '' : 'none'
   document.getElementById('gc-seeds').style.display  = tab === 'seeds'  ? '' : 'none'
+  document.getElementById('gc-craft').style.display  = tab === 'craft'  ? '' : 'none'
+  document.getElementById('gc-zones').style.display  = tab === 'zones'  ? '' : 'none'
+  if (tab === 'craft') gcRenderCraft()
+  if (tab === 'zones') gcRenderZones()
 }
 
 async function loadGameConfig() {
@@ -1960,7 +2101,7 @@ function gcRenderBosses() {
       <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${imgHtml}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${esc(eff.name)}${hasOv ? ' <span style="color:var(--green);font-size:10px;font-weight:400">edited</span>' : ''}</div>
-        <div style="font-size:11px;color:var(--muted2)">${eff.hp.toLocaleString()} HP · ${eff.atk} dmg/s · 100% ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.icon ?? ''} ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.name ?? eff.rewards.chestTier}</div>
+        <div style="font-size:11px;color:var(--muted2)">${eff.hp.toLocaleString()} HP · ${eff.atk} dmg/s · ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.icon ?? ''} ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.name ?? eff.rewards.chestTier}${eff.materialDropId ? ` · ${(ITEM_CATALOG.find(i=>i.id===eff.materialDropId)?.icon??'?')} ×${eff.materialDropQty??1} guaranteed` : ''}${eff.requirements ? ` · Req: ${Object.entries(eff.requirements).map(([k,v])=>k+':'+v).join(', ')}` : ''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button class="btn btn-ghost btn-sm" onclick="gcOpenBossModal('${base.id}')">Edit</button>
@@ -2141,10 +2282,10 @@ function gcResetChest(chestId) {
 // ─── Gold Drops ───────────────────────────────────────────────────────────────
 
 const GOLD_DROP_BASE = {
-  common_chest:    { min:1,  max:2  },
-  rare_chest:      { min:2,  max:5  },
-  epic_chest:      { min:5,  max:10 },
-  legendary_chest: { min:10, max:20 },
+  common_chest:    { min:15,  max:30  },
+  rare_chest:      { min:30,  max:75  },
+  epic_chest:      { min:75,  max:150 },
+  legendary_chest: { min:150, max:300 },
 }
 
 function gcRenderGoldDrops() {
@@ -2966,6 +3107,130 @@ function gcResetFarmConfig() {
   gcConfig.farmConfig = {}
   gcSetDirty()
   gcRenderFarmConfig()
+}
+
+// ─── Crafting Recipes (read-only reference) ──────────────────────────────────
+
+function fmtCraftTime(sec) {
+  if (sec < 60) return sec + 's'
+  const m = Math.floor(sec / 60)
+  if (m < 60) return m + 'm' + (sec % 60 ? ' ' + (sec % 60) + 's' : '')
+  const h = Math.floor(m / 60)
+  return h + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
+}
+
+function gcRenderCraft() {
+  const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
+  const findItem = id => allItems.find(i => i.id === id)
+
+  const tiers = [
+    { label: 'Tier 1 — Refine Materials', recipes: CRAFT_RECIPE_CATALOG.filter(r => r.isIntermediate) },
+    { label: 'Tier 2 — Intermediate Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_iron_helm','recipe_fang_dagger','recipe_essence_ring','recipe_scale_robe','recipe_void_blade'].includes(r.id)) },
+    { label: 'Tier 3 — Zone-Drop Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_slime_shield','recipe_goblin_blade','recipe_wolf_pendant','recipe_orc_plate','recipe_troll_cloak','recipe_dragon_crown'].includes(r.id)) },
+    { label: 'Tier 4 — Boss Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_warlord_gauntlets','recipe_troll_aegis','recipe_dragonfire_blade'].includes(r.id)) },
+  ]
+
+  let html = ''
+  for (const tier of tiers) {
+    if (!tier.recipes.length) continue
+    html += `<div class="sec-title" style="margin-top:12px;margin-bottom:8px">${tier.label}</div>`
+    for (const r of tier.recipes) {
+      const out = findItem(r.output)
+      const rarityCol = {'common':'#9CA3AF','rare':'#38BDF8','epic':'#C084FC','legendary':'#FACC15','mythic':'#F472B6'}[out?.rarity] || '#9CA3AF'
+      const ings = r.ingredients.map(ing => {
+        const d = findItem(ing.id)
+        return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:8px;font-size:11px"><span>${d?.icon??'?'}</span> <span style="color:var(--text)">${d?.name??ing.id}</span> <span style="color:var(--muted2)">×${ing.qty}</span></span>`
+      }).join('')
+      html += `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;min-width:180px">
+          <span style="font-size:20px">${out?.icon??'?'}</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${out?.name??r.output}</div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${rarityCol}">${out?.rarity??''} ${out?.slot??''}</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:10px;color:var(--muted2);margin-bottom:2px">Ingredients:</div>
+          ${ings}
+        </div>
+        <div style="display:flex;gap:12px;font-size:11px;color:var(--muted2);flex-shrink:0">
+          <span title="Level required">🔒 Lv${r.levelRequired}</span>
+          <span title="XP per item" style="color:#f97316">✦ ${r.xpPerItem} xp</span>
+          <span title="Time per item">⏱ ${fmtCraftTime(r.secPerItem)}</span>
+        </div>
+      </div>`
+    }
+  }
+  document.getElementById('gc-craft-list').innerHTML = html
+}
+
+// ─── Zones (read-only reference) ─────────────────────────────────────────────
+
+function fmtHP(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M'
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'k'
+  return String(n)
+}
+
+function gcRenderZones() {
+  const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
+  const findItem = id => allItems.find(i => i.id === id)
+  const boss = id => BOSS_CATALOG.find(b => b.id === id)
+
+  let html = ''
+  for (const z of ZONE_CATALOG) {
+    const b = boss(z.bossId)
+    const gateStr = z.gateItems.length
+      ? z.gateItems.map(id => { const it = findItem(id); return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:11px">${it?.icon??'?'} ${it?.name??id}</span>` }).join(', ')
+      : '<span style="color:var(--muted2);font-size:11px">None</span>'
+    const reqStr = b?.requirements
+      ? Object.entries(b.requirements).map(([k,v]) => `<span style="font-size:10px;color:var(--muted2)">${k}: ${v}</span>`).join(' · ')
+      : ''
+
+    html += `<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:22px">${z.icon}</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:${z.themeColor}">${z.name}</div>
+          <div style="font-size:10px;color:var(--muted2)">Warrior Lv ${z.warriorLevel} · Gate: ${gateStr}</div>
+        </div>
+      </div>
+
+      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Mobs</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">`
+
+    for (const m of z.mobs) {
+      const matItem = findItem(m.materialDropId)
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:11px">
+        <span style="font-size:14px">${m.icon}</span>
+        <span style="flex:1;color:var(--text);font-weight:500">${m.name}</span>
+        <span style="color:var(--muted2)">HP ${fmtHP(m.hp)}</span>
+        <span style="color:#f87171">ATK ${m.atk}</span>
+        <span style="color:#84cc16">XP ${fmtHP(m.xpReward)}</span>
+        <span style="color:#facc15">💰 ${m.goldMin}–${m.goldMax}</span>
+        ${matItem ? `<span title="${m.materialDropChance*100}% chance">${matItem.icon} ${Math.round(m.materialDropChance*100)}%${m.materialDropQty>1?' ×'+m.materialDropQty:''}</span>` : ''}
+      </div>`
+    }
+
+    html += `</div>
+      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Boss</div>`
+
+    if (b) {
+      const bMat = findItem(b.materialDropId)
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid ${z.themeColor}44;border-radius:10px;font-size:12px">
+        <span style="font-size:18px">${b.icon}</span>
+        <span style="flex:1;color:var(--text);font-weight:700">${b.name}</span>
+        <span style="color:var(--muted2)">HP ${fmtHP(b.hp)}</span>
+        <span style="color:#f87171">ATK ${b.atk}/s</span>
+        <span>🎁 ${b.rewards.chestTier.replace('_chest','')}</span>
+        ${bMat ? `<span>${bMat.icon} ×${b.materialDropQty}</span>` : ''}
+      </div>`
+      if (reqStr) html += `<div style="margin-top:4px;padding-left:12px">${reqStr}</div>`
+    }
+
+    html += `</div>`
+  }
+  document.getElementById('gc-zone-list').innerHTML = html
 }
 
 // ─── Economy ─────────────────────────────────────────────────────────────────
