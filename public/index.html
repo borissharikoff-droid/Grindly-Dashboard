@@ -2820,7 +2820,7 @@ function gcRenderSeeds() {
     const hasOv = Object.keys(ov).length > 0
     const hrs = eff.growTimeMinutes >= 60 ? (eff.growTimeMinutes/60).toFixed(1) + 'h' : eff.growTimeMinutes + 'm'
     return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:10px">
-      <span style="font-size:24px;width:32px;text-align:center">${eff.icon}</span>
+      ${eff.image ? `<img src="${eff.image}" style="width:32px;height:32px;object-fit:contain">` : `<span style="font-size:24px;width:32px;text-align:center">${eff.icon}</span>`}
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${esc(eff.name)} ${hasOv ? '<span style="color:var(--green);font-size:10px">edited</span>' : ''}</div>
         <div style="font-size:11px;color:var(--muted2)">
