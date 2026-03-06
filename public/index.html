@@ -501,11 +501,10 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost gc-subtab active" data-tab="items"   onclick="gcTab('items')">🗡 Items</button>
-          <button class="btn btn-ghost gc-subtab"        data-tab="bosses"  onclick="gcTab('bosses')">👹 Bosses</button>
+          <button class="btn btn-ghost gc-subtab"        data-tab="bosses"  onclick="gcTab('bosses')">🗺️ Zones & Bosses</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="chests"  onclick="gcTab('chests')">📦 Chests</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="seeds"   onclick="gcTab('seeds')">🌱 Seeds & Farm</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="craft"   onclick="gcTab('craft')">⚒️ Crafting</button>
-          <button class="btn btn-ghost gc-subtab"        data-tab="zones"   onclick="gcTab('zones')">🗺️ Zones</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="gc-status" style="font-size:12px;color:var(--muted2)"></span>
@@ -516,14 +515,22 @@ tr:hover td{background:rgba(255,255,255,.018)}
 
       <!-- Items sub-tab -->
       <div id="gc-items">
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input class="input" id="gc-item-search" placeholder="Search items…" oninput="gcFilterItems()" style="flex:1;padding:8px 12px"/>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <input class="input" id="gc-item-search" placeholder="Search items…" oninput="gcFilterItems()" style="flex:1;min-width:140px;padding:8px 12px"/>
+          <select class="input" id="gc-item-filter-rarity" onchange="gcFilterItems()" style="width:110px;padding:6px 8px;font-size:12px">
+            <option value="">All rarities</option>
+            <option value="common">Common</option><option value="rare">Rare</option><option value="epic">Epic</option><option value="legendary">Legendary</option><option value="mythic">Mythic</option>
+          </select>
+          <select class="input" id="gc-item-filter-slot" onchange="gcFilterItems()" style="width:110px;padding:6px 8px;font-size:12px">
+            <option value="">All slots</option>
+            <option value="head">Head</option><option value="body">Body</option><option value="legs">Legs</option><option value="ring">Ring</option><option value="weapon">Weapon</option><option value="consumable">Consumable</option><option value="plant">Plant</option><option value="material">Material</option>
+          </select>
           <button class="btn btn-green btn-sm" onclick="gcOpenItemModal(null)">+ Add custom</button>
         </div>
         <div id="gc-item-list"></div>
       </div>
 
-      <!-- Bosses sub-tab -->
+      <!-- Zones & Bosses sub-tab -->
       <div id="gc-bosses" style="display:none">
         <div style="margin-bottom:12px;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
           <span style="font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase">Base Player Stats</span>
@@ -542,7 +549,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-green btn-sm" onclick="gcSaveCombatBase()">Save</button>
           <button class="btn btn-ghost btn-sm" onclick="gcResetCombatBase()">Reset</button>
         </div>
-        <div id="gc-boss-list" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="gc-boss-list" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
 
       <!-- Chests sub-tab -->
@@ -688,18 +695,11 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <!-- Crafting sub-tab -->
       <div id="gc-craft" style="display:none">
         <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">All crafting recipes. Read-only reference — shows current game data.</div>
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">All crafting recipes. Click Edit to change level, XP, time, or ingredient quantities.</div>
           <div id="gc-craft-list"></div>
         </div>
       </div>
 
-      <!-- Zones sub-tab -->
-      <div id="gc-zones" style="display:none">
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">Arena zones with mobs and bosses. Read-only reference — shows current game data.</div>
-          <div id="gc-zone-list"></div>
-        </div>
-      </div>
     </div>
 
     <!-- Item edit modal -->
@@ -732,7 +732,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
           </div>
           <div class="gc-field"><label>Slot</label>
             <select class="input" id="gc-f-slot" onchange="gcUpdateIPPreview()">
-              <option>head</option><option>body</option><option>legs</option><option>ring</option><option>weapon</option><option>consumable</option><option>plant</option>
+              <option>head</option><option>body</option><option>legs</option><option>ring</option><option>weapon</option><option>consumable</option><option>plant</option><option>material</option>
             </select>
           </div>
         </div>
@@ -800,6 +800,65 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="btn btn-green" style="flex:1" onclick="gcSaveBoss()">Save</button>
           <button class="btn btn-ghost btn-sm" id="gc-b-reset" onclick="gcResetBoss()">Reset to default</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mob edit modal -->
+    <div id="gc-mob-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 id="gc-mob-modal-title" style="font-size:15px">Edit Mob</h3>
+          <button onclick="gcCloseMobModal()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <input type="hidden" id="gc-mob-zone-id"/>
+        <input type="hidden" id="gc-mob-id"/>
+        <div class="gc-field"><label>Name</label><input class="input" id="gc-m-name"/></div>
+        <div class="gc-field"><label>Icon (emoji)</label><input class="input" id="gc-m-icon" maxlength="8" style="width:90px"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="gc-field"><label>HP</label><input class="input" type="number" id="gc-m-hp" min="1"/></div>
+          <div class="gc-field"><label>ATK (dmg/s)</label><input class="input" type="number" id="gc-m-atk" min="0" step="0.1"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="gc-field"><label>XP Reward</label><input class="input" type="number" id="gc-m-xp" min="0"/></div>
+          <div class="gc-field"><label>Gold (min–max)</label>
+            <div style="display:flex;gap:4px"><input class="input" type="number" id="gc-m-gold-min" min="0" style="width:60px"/><span style="color:var(--muted2);line-height:36px">–</span><input class="input" type="number" id="gc-m-gold-max" min="0" style="width:60px"/></div>
+          </div>
+        </div>
+        <div class="sec-title" style="margin:12px 0 6px">Material Drop</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px">
+          <div class="gc-field"><label>Material</label>
+            <select class="input" id="gc-m-mat" style="font-size:11px">
+              <option value="">None</option>
+            </select>
+          </div>
+          <div class="gc-field"><label>Chance</label><input class="input" type="number" id="gc-m-mat-chance" min="0" max="1" step="0.05" placeholder="0.3"/></div>
+          <div class="gc-field"><label>Qty</label><input class="input" type="number" id="gc-m-mat-qty" min="1" placeholder="1"/></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-green" style="flex:1" onclick="gcSaveMob()">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="gcResetMob()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Craft recipe edit modal -->
+    <div id="gc-craft-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 id="gc-craft-modal-title" style="font-size:15px">Edit Recipe</h3>
+          <button onclick="gcCloseCraftModal()" style="background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <input type="hidden" id="gc-craft-id"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="gc-field"><label>Level Required</label><input class="input" type="number" id="gc-cr-level" min="0"/></div>
+          <div class="gc-field"><label>XP per Item</label><input class="input" type="number" id="gc-cr-xp" min="0"/></div>
+        </div>
+        <div class="gc-field"><label>Time per Item (seconds)</label><input class="input" type="number" id="gc-cr-sec" min="1"/></div>
+        <div id="gc-cr-ingredients" style="margin-top:12px"></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-green" style="flex:1" onclick="gcSaveCraftRecipe()">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="gcResetCraftRecipe()">Reset</button>
         </div>
       </div>
     </div>
@@ -1714,7 +1773,7 @@ const CHEST_CATALOG = [
   { id:'legendary_chest', name:'Legendary Bag', icon:'💎', itemWeights:[{itemId:'neon_visor',weight:2},{itemId:'hacker_jacket',weight:2},{itemId:'sonic_loop',weight:2},{itemId:'phantom_cloak',weight:3},{itemId:'chrono_visor',weight:3},{itemId:'void_aura',weight:1},{itemId:'atk_potion',weight:2},{itemId:'hp_potion',weight:2},{itemId:'regen_potion',weight:2}] },
 ]
 
-let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{} }
+let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, zoneOverrides:{}, craftOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{} }
 let gcDirty = false
 let gcLoaded = false
 let gcCurrentSubtab = 'items'
@@ -1727,9 +1786,7 @@ function gcTab(tab) {
   document.getElementById('gc-chests').style.display = tab === 'chests' ? '' : 'none'
   document.getElementById('gc-seeds').style.display  = tab === 'seeds'  ? '' : 'none'
   document.getElementById('gc-craft').style.display  = tab === 'craft'  ? '' : 'none'
-  document.getElementById('gc-zones').style.display  = tab === 'zones'  ? '' : 'none'
   if (tab === 'craft') gcRenderCraft()
-  if (tab === 'zones') gcRenderZones()
 }
 
 async function loadGameConfig() {
@@ -1742,6 +1799,8 @@ async function loadGameConfig() {
       hiddenItems: data.hiddenItems ?? [],
       customItems: data.customItems ?? [],
       bossOverrides: data.bossOverrides ?? {},
+      zoneOverrides: data.zoneOverrides ?? {},
+      craftOverrides: data.craftOverrides ?? {},
       chestWeightOverrides: data.chestWeightOverrides ?? {},
       chestOverrides: data.chestOverrides ?? {},
       seedOverrides: data.seedOverrides ?? {},
@@ -2090,23 +2149,64 @@ function gcDeleteBase(id) {
 function gcRenderBosses() {
   const list = document.getElementById('gc-boss-list')
   if (!list) return
-  list.innerHTML = BOSS_CATALOG.map(base => {
-    const ov = (gcConfig.bossOverrides ?? {})[base.id] ?? {}
-    const eff = { ...base, ...ov, rewards: { ...base.rewards, ...(ov.rewards ?? {}) } }
-    const hasOv = Object.keys(ov).length > 0
-    const imgHtml = eff.image
-      ? `<img src="${eff.image}" style="width:36px;height:36px;object-fit:contain;border-radius:6px;border:1px solid var(--border)"/>`
-      : `<span style="font-size:24px">${eff.icon}</span>`
-    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:12px">
-      <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${imgHtml}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${esc(eff.name)}${hasOv ? ' <span style="color:var(--green);font-size:10px;font-weight:400">edited</span>' : ''}</div>
-        <div style="font-size:11px;color:var(--muted2)">${eff.hp.toLocaleString()} HP · ${eff.atk} dmg/s · ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.icon ?? ''} ${CHEST_CATALOG.find(c=>c.id===eff.rewards.chestTier)?.name ?? eff.rewards.chestTier}${eff.materialDropId ? ` · ${(ITEM_CATALOG.find(i=>i.id===eff.materialDropId)?.icon??'?')} ×${eff.materialDropQty??1} guaranteed` : ''}${eff.requirements ? ` · Req: ${Object.entries(eff.requirements).map(([k,v])=>k+':'+v).join(', ')}` : ''}</div>
+  const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
+  const findItem = id => allItems.find(i => i.id === id)
+
+  list.innerHTML = ZONE_CATALOG.map(z => {
+    const b = BOSS_CATALOG.find(x => x.id === z.bossId)
+    const bOv = (gcConfig.bossOverrides ?? {})[z.bossId] ?? {}
+    const bEff = b ? { ...b, ...bOv, rewards: { ...b.rewards, ...(bOv.rewards ?? {}) } } : null
+    const bHasOv = Object.keys(bOv).length > 0
+    const zOv = (gcConfig.zoneOverrides ?? {})[z.id] ?? {}
+    const zHasOv = Object.keys(zOv).length > 0
+    const gateStr = z.gateItems.length
+      ? z.gateItems.map(id => { const it = findItem(id); return `${it?.icon??'?'} ${it?.name??id}` }).join(', ')
+      : 'None'
+
+    let mobsHtml = z.mobs.map(m => {
+      const mOv = ((gcConfig.zoneOverrides ?? {})[z.id]?.mobs ?? {})[m.id] ?? {}
+      const mEff = { ...m, ...mOv }
+      const mHasOv = Object.keys(mOv).length > 0
+      const mat = findItem(mEff.materialDropId)
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:11px;flex-wrap:wrap">
+        <span style="font-size:14px">${mEff.icon}</span>
+        <span style="color:var(--text);font-weight:500;min-width:100px">${esc(mEff.name)}${mHasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</span>
+        <span style="color:var(--muted2)">HP ${fmtHP(mEff.hp)}</span>
+        <span style="color:#f87171">ATK ${mEff.atk}</span>
+        <span style="color:#84cc16">XP ${fmtHP(mEff.xpReward)}</span>
+        <span style="color:#facc15">💰 ${mEff.goldMin}–${mEff.goldMax}</span>
+        ${mat ? `<span>${mat.icon} ${Math.round((mEff.materialDropChance??0)*100)}%${(mEff.materialDropQty||1)>1?' ×'+mEff.materialDropQty:''}</span>` : ''}
+        <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;margin-left:auto" onclick="gcOpenMobModal('${z.id}','${m.id}')">Edit</button>
+      </div>`
+    }).join('')
+
+    let bossHtml = ''
+    if (bEff) {
+      const bMat = findItem(bEff.materialDropId)
+      bossHtml = `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid ${z.themeColor}44;border-radius:10px;font-size:12px;flex-wrap:wrap">
+        <span style="font-size:18px">${bEff.icon}</span>
+        <span style="color:var(--text);font-weight:700;min-width:120px">${esc(bEff.name)}${bHasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</span>
+        <span style="color:var(--muted2)">HP ${fmtHP(bEff.hp)}</span>
+        <span style="color:#f87171">ATK ${bEff.atk}/s</span>
+        <span>🎁 ${bEff.rewards.chestTier.replace('_chest','')}</span>
+        ${bMat ? `<span>${bMat.icon} ×${bEff.materialDropQty??1}</span>` : ''}
+        ${bEff.requirements ? `<span style="color:var(--muted2);font-size:10px">Req: ${Object.entries(bEff.requirements).map(([k,v])=>k+':'+v).join(', ')}</span>` : ''}
+        <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px;margin-left:auto" onclick="gcOpenBossModal('${z.bossId}')">Edit</button>
+      </div>`
+    }
+
+    return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:22px">${z.icon}</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:${z.themeColor}">${z.name}</div>
+          <div style="font-size:10px;color:var(--muted2)">Warrior Lv ${z.warriorLevel} · Gate: ${gateStr}</div>
+        </div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-ghost btn-sm" onclick="gcOpenBossModal('${base.id}')">Edit</button>
-        ${hasOv ? `<button class="btn btn-ghost btn-sm" onclick="gcResetBoss_('${base.id}')" title="Reset">↺</button>` : ''}
-      </div>
+      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Mobs</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">${mobsHtml}</div>
+      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Boss</div>
+      ${bossHtml}
     </div>`
   }).join('')
 }
@@ -3109,7 +3209,7 @@ function gcResetFarmConfig() {
   gcRenderFarmConfig()
 }
 
-// ─── Crafting Recipes (read-only reference) ──────────────────────────────────
+// ─── Crafting Recipes ─────────────────────────────────────────────────────────
 
 function fmtCraftTime(sec) {
   if (sec < 60) return sec + 's'
@@ -3117,6 +3217,19 @@ function fmtCraftTime(sec) {
   if (m < 60) return m + 'm' + (sec % 60 ? ' ' + (sec % 60) + 's' : '')
   const h = Math.floor(m / 60)
   return h + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '')
+}
+
+function fmtHP(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M'
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'k'
+  return String(n)
+}
+
+function gcGetRecipe(id) {
+  const base = CRAFT_RECIPE_CATALOG.find(r => r.id === id)
+  if (!base) return null
+  const ov = (gcConfig.craftOverrides ?? {})[id] ?? {}
+  return { ...base, ...ov, ingredients: ov.ingredients ?? base.ingredients }
 }
 
 function gcRenderCraft() {
@@ -3134,7 +3247,10 @@ function gcRenderCraft() {
   for (const tier of tiers) {
     if (!tier.recipes.length) continue
     html += `<div class="sec-title" style="margin-top:12px;margin-bottom:8px">${tier.label}</div>`
-    for (const r of tier.recipes) {
+    for (const base of tier.recipes) {
+      const r = gcGetRecipe(base.id)
+      const ov = (gcConfig.craftOverrides ?? {})[base.id] ?? {}
+      const hasOv = Object.keys(ov).length > 0
       const out = findItem(r.output)
       const rarityCol = {'common':'#9CA3AF','rare':'#38BDF8','epic':'#C084FC','legendary':'#FACC15','mythic':'#F472B6'}[out?.rarity] || '#9CA3AF'
       const ings = r.ingredients.map(ing => {
@@ -3142,21 +3258,22 @@ function gcRenderCraft() {
         return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:8px;font-size:11px"><span>${d?.icon??'?'}</span> <span style="color:var(--text)">${d?.name??ing.id}</span> <span style="color:var(--muted2)">×${ing.qty}</span></span>`
       }).join('')
       html += `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:8px;min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;min-width:160px">
           <span style="font-size:20px">${out?.icon??'?'}</span>
           <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text)">${out?.name??r.output}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${out?.name??r.output}${hasOv ? ' <span style="color:var(--green);font-size:9px">✎</span>' : ''}</div>
             <div style="font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:${rarityCol}">${out?.rarity??''} ${out?.slot??''}</div>
           </div>
         </div>
-        <div style="flex:1;min-width:200px">
+        <div style="flex:1;min-width:180px">
           <div style="font-size:10px;color:var(--muted2);margin-bottom:2px">Ingredients:</div>
           ${ings}
         </div>
-        <div style="display:flex;gap:12px;font-size:11px;color:var(--muted2);flex-shrink:0">
+        <div style="display:flex;gap:10px;font-size:11px;color:var(--muted2);flex-shrink:0;align-items:center">
           <span title="Level required">🔒 Lv${r.levelRequired}</span>
           <span title="XP per item" style="color:#f97316">✦ ${r.xpPerItem} xp</span>
           <span title="Time per item">⏱ ${fmtCraftTime(r.secPerItem)}</span>
+          <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="gcOpenCraftModal('${base.id}')">Edit</button>
         </div>
       </div>`
     }
@@ -3164,73 +3281,161 @@ function gcRenderCraft() {
   document.getElementById('gc-craft-list').innerHTML = html
 }
 
-// ─── Zones (read-only reference) ─────────────────────────────────────────────
+// ── Craft recipe modal ───────────────────────────────────────────────────────
 
-function fmtHP(n) {
-  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M'
-  if (n >= 1e3) return (n/1e3).toFixed(1) + 'k'
-  return String(n)
+function gcOpenCraftModal(id) {
+  const base = CRAFT_RECIPE_CATALOG.find(r => r.id === id)
+  if (!base) return
+  const r = gcGetRecipe(id)
+  const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
+  const findItem = iid => allItems.find(i => i.id === iid)
+  const out = findItem(r.output)
+  document.getElementById('gc-craft-modal-title').textContent = 'Edit Recipe — ' + (out?.name ?? r.output)
+  document.getElementById('gc-craft-id').value = id
+  document.getElementById('gc-cr-level').value = r.levelRequired
+  document.getElementById('gc-cr-xp').value = r.xpPerItem
+  document.getElementById('gc-cr-sec').value = r.secPerItem
+  // Render ingredients
+  let ingHtml = '<div class="sec-title" style="margin-bottom:6px">Ingredients</div>'
+  r.ingredients.forEach((ing, i) => {
+    const d = findItem(ing.id)
+    ingHtml += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="font-size:14px">${d?.icon??'?'}</span>
+      <span style="font-size:11px;flex:1;color:var(--text)">${d?.name??ing.id}</span>
+      <span style="font-size:10px;color:var(--muted2)">×</span>
+      <input class="input gc-cr-ing-qty" type="number" min="1" value="${ing.qty}" data-idx="${i}" data-item="${ing.id}" style="width:55px;font-size:11px;padding:4px 6px"/>
+    </div>`
+  })
+  document.getElementById('gc-cr-ingredients').innerHTML = ingHtml
+  document.getElementById('gc-craft-modal').style.display = 'flex'
 }
 
-function gcRenderZones() {
+function gcCloseCraftModal() {
+  document.getElementById('gc-craft-modal').style.display = 'none'
+}
+
+function gcSaveCraftRecipe() {
+  const id = document.getElementById('gc-craft-id').value
+  const base = CRAFT_RECIPE_CATALOG.find(r => r.id === id)
+  if (!base) return
+  const ov = {}
+  const level = Number(document.getElementById('gc-cr-level').value)
+  const xp    = Number(document.getElementById('gc-cr-xp').value)
+  const sec   = Number(document.getElementById('gc-cr-sec').value)
+  if (level !== base.levelRequired) ov.levelRequired = level
+  if (xp    !== base.xpPerItem)     ov.xpPerItem = xp
+  if (sec   !== base.secPerItem)    ov.secPerItem = sec
+  // Check ingredients qty changes
+  const ingEls = document.querySelectorAll('.gc-cr-ing-qty')
+  let changed = false
+  const newIngs = base.ingredients.map((ing, i) => {
+    const el = ingEls[i]
+    const q = el ? Number(el.value) : ing.qty
+    if (q !== ing.qty) changed = true
+    return { id: ing.id, qty: q }
+  })
+  if (changed) ov.ingredients = newIngs
+  if (!gcConfig.craftOverrides) gcConfig.craftOverrides = {}
+  gcConfig.craftOverrides[id] = ov
+  gcSetDirty()
+  gcCloseCraftModal()
+  gcRenderCraft()
+}
+
+function gcResetCraftRecipe() {
+  const id = document.getElementById('gc-craft-id').value
+  if (!gcConfig.craftOverrides) return
+  delete gcConfig.craftOverrides[id]
+  gcSetDirty()
+  gcCloseCraftModal()
+  gcRenderCraft()
+}
+
+// ── Mob editing ──────────────────────────────────────────────────────────────
+
+function gcOpenMobModal(zoneId, mobId) {
+  const zone = ZONE_CATALOG.find(z => z.id === zoneId)
+  if (!zone) return
+  const baseMob = zone.mobs.find(m => m.id === mobId)
+  if (!baseMob) return
+  const mOv = ((gcConfig.zoneOverrides ?? {})[zoneId]?.mobs ?? {})[mobId] ?? {}
+  const eff = { ...baseMob, ...mOv }
+
+  document.getElementById('gc-mob-modal-title').textContent = 'Edit Mob — ' + baseMob.name
+  document.getElementById('gc-mob-zone-id').value = zoneId
+  document.getElementById('gc-mob-id').value = mobId
+  document.getElementById('gc-m-name').value = eff.name
+  document.getElementById('gc-m-icon').value = eff.icon
+  document.getElementById('gc-m-hp').value = eff.hp
+  document.getElementById('gc-m-atk').value = eff.atk
+  document.getElementById('gc-m-xp').value = eff.xpReward
+  document.getElementById('gc-m-gold-min').value = eff.goldMin
+  document.getElementById('gc-m-gold-max').value = eff.goldMax
+  document.getElementById('gc-m-mat-chance').value = eff.materialDropChance ?? ''
+  document.getElementById('gc-m-mat-qty').value = eff.materialDropQty ?? 1
+
+  // Populate material dropdown
   const allItems = [...ITEM_CATALOG, ...(gcConfig.customItems ?? [])]
-  const findItem = id => allItems.find(i => i.id === id)
-  const boss = id => BOSS_CATALOG.find(b => b.id === id)
+  const matSelect = document.getElementById('gc-m-mat')
+  matSelect.innerHTML = '<option value="">None</option>' + allItems.filter(i => i.slot === 'plant' || i.slot === 'material').map(i =>
+    `<option value="${i.id}"${i.id === eff.materialDropId ? ' selected' : ''}>${i.icon} ${i.name}</option>`
+  ).join('')
 
-  let html = ''
-  for (const z of ZONE_CATALOG) {
-    const b = boss(z.bossId)
-    const gateStr = z.gateItems.length
-      ? z.gateItems.map(id => { const it = findItem(id); return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:11px">${it?.icon??'?'} ${it?.name??id}</span>` }).join(', ')
-      : '<span style="color:var(--muted2);font-size:11px">None</span>'
-    const reqStr = b?.requirements
-      ? Object.entries(b.requirements).map(([k,v]) => `<span style="font-size:10px;color:var(--muted2)">${k}: ${v}</span>`).join(' · ')
-      : ''
+  document.getElementById('gc-mob-modal').style.display = 'flex'
+}
 
-    html += `<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:22px">${z.icon}</span>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:${z.themeColor}">${z.name}</div>
-          <div style="font-size:10px;color:var(--muted2)">Warrior Lv ${z.warriorLevel} · Gate: ${gateStr}</div>
-        </div>
-      </div>
+function gcCloseMobModal() {
+  document.getElementById('gc-mob-modal').style.display = 'none'
+}
 
-      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Mobs</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">`
+function gcSaveMob() {
+  const zoneId = document.getElementById('gc-mob-zone-id').value
+  const mobId  = document.getElementById('gc-mob-id').value
+  const zone = ZONE_CATALOG.find(z => z.id === zoneId)
+  const baseMob = zone?.mobs.find(m => m.id === mobId)
+  if (!baseMob) return
 
-    for (const m of z.mobs) {
-      const matItem = findItem(m.materialDropId)
-      html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:11px">
-        <span style="font-size:14px">${m.icon}</span>
-        <span style="flex:1;color:var(--text);font-weight:500">${m.name}</span>
-        <span style="color:var(--muted2)">HP ${fmtHP(m.hp)}</span>
-        <span style="color:#f87171">ATK ${m.atk}</span>
-        <span style="color:#84cc16">XP ${fmtHP(m.xpReward)}</span>
-        <span style="color:#facc15">💰 ${m.goldMin}–${m.goldMax}</span>
-        ${matItem ? `<span title="${m.materialDropChance*100}% chance">${matItem.icon} ${Math.round(m.materialDropChance*100)}%${m.materialDropQty>1?' ×'+m.materialDropQty:''}</span>` : ''}
-      </div>`
-    }
+  const ov = {}
+  const name = document.getElementById('gc-m-name').value
+  const icon = document.getElementById('gc-m-icon').value
+  const hp   = Number(document.getElementById('gc-m-hp').value)
+  const atk  = Number(document.getElementById('gc-m-atk').value)
+  const xp   = Number(document.getElementById('gc-m-xp').value)
+  const gMin = Number(document.getElementById('gc-m-gold-min').value)
+  const gMax = Number(document.getElementById('gc-m-gold-max').value)
+  const mat  = document.getElementById('gc-m-mat').value
+  const mChance = Number(document.getElementById('gc-m-mat-chance').value)
+  const mQty = Number(document.getElementById('gc-m-mat-qty').value)
 
-    html += `</div>
-      <div style="font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Boss</div>`
+  if (name !== baseMob.name)     ov.name = name
+  if (icon !== baseMob.icon)     ov.icon = icon
+  if (hp   !== baseMob.hp)       ov.hp = hp
+  if (atk  !== baseMob.atk)      ov.atk = atk
+  if (xp   !== baseMob.xpReward) ov.xpReward = xp
+  if (gMin !== baseMob.goldMin)  ov.goldMin = gMin
+  if (gMax !== baseMob.goldMax)  ov.goldMax = gMax
+  if (mat  !== (baseMob.materialDropId ?? '')) ov.materialDropId = mat || undefined
+  if (mChance !== (baseMob.materialDropChance ?? 0)) ov.materialDropChance = mChance
+  if (mQty !== (baseMob.materialDropQty ?? 1)) ov.materialDropQty = mQty
 
-    if (b) {
-      const bMat = findItem(b.materialDropId)
-      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid ${z.themeColor}44;border-radius:10px;font-size:12px">
-        <span style="font-size:18px">${b.icon}</span>
-        <span style="flex:1;color:var(--text);font-weight:700">${b.name}</span>
-        <span style="color:var(--muted2)">HP ${fmtHP(b.hp)}</span>
-        <span style="color:#f87171">ATK ${b.atk}/s</span>
-        <span>🎁 ${b.rewards.chestTier.replace('_chest','')}</span>
-        ${bMat ? `<span>${bMat.icon} ×${b.materialDropQty}</span>` : ''}
-      </div>`
-      if (reqStr) html += `<div style="margin-top:4px;padding-left:12px">${reqStr}</div>`
-    }
+  if (!gcConfig.zoneOverrides) gcConfig.zoneOverrides = {}
+  if (!gcConfig.zoneOverrides[zoneId]) gcConfig.zoneOverrides[zoneId] = {}
+  if (!gcConfig.zoneOverrides[zoneId].mobs) gcConfig.zoneOverrides[zoneId].mobs = {}
+  gcConfig.zoneOverrides[zoneId].mobs[mobId] = ov
+  gcSetDirty()
+  gcCloseMobModal()
+  gcRenderBosses()
+}
 
-    html += `</div>`
+function gcResetMob() {
+  const zoneId = document.getElementById('gc-mob-zone-id').value
+  const mobId  = document.getElementById('gc-mob-id').value
+  if (gcConfig.zoneOverrides?.[zoneId]?.mobs) {
+    delete gcConfig.zoneOverrides[zoneId].mobs[mobId]
+    gcSetDirty()
   }
-  document.getElementById('gc-zone-list').innerHTML = html
+  gcCloseMobModal()
+  gcRenderBosses()
 }
 
 // ─── Economy ─────────────────────────────────────────────────────────────────
