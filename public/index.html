@@ -22,8 +22,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
 /* ── Login ─────────────────────────────────────────────────────────────────── */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;width:340px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 30%,rgba(124,108,255,.06) 0%,transparent 60%)}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;width:340px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--purple),var(--pink))}
 .login-logo{font-size:36px;margin-bottom:10px}
 .login-box h1{font-size:22px;font-weight:700;margin-bottom:4px}
 .login-box p{color:var(--muted2);font-size:13px;margin-bottom:28px}
@@ -49,7 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 #app{display:none;flex-direction:column;min-height:100vh}
 
 /* Topbar */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;gap:12px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--card) 0%,rgba(16,16,28,.95) 100%);position:sticky;top:0;z-index:50;gap:12px;backdrop-filter:blur(12px)}
 .topbar-logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;flex-shrink:0}
 .topbar-logo span{color:var(--green)}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -72,9 +73,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* Tabs */
 .tabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto}
-.tab-btn{padding:12px 18px;border:none;background:transparent;color:var(--muted2);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;font-family:var(--font)}
-.tab-btn:hover{color:var(--text)}
-.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.tab-btn{padding:12px 18px;border:none;background:transparent;color:var(--muted2);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;font-family:var(--font);position:relative}
+.tab-btn:hover{color:var(--text);background:rgba(255,255,255,.02)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);background:rgba(0,255,136,.03)}
 
 /* Content */
 .content{flex:1;padding:24px;overflow-y:auto;max-width:1400px;width:100%;margin:0 auto}
@@ -83,8 +84,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* ── Stat cards ──────────────────────────────────────────────────────────────  */
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.12)}
 .card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.015) 0%,transparent 60%);pointer-events:none}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;opacity:.6}
+.c-green .card-val{color:var(--green)} .c-green::after{background:var(--green)}
+.c-purple .card-val{color:var(--purple)} .c-purple::after{background:var(--purple)}
+.c-yellow .card-val{color:var(--yellow)} .c-yellow::after{background:var(--yellow)}
+.c-blue .card-val{color:var(--blue)} .c-blue::after{background:var(--blue)}
+.c-orange .card-val{color:var(--orange)} .c-orange::after{background:var(--orange)}
+.c-pink .card-val{color:var(--pink)} .c-pink::after{background:var(--pink)}
 .card-icon{font-size:20px;margin-bottom:8px;line-height:1}
 .card-label{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .card-val{font-size:28px;font-weight:700;letter-spacing:-.8px;line-height:1}
@@ -92,20 +101,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .trend-up{color:var(--green)}
 .trend-down{color:var(--red)}
 .trend-neutral{color:var(--muted2)}
-.c-green .card-val{color:var(--green)}
-.c-purple .card-val{color:var(--purple)}
-.c-yellow .card-val{color:var(--yellow)}
-.c-blue .card-val{color:var(--blue)}
-.c-orange .card-val{color:var(--orange)}
-.c-pink .card-val{color:var(--pink)}
-
+.card-spark{margin-top:8px;height:24px;display:flex;align-items:flex-end;gap:1px}
+.card-spark-bar{flex:1;border-radius:2px 2px 0 0;min-height:1px;transition:height .3s ease}
 /* ── Chart boxes ─────────────────────────────────────────────────────────────  */
 .chart-grid{display:grid;gap:14px;margin-bottom:24px}
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:2fr 1fr}
 @media(max-width:860px){.g2,.g3{grid-template-columns:1fr}}
-.chart-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
-.box-title{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:border-color .15s}
+.chart-box:hover{border-color:rgba(255,255,255,.1)}
+.box-title{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.box-title .box-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:none;letter-spacing:0}
 .chart-wrap{position:relative}
 .h180{height:180px}
 .h220{height:220px}
@@ -115,8 +121,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 /* ── Heatmap ─────────────────────────────────────────────────────────────────  */
 .heatmap{display:grid;grid-template-columns:repeat(24,1fr);gap:3px}
-.hm-cell{height:36px;border-radius:4px;cursor:default;transition:opacity .15s}
-.hm-cell:hover{opacity:.75}
+.hm-cell{height:36px;border-radius:6px;cursor:default;transition:all .2s;position:relative}
+.hm-cell:hover{transform:scaleY(1.15);z-index:1;box-shadow:0 0 12px rgba(0,255,136,.3)}
 .hm-labels{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;margin-top:4px}
 .hm-label{font-size:9px;color:var(--muted);text-align:center}
 
@@ -223,9 +229,14 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .divider{height:1px;background:var(--border);margin:20px 0}
 .search-wrap{padding:14px 20px;border-bottom:1px solid var(--border)}
 .mini-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.mini-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.mini-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px;transition:transform .15s,border-color .15s}
+.mini-card:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.1)}
 .mini-card .lbl{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px}
 .mini-card .val{font-size:20px;font-weight:700}
+
+/* ── Page transitions ───────────────────────────────────────────────────────  */
+.page{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -299,8 +310,8 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div class="cards" id="overview-cards">
         <div class="card c-purple copyable" onclick="copyCard(this,'c-users')"><div class="card-icon">👥</div><div class="card-label">Total Users</div><div class="card-val" id="c-users">—</div><div class="card-trend" id="t-users"></div></div>
         <div class="card c-green copyable"  onclick="copyCard(this,'c-online')"><div class="card-icon">🟢</div><div class="card-label">Online Now</div><div class="card-val" id="c-online">—</div><div class="card-trend trend-neutral" id="t-online">live</div></div>
-        <div class="card c-blue copyable"   onclick="copyCard(this,'c-dau')"><div class="card-icon">📅</div><div class="card-label">DAU Today</div><div class="card-val" id="c-dau">—</div><div class="card-trend" id="t-dau"></div></div>
-        <div class="card c-yellow copyable" onclick="copyCard(this,'c-sessions')"><div class="card-icon">⏱</div><div class="card-label">Sessions Today</div><div class="card-val" id="c-sessions">—</div><div class="card-trend" id="t-sessions"></div></div>
+        <div class="card c-blue copyable"   onclick="copyCard(this,'c-dau')"><div class="card-icon">📅</div><div class="card-label">DAU Today</div><div class="card-val" id="c-dau">—</div><div class="card-trend" id="t-dau"></div><div class="card-spark" id="spark-dau"></div></div>
+        <div class="card c-yellow copyable" onclick="copyCard(this,'c-sessions')"><div class="card-icon">⏱</div><div class="card-label">Sessions Today</div><div class="card-val" id="c-sessions">—</div><div class="card-trend" id="t-sessions"></div><div class="card-spark" id="spark-sessions"></div></div>
         <div class="card c-orange copyable" onclick="copyCard(this,'c-avg')"><div class="card-icon">⚡</div><div class="card-label">Avg Session</div><div class="card-val" id="c-avg">—</div><div class="card-trend trend-neutral">duration</div></div>
         <div class="card c-pink copyable"   onclick="copyCard(this,'c-hours')"><div class="card-icon">🏆</div><div class="card-label">Total Hours</div><div class="card-val" id="c-hours">—</div><div class="card-trend trend-neutral">all time</div></div>
       </div>
@@ -318,7 +329,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
       </div>
 
       <!-- Sessions + Level distribution -->
-      <div class="chart-grid g3">
+      <div class="chart-grid g2">
         <div class="chart-box">
           <div class="box-title">Sessions per Day — 30 days</div>
           <div class="chart-wrap h220"><canvas id="ch-sessions"></canvas></div>
@@ -326,6 +337,23 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div class="chart-box">
           <div class="box-title">User Level Distribution</div>
           <div class="chart-wrap h220"><canvas id="ch-levels"></canvas></div>
+        </div>
+      </div>
+
+      <!-- DAU/Registrations combined area + Retention -->
+      <div class="chart-grid g2">
+        <div class="chart-box">
+          <div class="box-title">DAU vs New Users — 30 day overlay</div>
+          <div class="chart-wrap h220"><canvas id="ch-overlay"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="box-title">Health Metrics</div>
+          <div class="cards" style="margin-bottom:0;margin-top:4px;grid-template-columns:1fr 1fr">
+            <div class="card c-green" style="padding:12px 14px"><div class="card-label">DAU / Total</div><div class="card-val" id="c-dau-pct" style="font-size:22px">—</div><div class="card-trend trend-neutral">engagement rate</div></div>
+            <div class="card c-blue" style="padding:12px 14px"><div class="card-label">7d Avg DAU</div><div class="card-val" id="c-7d-dau" style="font-size:22px">—</div><div class="card-trend trend-neutral">weekly average</div></div>
+            <div class="card c-yellow" style="padding:12px 14px"><div class="card-label">Events Today</div><div class="card-val" id="c-events-today" style="font-size:22px">—</div><div class="card-trend" id="t-events"></div></div>
+            <div class="card c-purple" style="padding:12px 14px"><div class="card-label">Events/Session</div><div class="card-val" id="c-events-per" style="font-size:22px">—</div><div class="card-trend trend-neutral">avg depth</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -380,14 +408,20 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
       </div>
 
-      <!-- Streak stats -->
-      <div class="chart-box" style="margin-top:14px">
-        <div class="box-title">Streak Stats</div>
-        <div class="cards" id="streak-cards" style="margin-bottom:0;margin-top:4px">
-          <div class="card c-yellow"><div class="card-label">Streak ≥ 1 day</div><div class="card-val" id="s1">—</div></div>
-          <div class="card c-orange"><div class="card-label">Streak ≥ 7 days</div><div class="card-val" id="s7">—</div></div>
-          <div class="card c-pink"><div class="card-label">Streak ≥ 30 days</div><div class="card-val" id="s30">—</div></div>
-          <div class="card"><div class="card-label">Avg Streak</div><div class="card-val" id="savg">—</div></div>
+      <!-- XP distribution pie -->
+      <div class="chart-grid g2" style="margin-top:14px">
+        <div class="chart-box">
+          <div class="box-title">XP Share by Skill</div>
+          <div class="chart-wrap h260"><canvas id="ch-skill-pie"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="box-title">Streak Stats</div>
+          <div class="cards" id="streak-cards" style="margin-bottom:0;margin-top:4px;grid-template-columns:1fr 1fr">
+            <div class="card c-yellow" style="padding:14px 16px"><div class="card-icon">🔥</div><div class="card-label">Streak ≥ 1 day</div><div class="card-val" id="s1">—</div></div>
+            <div class="card c-orange" style="padding:14px 16px"><div class="card-icon">💪</div><div class="card-label">Streak ≥ 7 days</div><div class="card-val" id="s7">—</div></div>
+            <div class="card c-pink" style="padding:14px 16px"><div class="card-icon">🏆</div><div class="card-label">Streak ≥ 30 days</div><div class="card-val" id="s30">—</div></div>
+            <div class="card c-purple" style="padding:14px 16px"><div class="card-icon">📊</div><div class="card-label">Avg Streak</div><div class="card-val" id="savg">—</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -428,18 +462,40 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div class="cards" id="economy-cards">
         <div class="card c-yellow"><div class="card-icon">💰</div><div class="card-label">Total Gold</div><div class="card-val" id="ec-total-gold">—</div></div>
         <div class="card c-green"><div class="card-icon">📊</div><div class="card-label">Avg Gold / User</div><div class="card-val" id="ec-avg-gold">—</div></div>
+        <div class="card c-orange"><div class="card-icon">📈</div><div class="card-label">Median Gold</div><div class="card-val" id="ec-median-gold">—</div></div>
         <div class="card c-blue"><div class="card-icon">📋</div><div class="card-label">Active Listings</div><div class="card-val" id="ec-listings">—</div></div>
         <div class="card c-purple"><div class="card-icon">💎</div><div class="card-label">Listings Value</div><div class="card-val" id="ec-listings-val">—</div></div>
+        <div class="card c-pink"><div class="card-icon">🔄</div><div class="card-label">Total Trades</div><div class="card-val" id="ec-total-trades">—</div></div>
       </div>
+
+      <!-- Trade volume chart + Gold flow -->
       <div class="chart-grid g2" style="margin-top:14px">
+        <div class="chart-box">
+          <div class="box-title">Trade Volume — 30 days <span class="box-badge" style="background:rgba(0,255,136,.12);color:var(--green)" id="ec-vol-badge">items</span></div>
+          <div class="chart-wrap h260"><canvas id="ch-trade-vol"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="box-title">Gold Traded — 30 days</div>
+          <div class="chart-wrap h260"><canvas id="ch-trade-gold"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Top holders + Distribution -->
+      <div class="chart-grid g2">
         <div class="chart-box">
           <div class="box-title">Top Gold Holders</div>
           <div id="ec-top-holders" style="margin-top:8px"></div>
         </div>
         <div class="chart-box">
-          <div class="box-title">Gold Distribution</div>
+          <div class="box-title">Gold Distribution <span class="box-badge" style="background:rgba(255,209,102,.12);color:var(--yellow)" id="ec-gini-badge"></span></div>
           <div class="chart-wrap h260"><canvas id="ch-gold-dist"></canvas></div>
         </div>
+      </div>
+
+      <!-- Most traded items -->
+      <div class="chart-box">
+        <div class="box-title">Most Traded Items <span class="box-badge" style="background:rgba(124,108,255,.12);color:var(--purple)" id="ec-trade-total-badge"></span></div>
+        <div id="ec-top-traded" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -550,11 +606,34 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-ghost btn-sm" onclick="gcResetCombatBase()">Reset</button>
         </div>
         <div id="gc-boss-list" style="display:flex;flex-direction:column;gap:12px"></div>
+
+        <!-- Boss Chest Drop Mechanic Reference -->
+        <div style="margin-top:16px;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px">
+          <div class="sec-title" style="margin-bottom:8px">Boss Chest Drop Mechanic</div>
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:8px">When a boss is defeated, the chest tier is rolled as follows:</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="color:var(--green);font-weight:600;min-width:40px">55%</span><span style="color:var(--text)">Listed chest tier drops</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="color:#facc15;font-weight:600;min-width:40px">30%</span><span style="color:var(--text)">One tier lower drops (common if already lowest)</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="color:#f87171;font-weight:600;min-width:40px">15%</span><span style="color:var(--text)">No chest at all</span></div>
+          </div>
+        </div>
       </div>
 
       <!-- Chests sub-tab -->
       <div id="gc-chests" style="display:none">
         <div id="gc-chest-list" style="display:flex;flex-direction:column;gap:12px"></div>
+
+        <!-- Equipment Drop Rates per Chest -->
+        <div style="margin-top:16px;padding:12px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px">
+          <div class="sec-title" style="margin-bottom:8px">Equipment Drop Rates per Chest</div>
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:8px">Chance that a chest contains an equipment item. When no equipment drops, the chest still awards gold + materials.</div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;width:24px;text-align:center">📦</span><span style="min-width:100px;color:var(--text)">Common Chest</span><span style="color:var(--green);font-weight:600">50%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;width:24px;text-align:center">📦</span><span style="min-width:100px;color:#38bdf8">Rare Chest</span><span style="color:var(--green);font-weight:600">60%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;width:24px;text-align:center">📦</span><span style="min-width:100px;color:#c084fc">Epic Chest</span><span style="color:var(--green);font-weight:600">70%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;width:24px;text-align:center">📦</span><span style="min-width:100px;color:#facc15">Legendary Chest</span><span style="color:var(--green);font-weight:600">80%</span></div>
+          </div>
+        </div>
 
         <!-- Gold Drop Ranges per Chest -->
         <div style="margin-top:16px">
@@ -1024,9 +1103,16 @@ Chart.defaults.color         = '#55557a'
 Chart.defaults.font.family   = 'Segoe UI, system-ui, sans-serif'
 Chart.defaults.font.size     = 11
 Chart.defaults.plugins.legend.display = false
-Chart.defaults.animation.duration     = 500
+Chart.defaults.animation.duration     = 600
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(16,16,28,.95)'
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.1)'
+Chart.defaults.plugins.tooltip.borderWidth = 1
+Chart.defaults.plugins.tooltip.cornerRadius = 8
+Chart.defaults.plugins.tooltip.padding = 10
+Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 12 }
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12 }
 
-const GRID_COLOR = 'rgba(255,255,255,0.05)'
+const GRID_COLOR = 'rgba(255,255,255,0.04)'
 const AXIS_OPTS  = {
   x: { grid: { color: GRID_COLOR }, ticks: { color: '#55557a' } },
   y: { grid: { color: GRID_COLOR }, ticks: { color: '#55557a' }, beginAtZero: true },
@@ -1200,11 +1286,13 @@ function restoreRefreshInterval() {
 
 async function forceRefresh() {
   document.getElementById('last-refresh').textContent = 'Refreshing…'
+  economyLoaded = false
   const [stats] = await Promise.all([apiFetch('GET', '/api/stats?force=1'), loadUsers()])
   statsData = stats
   renderOverview(stats)
   renderAnalytics(stats)
   renderSkills(stats)
+  if (document.getElementById('page-economy')?.classList.contains('active')) loadEconomy()
   document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
 }
 
@@ -1271,6 +1359,17 @@ async function loadAll() {
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 
+function renderSparkline(containerId, vals, color) {
+  const el = document.getElementById(containerId)
+  if (!el || !vals || vals.length === 0) return
+  const last7 = vals.slice(-7)
+  const max = Math.max(...last7, 1)
+  el.innerHTML = last7.map(v => {
+    const h = Math.max(2, Math.round(v / max * 22))
+    return '<div class="card-spark-bar" style="height:' + h + 'px;background:' + color + '"></div>'
+  }).join('')
+}
+
 function renderOverview(d) {
   document.getElementById('c-users').textContent   = d.totalUsers ?? '—'
   document.getElementById('c-online').textContent  = d.onlineNow ?? 0
@@ -1286,46 +1385,95 @@ function renderOverview(d) {
   const grow = fill30Days(d.userGrowth || [], 'day', 'new_users')
   const ses  = fill30Days(d.sessionsPerDay || [], 'day', 'sessions')
 
+  // Sparklines for DAU and Sessions cards
+  renderSparkline('spark-dau', dau.vals, 'rgba(6,174,212,.5)')
+  renderSparkline('spark-sessions', ses.vals, 'rgba(255,209,102,.5)')
+
+  // Health metrics
+  const dauPct = d.totalUsers ? Math.round(d.dauToday / d.totalUsers * 100) : 0
+  document.getElementById('c-dau-pct').textContent = dauPct + '%'
+  const last7DAU = dau.vals.slice(-7)
+  const avg7DAU = last7DAU.length ? Math.round(last7DAU.reduce((a,b) => a + b, 0) / last7DAU.length) : 0
+  document.getElementById('c-7d-dau').textContent = avg7DAU
+  document.getElementById('c-events-today').textContent = fmtNum(d.eventsToday || 0)
+  document.getElementById('t-events').innerHTML = trendHtml(d.eventsToday, d.eventsYesterday)
+  const eventsPerSession = d.sessionsToday > 0 ? (d.eventsToday / d.sessionsToday).toFixed(1) : '—'
+  document.getElementById('c-events-per').textContent = eventsPerSession
+
   mkChart('ch-dau', 'line', dau.labels, [{
-    data: dau.vals, borderColor: '#7c6cff',
-    backgroundColor: 'rgba(124,108,255,.1)', tension: 0.4, fill: true,
-    pointRadius: 3, pointBackgroundColor: '#7c6cff',
+    data: dau.vals, borderColor: '#7c6cff', borderWidth: 2,
+    backgroundColor: 'rgba(124,108,255,.08)', tension: 0.4, fill: true,
+    pointRadius: 2, pointHoverRadius: 5, pointBackgroundColor: '#7c6cff',
   }])
 
   mkChart('ch-growth', 'line', grow.labels, [{
-    data: grow.vals, borderColor: '#00ff88',
-    backgroundColor: 'rgba(0,255,136,.1)', tension: 0.4, fill: true,
-    pointRadius: 3, pointBackgroundColor: '#00ff88',
+    data: grow.vals, borderColor: '#00ff88', borderWidth: 2,
+    backgroundColor: 'rgba(0,255,136,.08)', tension: 0.4, fill: true,
+    pointRadius: 2, pointHoverRadius: 5, pointBackgroundColor: '#00ff88',
   }])
 
   mkChart('ch-sessions', 'bar', ses.labels, [{
     data: ses.vals,
-    backgroundColor: 'rgba(255,209,102,.5)', borderColor: '#ffd166', borderWidth: 1,
-    borderRadius: 3,
+    backgroundColor: ses.vals.map(function(v, i) {
+      return i === ses.vals.length - 1 ? 'rgba(255,209,102,.8)' : 'rgba(255,209,102,.4)'
+    }),
+    borderColor: '#ffd166', borderWidth: 1,
+    borderRadius: 4,
   }])
 
   // Level distribution
   const lvl = d.levelDistribution || []
+  const lvlColors = lvl.map(function(r, i) {
+    var pct = i / Math.max(lvl.length - 1, 1)
+    return 'rgba(' + Math.round(6 + 118 * pct) + ',' + Math.round(174 - 66 * pct) + ',' + Math.round(212 + 43 * pct) + ',0.6)'
+  })
   mkChart('ch-levels', 'bar', lvl.map(r => r.bucket), [{
     data: lvl.map(r => Number(r.user_count)),
-    backgroundColor: 'rgba(6,174,212,.5)', borderColor: '#06aed4', borderWidth: 1,
+    backgroundColor: lvlColors, borderWidth: 0,
     borderRadius: 4,
   }])
+
+  // DAU vs New Users overlay
+  if (charts['ch-overlay']) charts['ch-overlay'].destroy()
+  var ctxOv = document.getElementById('ch-overlay')?.getContext('2d')
+  if (ctxOv) {
+    charts['ch-overlay'] = new Chart(ctxOv, {
+      type: 'line',
+      data: {
+        labels: dau.labels,
+        datasets: [
+          { label: 'DAU', data: dau.vals, borderColor: '#7c6cff', backgroundColor: 'rgba(124,108,255,.06)', tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2 },
+          { label: 'New Users', data: grow.vals, borderColor: '#00ff88', backgroundColor: 'rgba(0,255,136,.06)', tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top', labels: { color: '#ddddf5', font: { size: 11 }, boxWidth: 12, padding: 12 } } },
+        scales: AXIS_OPTS,
+        interaction: { mode: 'index', intersect: false },
+      },
+    })
+  }
 }
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 function renderAnalytics(d) {
-  // Top events (horizontal bar)
+  // Top events (horizontal bar) with gradient coloring
   const ev = (d.topEvents || []).slice(0, 12)
+  const evMax = ev.length ? Math.max(...ev.map(r => Number(r.cnt))) : 1
   mkChart('ch-events', 'bar', ev.map(r => r.event_name), [{
     data: ev.map(r => Number(r.cnt)),
-    backgroundColor: ev.map((_, i) => `hsl(${150 + i * 18},80%,60%)`),
-    borderWidth: 0, borderRadius: 5,
+    backgroundColor: ev.map((r, i) => {
+      const intensity = Number(r.cnt) / evMax
+      return `rgba(0,${Math.round(180 + 75 * intensity)},${Math.round(100 + 36 * intensity)},${0.3 + 0.5 * intensity})`
+    }),
+    borderColor: ev.map(() => 'rgba(0,255,136,.3)'),
+    borderWidth: 1, borderRadius: 5,
   }], {
     indexAxis: 'y',
     scales: AXIS_OPTS_FLIP,
-    plugins: { legend: { display: false } },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return fmtNum(ctx.parsed.x) + ' events' } } } },
   })
 
   // Tab clicks (doughnut)
@@ -1406,37 +1554,67 @@ function renderSkills(d) {
   // Mini stats
   const totalSkillXP = skills.reduce((s, r) => s + Number(r.total_xp), 0)
   const topSkill = skills[0]
+  const totalSkillUsers = skills.reduce((s, r) => s + Number(r.user_count), 0)
   const sm = document.getElementById('skill-mini')
   if (sm) sm.innerHTML = `
     <div class="mini-card"><div class="lbl">Total Skill XP</div><div class="val">${fmtXP(totalSkillXP)}</div></div>
     <div class="mini-card"><div class="lbl">Top Skill</div><div class="val" style="font-size:16px">${topSkill ? (SKILLS[topSkill.skill_id]?.icon ?? '?') + ' ' + (SKILLS[topSkill.skill_id]?.label ?? topSkill.skill_id) : '—'}</div></div>
     <div class="mini-card"><div class="lbl">Active Skills</div><div class="val">${skills.length}</div></div>
+    <div class="mini-card"><div class="lbl">Avg XP / Skill</div><div class="val">${skills.length ? fmtXP(Math.round(totalSkillXP / skills.length)) : '—'}</div></div>
   `
 
-  // XP chart (horizontal bar)
+  // XP chart (horizontal bar) with gradient-like colors
   const colors = skills.map(r => SKILLS[r.skill_id]?.color ?? '#7c6cff')
   mkChart('ch-skills', 'bar',
     skills.map(r => (SKILLS[r.skill_id]?.icon ?? '') + ' ' + (SKILLS[r.skill_id]?.label ?? r.skill_id)),
-    [{ data: skills.map(r => Number(r.total_xp)), backgroundColor: colors, borderWidth: 0, borderRadius: 5 }],
-    { indexAxis: 'y', scales: AXIS_OPTS_FLIP }
+    [{ data: skills.map(r => Number(r.total_xp)), backgroundColor: colors.map(c => c + 'cc'), borderColor: colors, borderWidth: 1, borderRadius: 6 }],
+    { indexAxis: 'y', scales: AXIS_OPTS_FLIP, plugins: { tooltip: { callbacks: { label: function(ctx) { return fmtXP(ctx.parsed.x) + ' XP' } } } } }
   )
 
-  // User count bars
+  // User count bars with percentage
   const maxU = Math.max(...skills.map(r => Number(r.user_count)), 1)
   const barsEl = document.getElementById('skill-bars')
   if (barsEl) {
     barsEl.innerHTML = skills.map(r => {
       const sk = SKILLS[r.skill_id] || { label: r.skill_id, icon: '?', color: '#7c6cff' }
       const pct = Math.round(Number(r.user_count) / maxU * 100)
+      const xpPct = totalSkillXP > 0 ? Math.round(Number(r.total_xp) / totalSkillXP * 100) : 0
       return `<div class="skill-row">
         <div class="skill-icon">${sk.icon}</div>
         <div>
-          <div style="font-size:12px;margin-bottom:4px">${sk.label}</div>
+          <div style="font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between"><span>${sk.label}</span><span style="color:${sk.color};font-size:10px;font-weight:600">${xpPct}% of XP</span></div>
           <div class="skill-bar-wrap"><div class="skill-bar" style="width:${pct}%;background:${sk.color}"></div></div>
         </div>
         <div class="skill-xp">${r.user_count} users</div>
       </div>`
     }).join('')
+  }
+
+  // XP share pie chart
+  if (skills.length) {
+    if (charts['ch-skill-pie']) charts['ch-skill-pie'].destroy()
+    var pieCtx = document.getElementById('ch-skill-pie')?.getContext('2d')
+    if (pieCtx) {
+      charts['ch-skill-pie'] = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: skills.map(r => SKILLS[r.skill_id]?.label ?? r.skill_id),
+          datasets: [{
+            data: skills.map(r => Number(r.total_xp)),
+            backgroundColor: colors,
+            borderWidth: 0, hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          cutout: '55%',
+          plugins: {
+            legend: { display: true, position: 'right', labels: { color: '#ddddf5', font: { size: 11 }, padding: 10, boxWidth: 10 } },
+            tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + fmtXP(ctx.parsed) + ' XP (' + Math.round(ctx.parsed / totalSkillXP * 100) + '%)' } } },
+          },
+        },
+      })
+    }
   }
 
   // Streak
@@ -3495,29 +3673,105 @@ async function loadEconomy() {
   economyLoaded = true
   const data = await apiFetch('GET', '/api/economy')
   if (!data || data.error) { economyLoaded = false; console.warn('economy error', data && data.error); return }
+
+  // Stat cards
   document.getElementById('ec-total-gold').textContent   = fmtNum(data.totalGold || 0)
   document.getElementById('ec-avg-gold').textContent     = fmtNum(Math.round(data.avgGold || 0))
+  document.getElementById('ec-median-gold').textContent  = fmtNum(data.medianGold || 0)
   document.getElementById('ec-listings').textContent     = fmtNum(data.activeListings || 0)
   document.getElementById('ec-listings-val').textContent = fmtNum(data.listingsValue || 0)
-  const holders = data.topHolders || []
-  const el = document.getElementById('ec-top-holders')
+  document.getElementById('ec-total-trades').textContent = fmtNum(data.totalTradeVolume || 0)
+
+  // Gini badge
+  var giniBadge = document.getElementById('ec-gini-badge')
+  if (giniBadge && data.gini != null) {
+    var giniLabel = data.gini < 0.3 ? 'Equal' : data.gini < 0.5 ? 'Moderate' : 'Concentrated'
+    giniBadge.textContent = 'Gini: ' + data.gini.toFixed(2) + ' — ' + giniLabel
+  }
+
+  // Trade total badge
+  var tradeBadge = document.getElementById('ec-trade-total-badge')
+  if (tradeBadge) tradeBadge.textContent = fmtNum(data.totalTradeGold || 0) + ' gold traded'
+
+  // Top holders with rank badges
+  var holders = data.topHolders || []
+  var el = document.getElementById('ec-top-holders')
   if (el) {
-    const maxG = holders.reduce(function(a,r){ return Math.max(a, Number(r.gold)) }, 1)
-    el.innerHTML = holders.map(function(r) {
-      const pct = Math.round(Number(r.gold) / maxG * 100)
+    var maxG = holders.reduce(function(a,r){ return Math.max(a, Number(r.gold)) }, 1)
+    var rankEmoji = ['🥇','🥈','🥉']
+    el.innerHTML = holders.map(function(r, i) {
+      var pct = Math.round(Number(r.gold) / maxG * 100)
+      var rank = i < 3 ? '<span style="font-size:14px;width:20px;text-align:center">' + rankEmoji[i] + '</span>' : '<span style="font-size:11px;color:var(--muted2);width:20px;text-align:center;font-weight:700">#' + (i+1) + '</span>'
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
-        + '<div style="width:120px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.username||'?') + '</div>'
-        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;height:14px;overflow:hidden">'
-        + '<div style="height:100%;width:' + pct + '%;background:var(--yellow);border-radius:4px"></div></div>'
-        + '<div style="width:70px;text-align:right;font-size:12px;color:var(--yellow)">' + fmtNum(Number(r.gold)) + ' 🪙</div>'
+        + rank
+        + '<div style="width:100px;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:' + (i < 3 ? '600' : '400') + '">' + esc(r.username||'?') + '</div>'
+        + '<div style="flex:1;background:rgba(255,255,255,.04);border-radius:4px;height:' + (i < 3 ? '16' : '12') + 'px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + (i === 0 ? 'linear-gradient(90deg,#ffd166,#ff6b35)' : i === 1 ? 'var(--yellow)' : i === 2 ? 'rgba(255,209,102,.7)' : 'rgba(255,209,102,.4)') + ';border-radius:4px;transition:width .6s ease"></div></div>'
+        + '<div style="width:70px;text-align:right;font-size:12px;color:var(--yellow);font-weight:' + (i < 3 ? '700' : '400') + '">' + fmtNum(Number(r.gold)) + ' 🪙</div>'
         + '</div>'
     }).join('')
   }
+
+  // Gold distribution
   if (data.goldBuckets && data.goldBuckets.length) {
-    mkChart('ch-gold-dist', 'bar', data.goldBuckets.map(function(b){return b.label}), [{
+    var bucketColors = data.goldBuckets.map(function(b, i) {
+      var pct = i / Math.max(data.goldBuckets.length - 1, 1)
+      return 'rgba(255,' + Math.round(209 - 100 * pct) + ',' + Math.round(102 + 50 * pct) + ',0.6)'
+    })
+    mkChart('ch-gold-dist', 'bar', data.goldBuckets.map(function(b){return b.label + ' 🪙'}), [{
       data: data.goldBuckets.map(function(b){return Number(b.count)}),
-      backgroundColor: 'rgba(255,209,102,.5)', borderColor: '#ffd166', borderWidth: 1, borderRadius: 3,
+      backgroundColor: bucketColors, borderWidth: 0, borderRadius: 4,
     }], { scales: { y: { beginAtZero: true } } })
+  }
+
+  // Trade volume chart (items)
+  var tv = data.tradeVolume30d || []
+  if (tv.length) {
+    var tvLabels = tv.map(function(r) { return r.day.slice(5) })
+    mkChart('ch-trade-vol', 'bar', tvLabels, [{
+      data: tv.map(function(r) { return r.items }),
+      backgroundColor: tv.map(function(r, i) {
+        return i === tv.length - 1 ? 'rgba(0,255,136,.7)' : 'rgba(0,255,136,.3)'
+      }),
+      borderWidth: 0, borderRadius: 4,
+    }])
+    var volBadge = document.getElementById('ec-vol-badge')
+    var totalItems = tv.reduce(function(a, r) { return a + r.items }, 0)
+    if (volBadge) volBadge.textContent = fmtNum(totalItems) + ' items this month'
+  }
+
+  // Gold traded chart
+  if (tv.length) {
+    var tvLabels2 = tv.map(function(r) { return r.day.slice(5) })
+    mkChart('ch-trade-gold', 'line', tvLabels2, [{
+      data: tv.map(function(r) { return r.gold }),
+      borderColor: '#ffd166', borderWidth: 2,
+      backgroundColor: 'rgba(255,209,102,.08)',
+      tension: 0.4, fill: true,
+      pointRadius: 0, pointHoverRadius: 5,
+    }])
+  }
+
+  // Most traded items
+  var topTraded = data.topTraded || []
+  var ttEl = document.getElementById('ec-top-traded')
+  if (ttEl && topTraded.length) {
+    var maxVol = topTraded[0] ? topTraded[0].volume : 1
+    var allItems = [...ITEM_CATALOG, ...(gcConfig.customItems || [])]
+    ttEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' + topTraded.map(function(t, i) {
+      var item = allItems.find(function(it) { return it.id === t.item_id })
+      var pct = Math.round(t.volume / maxVol * 100)
+      var rarityClass = item ? 'rarity-' + item.rarity : ''
+      return '<div style="display:grid;grid-template-columns:28px 160px 1fr 90px 90px;align-items:center;gap:10px">'
+        + '<span style="font-size:16px;text-align:center">' + (item ? item.icon : '❓') + '</span>'
+        + '<span style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" class="' + rarityClass + '">' + esc(item ? item.name : t.item_id) + '</span>'
+        + '<div style="height:8px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:var(--purple);border-radius:4px;transition:width .6s ease"></div></div>'
+        + '<span style="font-size:11px;color:var(--text);text-align:right">' + fmtNum(t.volume) + ' traded</span>'
+        + '<span style="font-size:11px;color:var(--yellow);text-align:right">' + fmtNum(t.gold_volume) + ' 🪙</span>'
+        + '</div>'
+    }).join('') + '</div>'
+  } else if (ttEl) {
+    ttEl.innerHTML = '<div class="empty">No trade data yet</div>'
   }
 }
 

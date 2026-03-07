@@ -289,40 +289,100 @@ app.post('/api/admin-config', requireAuth, async (req, res) => {
 
 app.get('/api/economy', requireAuth, async (req, res) => {
   try {
-    const [goldRes, holdersRes, listingsRes] = await Promise.all([
-      supabase.from('profiles').select('gold'),
-      supabase.from('profiles').select('username,gold').order('gold', { ascending: false }).limit(10),
-      supabase.from('marketplace_listings').select('price_gold,quantity').eq('status', 'active'),
-    ])
-    if (goldRes.error) return res.status(500).json({ error: goldRes.error.message })
+    const data = await cached('economy', 5 * 60 * 1000, async () => {
+      const [goldRes, holdersRes, listingsRes, soldRes, tradeRes] = await Promise.all([
+        supabase.from('profiles').select('gold'),
+        supabase.from('profiles').select('username,gold').order('gold', { ascending: false }).limit(10),
+        supabase.from('marketplace_listings').select('price_gold,quantity').eq('status', 'active'),
+        supabase.from('marketplace_listings').select('price_gold,quantity,item_id,created_at').eq('status', 'sold'),
+        supabase.from('trade_history').select('unit_price,quantity,total_gold,traded_at,item_id').order('traded_at', { ascending: false }).limit(500),
+      ])
+      if (goldRes.error) throw new Error(goldRes.error.message)
 
-    const goldArr = (goldRes.data || []).map(r => Number(r.gold) || 0)
-    const totalGold = goldArr.reduce((a, b) => a + b, 0)
-    const avgGold   = goldArr.length ? totalGold / goldArr.length : 0
+      const goldArr = (goldRes.data || []).map(r => Number(r.gold) || 0)
+      const totalGold = goldArr.reduce((a, b) => a + b, 0)
+      const avgGold   = goldArr.length ? totalGold / goldArr.length : 0
+      const medianGold = goldArr.length ? [...goldArr].sort((a,b) => a - b)[Math.floor(goldArr.length / 2)] : 0
+      const maxGold    = goldArr.length ? Math.max(...goldArr) : 0
 
-    const listings      = listingsRes.data || []
-    const activeListings = listings.length
-    const listingsValue  = listings.reduce((a, r) => a + (Number(r.price_gold) || 0) * (Number(r.quantity) || 1), 0)
+      const listings      = listingsRes.data || []
+      const activeListings = listings.length
+      const listingsValue  = listings.reduce((a, r) => a + (Number(r.price_gold) || 0) * (Number(r.quantity) || 1), 0)
 
-    // Gold distribution buckets
-    const buckets = [0, 100, 500, 1000, 5000, 10000, 50000, Infinity]
-    const bucketLabels = ['0', '100', '500', '1K', '5K', '10K', '50K+']
-    const counts = new Array(bucketLabels.length).fill(0)
-    for (const g of goldArr) {
-      for (let i = 0; i < buckets.length - 1; i++) {
-        if (g >= buckets[i] && g < buckets[i + 1]) { counts[i]++; break }
+      // Gold distribution buckets
+      const buckets = [0, 100, 500, 1000, 5000, 10000, 50000, Infinity]
+      const bucketLabels = ['0', '100', '500', '1K', '5K', '10K', '50K+']
+      const counts = new Array(bucketLabels.length).fill(0)
+      for (const g of goldArr) {
+        for (let i = 0; i < buckets.length - 1; i++) {
+          if (g >= buckets[i] && g < buckets[i + 1]) { counts[i]++; break }
+        }
       }
-    }
-    const goldBuckets = bucketLabels.map((label, i) => ({ label, count: counts[i] }))
+      const goldBuckets = bucketLabels.map((label, i) => ({ label, count: counts[i] }))
 
-    res.json({
-      totalGold,
-      avgGold,
-      activeListings,
-      listingsValue,
-      topHolders: holdersRes.data || [],
-      goldBuckets,
+      // Trade volume by day (last 30 days)
+      const trades = tradeRes.data || []
+      const tradesByDay = {}
+      const goldByDay = {}
+      for (const t of trades) {
+        const day = t.traded_at ? t.traded_at.slice(0, 10) : null
+        if (!day) continue
+        tradesByDay[day] = (tradesByDay[day] || 0) + (Number(t.quantity) || 0)
+        goldByDay[day] = (goldByDay[day] || 0) + (Number(t.total_gold) || 0)
+      }
+      const tradeVolume30d = []
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i)
+        const k = d.toISOString().slice(0, 10)
+        tradeVolume30d.push({ day: k, items: tradesByDay[k] || 0, gold: goldByDay[k] || 0 })
+      }
+
+      // Most traded items
+      const itemVolume = {}
+      const itemGoldVolume = {}
+      for (const t of trades) {
+        itemVolume[t.item_id] = (itemVolume[t.item_id] || 0) + (Number(t.quantity) || 0)
+        itemGoldVolume[t.item_id] = (itemGoldVolume[t.item_id] || 0) + (Number(t.total_gold) || 0)
+      }
+      const topTraded = Object.entries(itemVolume)
+        .map(([id, vol]) => ({ item_id: id, volume: vol, gold_volume: itemGoldVolume[id] || 0 }))
+        .sort((a, b) => b.volume - a.volume)
+        .slice(0, 10)
+
+      // Total trade stats
+      const totalTradeVolume = trades.reduce((a, t) => a + (Number(t.quantity) || 0), 0)
+      const totalTradeGold = trades.reduce((a, t) => a + (Number(t.total_gold) || 0), 0)
+      const totalSold = (soldRes.data || []).length
+
+      // Gold circulation (Gini coefficient approximation)
+      const sorted = [...goldArr].sort((a, b) => a - b)
+      let gini = 0
+      if (sorted.length > 1 && totalGold > 0) {
+        let sumOfDiffs = 0
+        for (let i = 0; i < sorted.length; i++) {
+          sumOfDiffs += (2 * (i + 1) - sorted.length - 1) * sorted[i]
+        }
+        gini = Math.round(sumOfDiffs / (sorted.length * totalGold) * 100) / 100
+      }
+
+      return {
+        totalGold,
+        avgGold,
+        medianGold,
+        maxGold,
+        gini,
+        activeListings,
+        listingsValue,
+        totalSold,
+        totalTradeVolume,
+        totalTradeGold,
+        topHolders: holdersRes.data || [],
+        goldBuckets,
+        tradeVolume30d,
+        topTraded,
+      }
     })
+    res.json(data)
   } catch (err) {
     console.error('/api/economy', err)
     res.status(500).json({ error: String(err) })
