@@ -298,6 +298,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <button class="tab-btn" onclick="showTab('skills',this)">⚡ Skills</button>
     <button class="tab-btn" onclick="showTab('users',this)">👥 Users</button>
     <button class="tab-btn" onclick="showTab('announcements',this)">📢 Announcements</button>
+    <button class="tab-btn" onclick="showTab('polls',this);loadPolls()">📊 Polls</button>
     <button class="tab-btn" onclick="showTab('gameconfig',this);loadGameConfig()">🎮 Game Config</button>
     <button class="tab-btn" onclick="showTab('economy',this)">💰 Economy</button>
   </nav>
@@ -552,6 +553,44 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div class="ann-list" id="ann-list"><div class="empty"><span class="spinner"></span></div></div>
     </div>
 
+    <!-- ── Polls ─────────────────────────────────────────────────────────── -->
+    <div class="page" id="page-polls">
+      <div class="ann-form">
+        <h3>📊 Create a new poll</h3>
+        <p style="color:var(--muted2);font-size:12px;margin-bottom:16px">Users will see the poll in-app and can vote once. Results update in real time.</p>
+
+        <div class="form-row">
+          <div style="flex:1">
+            <input class="input" id="poll-title" placeholder="Poll question — e.g. What feature should we build next?" maxlength="150"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <textarea class="input" id="poll-desc" placeholder="Optional description or context…" maxlength="400" style="min-height:48px"></textarea>
+          </div>
+        </div>
+
+        <div class="sec-title" style="margin-top:8px">Options <span style="color:var(--muted2);font-weight:400">(min 2)</span></div>
+        <div id="poll-options-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+          <input class="input poll-opt-input" placeholder="Option 1" maxlength="100"/>
+          <input class="input poll-opt-input" placeholder="Option 2" maxlength="100"/>
+        </div>
+        <button class="btn btn-ghost" style="font-size:12px;margin-bottom:14px" onclick="addPollOption()">+ Add option</button>
+
+        <div class="form-row" style="align-items:center">
+          <div style="flex:1">
+            <div class="sec-title" style="margin-bottom:4px">Expires (optional)</div>
+            <input class="input" type="datetime-local" id="poll-expires"/>
+          </div>
+          <button class="btn btn-green" style="padding:10px 20px;align-self:flex-end" onclick="createPoll()">Create Poll</button>
+        </div>
+        <div id="poll-status"></div>
+      </div>
+
+      <div class="sec-title" style="margin-top:20px">Active &amp; Past Polls</div>
+      <div id="poll-list" style="display:flex;flex-direction:column;gap:12px"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+
     <!-- ── Game Config ────────────────────────────────────────────────────── -->
     <div class="page" id="page-gameconfig">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
@@ -561,6 +600,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-ghost gc-subtab"        data-tab="chests"  onclick="gcTab('chests')">📦 Chests</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="seeds"   onclick="gcTab('seeds')">🌱 Seeds & Farm</button>
           <button class="btn btn-ghost gc-subtab"        data-tab="craft"   onclick="gcTab('craft')">⚒️ Crafting</button>
+          <button class="btn btn-ghost gc-subtab"        data-tab="icons"   onclick="gcTab('icons')">🎨 Icons</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="gc-status" style="font-size:12px;color:var(--muted2)"></span>
@@ -776,6 +816,50 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="font-size:12px;color:var(--muted2);margin-bottom:4px">All crafting recipes. Click Edit to change level, XP, time, or ingredient quantities.</div>
           <div id="gc-craft-list"></div>
+        </div>
+      </div>
+
+      <!-- Icons sub-tab -->
+      <div id="gc-icons" style="display:none">
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Override any UI icon in the app. Enter an emoji or leave blank to use the default. Changes apply after Save &amp; Apply.</div>
+
+        <!-- Gold icon -->
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div class="sec-title" style="margin-bottom:10px">Currency</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <label style="font-size:12px;min-width:80px">Gold icon</label>
+            <input class="input" id="gc-icon-gold" placeholder="🪙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/>
+            <span style="font-size:11px;color:var(--muted)">Default: 🪙</span>
+          </div>
+        </div>
+
+        <!-- Navbar primary tabs -->
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div class="sec-title" style="margin-bottom:10px">Navbar — Primary Tabs</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="gc-icon-nav-primary">
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Home</label><input class="input gc-nav-icon" data-tab="home" placeholder="⏱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⏱</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Skills</label><input class="input gc-nav-icon" data-tab="skills" placeholder="⚡" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚡</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Friends</label><input class="input gc-nav-icon" data-tab="friends" placeholder="👥" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 👥</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Stats</label><input class="input gc-nav-icon" data-tab="stats" placeholder="📊" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 📊</span></div>
+          </div>
+        </div>
+
+        <!-- Navbar secondary tabs (More menu) -->
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div class="sec-title" style="margin-bottom:10px">Navbar — More Menu Tabs</div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="gc-icon-nav-secondary">
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Inventory</label><input class="input gc-nav2-icon" data-tab="inventory" placeholder="🎒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🎒</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Market</label><input class="input gc-nav2-icon" data-tab="marketplace" placeholder="🛒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🛒</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Arena</label><input class="input gc-nav2-icon" data-tab="arena" placeholder="⚔️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚔️</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Farm</label><input class="input gc-nav2-icon" data-tab="farm" placeholder="🌱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🌱</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Craft</label><input class="input gc-nav2-icon" data-tab="craft" placeholder="⚒️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚒️</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Profile</label><input class="input gc-nav2-icon" data-tab="profile" placeholder="👤" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 👤</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Settings</label><input class="input gc-nav2-icon" data-tab="settings" placeholder="⚙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚙</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn btn-ghost btn-sm" onclick="gcResetIcons()">Reset All to Defaults</button>
         </div>
       </div>
 
@@ -1836,6 +1920,116 @@ async function deleteAnn(id, btn) {
   loadAnnouncements()
 }
 
+// ── Polls ─────────────────────────────────────────────────────────────────────
+
+var _pollsLoaded = false
+
+function addPollOption() {
+  var list = document.getElementById('poll-options-list')
+  var idx = list.querySelectorAll('.poll-opt-input').length + 1
+  var inp = document.createElement('input')
+  inp.className = 'input poll-opt-input'
+  inp.placeholder = 'Option ' + idx
+  inp.maxLength = 100
+  list.appendChild(inp)
+}
+
+async function loadPolls() {
+  _pollsLoaded = true
+  var list = document.getElementById('poll-list')
+  list.innerHTML = '<div class="empty"><span class="spinner"></span></div>'
+  var rows = await apiFetch('GET', '/api/polls')
+  if (!Array.isArray(rows) || !rows.length) {
+    list.innerHTML = '<div class="empty">No polls created yet</div>'
+    return
+  }
+  list.innerHTML = rows.map(function(p) {
+    var isActive = p.is_active && (!p.expires_at || new Date(p.expires_at) > new Date())
+    var statusBadge = isActive
+      ? '<span style="color:#57F287;font-size:11px;font-weight:600">● Active</span>'
+      : '<span style="color:var(--muted2);font-size:11px;font-weight:600">● Closed</span>'
+    var maxVotes = Math.max(1, Math.max.apply(null, (p.poll_options || []).map(function(o){return o.votes || 0})))
+    var optionsHtml = (p.poll_options || []).map(function(o) {
+      var pct = p.total_votes > 0 ? Math.round((o.votes / p.total_votes) * 100) : 0
+      var barW = p.total_votes > 0 ? Math.round((o.votes / maxVotes) * 100) : 0
+      return '<div style="margin-bottom:6px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">' +
+          '<span style="color:var(--text)">' + esc(o.label) + '</span>' +
+          '<span style="color:var(--muted2);font-family:var(--mono)">' + o.votes + ' (' + pct + '%)</span>' +
+        '</div>' +
+        '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">' +
+          '<div style="height:100%;width:' + barW + '%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .3s"></div>' +
+        '</div>' +
+      '</div>'
+    }).join('')
+
+    return '<div class="ann-item" style="flex-direction:column;align-items:stretch;gap:10px">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div class="ann-emoji">' + esc(p.icon || '📊') + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="ann-title">' + esc(p.title) + '</div>' +
+          (p.description ? '<div class="ann-body" style="margin-top:2px">' + esc(p.description) + '</div>' : '') +
+          '<div class="ann-meta">' + new Date(p.created_at).toLocaleString() +
+            ' · ' + p.total_votes + ' votes · ' + statusBadge +
+            (p.expires_at ? ' · expires ' + new Date(p.expires_at).toLocaleString() : '') +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-shrink:0">' +
+          (isActive ? '<button class="btn btn-ghost btn-sm" onclick="closePoll(\'' + p.id + '\',this)">Close</button>' : '') +
+          '<button class="btn btn-red btn-sm" onclick="deletePoll(\'' + p.id + '\',this)">Delete</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="padding:0 4px">' + optionsHtml + '</div>' +
+    '</div>'
+  }).join('')
+}
+
+async function createPoll() {
+  var title = document.getElementById('poll-title').value.trim()
+  var desc  = document.getElementById('poll-desc').value.trim()
+  var exp   = document.getElementById('poll-expires').value
+  var status = document.getElementById('poll-status')
+  var opts = []
+  document.querySelectorAll('.poll-opt-input').forEach(function(inp) {
+    var v = inp.value.trim()
+    if (v) opts.push(v)
+  })
+
+  if (!title) { status.className = 'status-err'; status.textContent = 'Title is required.'; return }
+  if (opts.length < 2) { status.className = 'status-err'; status.textContent = 'At least 2 options required.'; return }
+
+  status.className = ''; status.textContent = 'Creating…'
+
+  var payload = { title: title, description: desc, options: opts }
+  if (exp) payload.expires_at = new Date(exp).toISOString()
+
+  var r = await apiFetch('POST', '/api/polls', payload)
+  if (r.error) { status.className = 'status-err'; status.textContent = 'Error: ' + r.error; return }
+
+  status.className = 'status-ok'
+  status.textContent = '✓ Poll created! Users will see it in-app.'
+  document.getElementById('poll-title').value = ''
+  document.getElementById('poll-desc').value  = ''
+  document.getElementById('poll-expires').value = ''
+  // Reset options to 2 empty inputs
+  var optList = document.getElementById('poll-options-list')
+  optList.innerHTML = '<input class="input poll-opt-input" placeholder="Option 1" maxlength="100"/><input class="input poll-opt-input" placeholder="Option 2" maxlength="100"/>'
+  loadPolls()
+}
+
+async function deletePoll(id, btn) {
+  if (!confirm('Delete this poll and all votes?')) return
+  btn.textContent = '…'; btn.disabled = true
+  await apiFetch('DELETE', '/api/polls/' + id)
+  loadPolls()
+}
+
+async function closePoll(id, btn) {
+  btn.textContent = '…'; btn.disabled = true
+  await apiFetch('PATCH', '/api/polls/' + id + '/close')
+  loadPolls()
+}
+
 // ── Game Config ───────────────────────────────────────────────────────────────
 
 const ITEM_CATALOG = [
@@ -1871,6 +2065,7 @@ const ITEM_CATALOG = [
   {"id":"ancient_scale","name":"Ancient Scale","slot":"material","rarity":"rare","icon":"🐉","description":"A scale shed by an ancient beast.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
   {"id":"void_crystal","name":"Void Crystal","slot":"material","rarity":"epic","icon":"🔮","description":"A crystallised fragment of the void.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
   // ── Intermediate crafting materials ──
+  {"id":"compost","name":"Compost","slot":"material","rarity":"common","icon":"🧪","description":"Organic fertiliser. Apply to an empty farm plot (3 per plot) for +20% harvest yield and +5% farmer XP.","perkType":"cosmetic","perkValue":0,"perkDescription":"Farm consumable — 3 per plot, +20% yield, +5% XP"},
   {"id":"iron_bar","name":"Iron Bar","slot":"material","rarity":"common","icon":"⬛","description":"Smelted iron. Used to forge equipment.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"fang_shard","name":"Fang Shard","slot":"material","rarity":"common","icon":"🦴","description":"Ground monster fangs. Used in blade crafting.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"essence_vial","name":"Essence Vial","slot":"material","rarity":"rare","icon":"🧪","description":"Concentrated magic essence.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
@@ -1966,6 +2161,8 @@ const ZONE_CATALOG = [
 ]
 
 const CRAFT_RECIPE_CATALOG = [
+  // Farm consumable
+  { id:'recipe_compost',       output:'compost',           outputQty:3, isIntermediate:true,  ingredients:[{id:'wheat',qty:5},{id:'herbs',qty:3}],                                      levelRequired:0,  xpPerItem:30,   secPerItem:6 },
   // Tier 1 — Refine raw → intermediate
   { id:'recipe_iron_bar',      output:'iron_bar',          outputQty:1, isIntermediate:true,  ingredients:[{id:'ore_iron',qty:5}],                                                     levelRequired:0,  xpPerItem:45,   secPerItem:8 },
   { id:'recipe_fang_shard',    output:'fang_shard',        outputQty:1, isIntermediate:true,  ingredients:[{id:'monster_fang',qty:4}],                                                  levelRequired:0,  xpPerItem:55,   secPerItem:10 },
@@ -2011,7 +2208,9 @@ function gcTab(tab) {
   document.getElementById('gc-chests').style.display = tab === 'chests' ? '' : 'none'
   document.getElementById('gc-seeds').style.display  = tab === 'seeds'  ? '' : 'none'
   document.getElementById('gc-craft').style.display  = tab === 'craft'  ? '' : 'none'
+  document.getElementById('gc-icons').style.display  = tab === 'icons'  ? '' : 'none'
   if (tab === 'craft') gcRenderCraft()
+  if (tab === 'icons') gcRenderIcons()
 }
 
 async function loadGameConfig() {
@@ -2036,6 +2235,7 @@ async function loadGameConfig() {
       dropRateOverrides: data.dropRateOverrides ?? {},
       pityOverrides: data.pityOverrides ?? {},
       combatConfig: data.combatConfig ?? {},
+      uiIcons: data.uiIcons ?? {},
     }
   }
   gcRenderItems()
@@ -2060,6 +2260,7 @@ async function loadGameConfig() {
 }
 
 async function saveGameConfig(showNote) {
+  gcCollectIcons() // collect icon overrides before saving
   const st = document.getElementById('gc-status')
   st.textContent = 'Saving…'
   st.style.color = 'var(--muted2)'
@@ -3794,6 +3995,51 @@ function fmtNum(n) {
     loadAll()
     loadAnnouncements()
   }
+
+// ── Icons sub-tab ──────────────────────────────────────────────────────────
+
+function gcRenderIcons() {
+  const ui = gcConfig.uiIcons ?? {}
+  const goldEl = document.getElementById('gc-icon-gold')
+  if (goldEl) goldEl.value = ui.gold ?? ''
+  document.querySelectorAll('.gc-nav-icon').forEach(el => {
+    el.value = (ui.navTabs ?? {})[el.dataset.tab] ?? ''
+  })
+  document.querySelectorAll('.gc-nav2-icon').forEach(el => {
+    el.value = (ui.navSecondaryTabs ?? {})[el.dataset.tab] ?? ''
+  })
+}
+
+function gcCollectIcons() {
+  const ui = {}
+  const goldVal = (document.getElementById('gc-icon-gold')?.value ?? '').trim()
+  if (goldVal) ui.gold = goldVal
+
+  const navTabs = {}
+  document.querySelectorAll('.gc-nav-icon').forEach(el => {
+    const v = (el.value ?? '').trim()
+    if (v) navTabs[el.dataset.tab] = v
+  })
+  if (Object.keys(navTabs).length) ui.navTabs = navTabs
+
+  const navSecondaryTabs = {}
+  document.querySelectorAll('.gc-nav2-icon').forEach(el => {
+    const v = (el.value ?? '').trim()
+    if (v) navSecondaryTabs[el.dataset.tab] = v
+  })
+  if (Object.keys(navSecondaryTabs).length) ui.navSecondaryTabs = navSecondaryTabs
+
+  if (Object.keys(ui).length) gcConfig.uiIcons = ui
+  else delete gcConfig.uiIcons
+}
+
+function gcResetIcons() {
+  document.getElementById('gc-icon-gold').value = ''
+  document.querySelectorAll('.gc-nav-icon').forEach(el => { el.value = '' })
+  document.querySelectorAll('.gc-nav2-icon').forEach(el => { el.value = '' })
+  delete gcConfig.uiIcons
+  gcSetDirty()
+}
 })()
 </script>
 </body>

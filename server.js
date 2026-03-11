@@ -263,6 +263,68 @@ app.delete('/api/announcements/:id', requireAuth, async (req, res) => {
   res.json({ ok: true })
 })
 
+// ── Polls ─────────────────────────────────────────────────────────────────────
+
+app.get('/api/polls', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('polls')
+    .select('*, poll_options(id, label, sort_order)')
+    .order('created_at', { ascending: false })
+    .limit(50)
+  if (error) return res.status(500).json({ error: error.message })
+
+  // Attach vote counts per option
+  for (const poll of (data ?? [])) {
+    const { data: votes } = await supabase
+      .from('poll_votes')
+      .select('option_id')
+      .eq('poll_id', poll.id)
+    const counts = {}
+    for (const v of (votes ?? [])) counts[v.option_id] = (counts[v.option_id] || 0) + 1
+    poll.total_votes = (votes ?? []).length
+    for (const opt of (poll.poll_options ?? [])) opt.votes = counts[opt.id] || 0
+    poll.poll_options.sort((a, b) => a.sort_order - b.sort_order)
+  }
+  res.json(data ?? [])
+})
+
+app.post('/api/polls', requireAuth, async (req, res) => {
+  const { title, description, icon, expires_at, options } = req.body
+  if (!title?.trim()) return res.status(400).json({ error: 'title is required' })
+  if (!Array.isArray(options) || options.length < 2) {
+    return res.status(400).json({ error: 'at least 2 options required' })
+  }
+
+  const row = { title: title.trim(), description: (description || '').trim(), icon: icon?.trim() || '📊' }
+  if (expires_at) row.expires_at = expires_at
+  const { data: poll, error } = await supabase.from('polls').insert(row).select().single()
+  if (error) return res.status(500).json({ error: error.message })
+
+  const optRows = options.map((label, i) => ({ poll_id: poll.id, label: label.trim(), sort_order: i }))
+  const { error: optErr } = await supabase.from('poll_options').insert(optRows)
+  if (optErr) return res.status(500).json({ error: optErr.message })
+
+  // Re-fetch with options
+  const { data: full } = await supabase
+    .from('polls')
+    .select('*, poll_options(id, label, sort_order)')
+    .eq('id', poll.id)
+    .single()
+  res.json(full)
+})
+
+app.delete('/api/polls/:id', requireAuth, async (req, res) => {
+  const { error } = await supabase.from('polls').delete().eq('id', req.params.id)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
+})
+
+app.patch('/api/polls/:id/close', requireAuth, async (req, res) => {
+  const { error } = await supabase.from('polls').update({ is_active: false }).eq('id', req.params.id)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
+})
+
 // ── Admin Game Config ─────────────────────────────────────────────────────────
 
 app.get('/api/admin-config', requireAuth, async (req, res) => {
