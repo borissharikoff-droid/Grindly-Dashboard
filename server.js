@@ -602,6 +602,49 @@ app.delete('/api/users/:id/achievements/:achievementId', requireAuth, async (req
   }
 })
 
+// Delete user entirely
+app.delete('/api/users/:id', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+
+    // Verify user exists
+    const { data: profile, error: profileErr } = await supabase.from('profiles').select('id, username').eq('id', uid).single()
+    if (profileErr || !profile) return res.status(404).json({ error: 'User not found' })
+
+    // Delete from all user-related tables
+    await Promise.all([
+      supabase.from('user_skills').delete().eq('user_id', uid),
+      supabase.from('user_inventory').delete().eq('user_id', uid),
+      supabase.from('user_chests').delete().eq('user_id', uid),
+      supabase.from('user_achievements').delete().eq('user_id', uid),
+      supabase.from('admin_skill_overrides').delete().eq('user_id', uid),
+      supabase.from('session_summaries').delete().eq('user_id', uid),
+      supabase.from('analytics_events').delete().eq('user_id', uid),
+      supabase.from('item_gifts').delete().eq('sender_id', uid),
+      supabase.from('item_gifts').delete().eq('receiver_id', uid),
+      supabase.from('messages').delete().eq('sender_id', uid),
+      supabase.from('messages').delete().eq('receiver_id', uid),
+      supabase.from('friendships').delete().eq('user_id', uid),
+      supabase.from('friendships').delete().eq('friend_id', uid),
+      supabase.from('marketplace_listings').delete().eq('seller_id', uid),
+    ])
+
+    // Delete profile
+    const { error: delErr } = await supabase.from('profiles').delete().eq('id', uid)
+    if (delErr) return res.status(500).json({ error: delErr.message })
+
+    // Delete Supabase auth user
+    const { error: authErr } = await supabase.auth.admin.deleteUser(uid)
+    if (authErr) console.warn('[delete-user] auth.admin.deleteUser failed:', authErr.message)
+
+    invalidate('stats')
+    res.json({ ok: true, username: profile.username })
+  } catch (err) {
+    console.error('/api/users/:id DELETE', err)
+    res.status(500).json({ error: String(err) })
+  }
+})
+
 // ── Static ────────────────────────────────────────────────────────────────────
 
 app.use(express.static(path.join(__dirname, 'public')))

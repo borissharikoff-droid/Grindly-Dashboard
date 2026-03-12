@@ -4236,6 +4236,12 @@ function pmRender() {
   html += '<span style="font-size:11px;color:var(--muted)">UUID: ' + esc(p.id) + '</span>'
   html += '</div>'
 
+  html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--red)">'
+  html += '<h3 style="color:var(--red);margin-bottom:8px">Danger Zone</h3>'
+  html += '<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Permanently delete this player and all their data. This action cannot be undone.</p>'
+  html += '<button class="btn btn-red" style="width:100%" onclick="pmDeleteUser()">Delete Player</button>'
+  html += '</div>'
+
   body.innerHTML = html
 }
 
@@ -4288,6 +4294,20 @@ window.pmAddItem = async function() {
   if (!id) return pmToast('Enter an item ID')
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: id, quantity: qty })
   if (r.ok) { pmToast(id + ' added (x' + qty + ')'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+window.pmDeleteUser = async function() {
+  const name = pmData?.profile?.username || 'this player'
+  if (!confirm('⚠️ DELETE "' + name + '"?\n\nThis will permanently remove:\n• Profile & auth account\n• All skills, inventory, chests\n• Achievements, sessions, analytics\n• Messages, friendships, marketplace listings\n\nThis CANNOT be undone!')) return
+  if (!confirm('Are you absolutely sure you want to delete "' + name + '"?')) return
+  const r = await apiFetch('DELETE', '/api/users/' + pmUserId)
+  if (r.ok) {
+    pmToast('Player "' + (r.username || name) + '" deleted')
+    pmClose()
+    loadUsers()
+  } else {
+    pmToast('Error: ' + (r.error || 'unknown'))
+  }
 }
 
 window.pmRemoveAch = async function(achId) {
