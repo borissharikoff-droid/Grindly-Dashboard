@@ -4304,7 +4304,7 @@ window.pmDeleteUser = async function() {
   if (r.ok) {
     pmToast('Player "' + (r.username || name) + '" deleted')
     pmClose()
-    loadUsers()
+    loadAll()
   } else {
     pmToast('Error: ' + (r.error || 'unknown'))
   }

@@ -638,6 +638,7 @@ app.delete('/api/users/:id', requireAuth, async (req, res) => {
     if (authErr) console.warn('[delete-user] auth.admin.deleteUser failed:', authErr.message)
 
     invalidate('stats')
+    invalidate('economy')
     res.json({ ok: true, username: profile.username })
   } catch (err) {
     console.error('/api/users/:id DELETE', err)
