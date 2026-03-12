@@ -4097,36 +4097,7 @@ function gcResetIcons() {
   gcSetDirty()
 }
 
-// Expose helpers needed by player management panel
-window.apiFetch = apiFetch
-window.esc = esc
-window.loadUsers = loadUsers
-})()
-</script>
-
-<!-- ── Player Management Drawer ──────────────────────────────────────────── -->
-<div class="drawer-overlay" id="pm-overlay" onclick="pmClose()"></div>
-<div class="drawer" id="pm-drawer">
-  <div class="drawer-head">
-    <h2 id="pm-title">Player</h2>
-    <button class="btn btn-ghost btn-sm" onclick="pmClose()">✕ Close</button>
-  </div>
-  <div class="drawer-body" id="pm-body">
-    <div style="text-align:center;padding:40px"><span class="spinner"></span></div>
-  </div>
-</div>
-<div class="pm-toast" id="pm-toast"></div>
-
-<script>
-// ── Player Management ─────────────────────────────────────────────────────────
-
-// Event delegation for user row clicks
-document.addEventListener('click', function(e) {
-  const tr = e.target.closest('#users-tbody tr[data-uid]')
-  if (!tr) return
-  e.stopPropagation()
-  pmOpen(tr.dataset.uid, tr.dataset.uname)
-})
+// ── Player Management (inside IIFE for scope access) ──────────────────────────
 
 let pmUserId = null
 let pmData   = null
@@ -4146,9 +4117,8 @@ function pmToast(msg) {
 }
 
 function xpToLevel(xp) { return Math.min(99, Math.floor(99 * Math.pow(Math.max(0, xp) / 3_600_000, 1 / 2.2))) }
-function levelToXp(lvl) { return Math.floor(Math.pow(lvl / 99, 2.2) * 3_600_000) }
 
-async function pmOpen(userId, username) {
+window.pmOpen = async function(userId, username) {
   pmUserId = userId
   document.getElementById('pm-title').innerHTML = '🛠 ' + esc(username || 'Player')
   document.getElementById('pm-overlay').classList.add('open')
@@ -4164,7 +4134,7 @@ async function pmOpen(userId, username) {
   pmRender()
 }
 
-function pmClose() {
+window.pmClose = function() {
   document.getElementById('pm-overlay').classList.remove('open')
   document.getElementById('pm-drawer').classList.remove('open')
   pmUserId = null
@@ -4176,7 +4146,6 @@ function pmRender() {
   const p = d.profile
   const body = document.getElementById('pm-body')
 
-  // Info cards
   let html = '<div class="pm-info-grid">'
   html += '<div class="pm-info-card"><div class="lbl">Level</div><div class="val">' + (p.level ?? 0) + '</div></div>'
   html += '<div class="pm-info-card"><div class="lbl">Gold</div><div class="val" style="color:var(--yellow)">' + (p.gold ?? 0).toLocaleString() + '</div></div>'
@@ -4184,14 +4153,12 @@ function pmRender() {
   html += '<div class="pm-info-card"><div class="lbl">Status</div><div class="val" style="font-size:13px;color:var(--muted2)">' + (p.is_online ? '<span style="color:var(--green)">Online</span>' : 'Offline') + '</div></div>'
   html += '</div>'
 
-  // ── Gold & Streak edits ──
   html += '<div class="drawer-section">'
   html += '<h3>Quick Edit</h3>'
   html += '<div class="pm-field-row"><label>Gold</label><input class="input" type="number" id="pm-gold" value="' + (p.gold ?? 0) + '" min="0"/><button class="btn btn-green btn-sm" onclick="pmSetGold()">Set</button></div>'
   html += '<div class="pm-field-row"><label>Streak</label><input class="input" type="number" id="pm-streak" value="' + (p.streak_count ?? 0) + '" min="0"/><button class="btn btn-green btn-sm" onclick="pmSetStreak()">Set</button></div>'
   html += '</div>'
 
-  // ── Skills ──
   html += '<div class="drawer-section">'
   html += '<h3>Skills <button class="btn btn-red btn-sm" onclick="pmResetAllSkills()">Reset All</button></h3>'
   const skillMap = {}
@@ -4211,17 +4178,16 @@ function pmRender() {
   }
   html += '</div>'
 
-  // ── Chests ──
   html += '<div class="drawer-section">'
   html += '<h3>Chests</h3>'
   const chestMap = {}
   for (const c of d.chests) chestMap[c.chest_type] = c.quantity
   for (const ct of CHEST_TYPES) {
     const qty = chestMap[ct] || 0
-    const label = CHEST_LABELS[ct]
+    const clabel = CHEST_LABELS[ct]
     const color = CHEST_COLORS[ct]
     html += '<div class="pm-item-row">'
-    html += '<span style="color:' + color + ';font-weight:600">' + label + '</span>'
+    html += '<span style="color:' + color + ';font-weight:600">' + clabel + '</span>'
     html += '<span class="pm-item-qty">x' + qty + '</span>'
     html += '<div class="pm-item-actions">'
     html += '<input class="input" type="number" id="pm-chest-' + ct + '" value="' + qty + '" min="0"/>'
@@ -4230,7 +4196,6 @@ function pmRender() {
   }
   html += '</div>'
 
-  // ── Inventory ──
   html += '<div class="drawer-section">'
   html += '<h3>Inventory (' + d.inventory.length + ')</h3>'
   const sortedInv = [...d.inventory].sort((a, b) => a.item_id.localeCompare(b.item_id))
@@ -4244,7 +4209,6 @@ function pmRender() {
     html += '<button class="btn btn-red btn-sm" onclick="pmRemoveItem(\'' + esc(item.item_id).replace(/'/g, "\\'") + '\')">Del</button>'
     html += '</div></div>'
   }
-  // Add new item
   html += '<div class="pm-add-row">'
   html += '<input class="input" id="pm-new-item-id" placeholder="item_id (e.g. iron_sword)"/>'
   html += '<input class="input" type="number" id="pm-new-item-qty" placeholder="qty" value="1" min="1" style="flex:0 0 70px"/>'
@@ -4252,7 +4216,6 @@ function pmRender() {
   html += '</div>'
   html += '</div>'
 
-  // ── Achievements ──
   html += '<div class="drawer-section">'
   html += '<h3>Achievements (' + d.achievements.length + ')</h3>'
   if (!d.achievements.length) {
@@ -4269,7 +4232,6 @@ function pmRender() {
   }
   html += '</div>'
 
-  // ── User ID ──
   html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">'
   html += '<span style="font-size:11px;color:var(--muted)">UUID: ' + esc(p.id) + '</span>'
   html += '</div>'
@@ -4277,50 +4239,50 @@ function pmRender() {
   body.innerHTML = html
 }
 
-async function pmSetGold() {
+window.pmSetGold = async function() {
   const gold = document.getElementById('pm-gold')?.value
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/gold', { gold: Number(gold) })
   if (r.ok) { pmToast('Gold updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmSetStreak() {
+window.pmSetStreak = async function() {
   const streak = document.getElementById('pm-streak')?.value
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/streak', { streak_count: Number(streak) })
   if (r.ok) { pmToast('Streak updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmSetSkill(skillId) {
+window.pmSetSkill = async function(skillId) {
   const xp = Number(document.getElementById('pm-skill-xp-' + skillId)?.value ?? 0)
   const level = xpToLevel(xp)
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/skills', { skill_id: skillId, total_xp: xp, level })
   if (r.ok) { pmToast(skillId + ' XP set to ' + xp.toLocaleString()); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmResetAllSkills() {
+window.pmResetAllSkills = async function() {
   if (!confirm('Reset ALL skills for this player to 0?')) return
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/reset-skills')
   if (r.ok) { pmToast('All skills reset'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmSetChest(chestType) {
+window.pmSetChest = async function(chestType) {
   const qty = Number(document.getElementById('pm-chest-' + chestType)?.value ?? 0)
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/chests', { chest_type: chestType, quantity: qty })
   if (r.ok) { pmToast('Chests updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmSetItem(itemId) {
+window.pmSetItem = async function(itemId) {
   const el = document.querySelector('[data-inv-item="' + CSS.escape(itemId) + '"]')
   const qty = Number(el?.value ?? 0)
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: itemId, quantity: qty })
   if (r.ok) { pmToast(itemId + ' qty set to ' + qty); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmRemoveItem(itemId) {
+window.pmRemoveItem = async function(itemId) {
   const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: itemId, quantity: 0 })
   if (r.ok) { pmToast(itemId + ' removed'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmAddItem() {
+window.pmAddItem = async function() {
   const id  = document.getElementById('pm-new-item-id')?.value?.trim()
   const qty = Number(document.getElementById('pm-new-item-qty')?.value ?? 1)
   if (!id) return pmToast('Enter an item ID')
@@ -4328,7 +4290,7 @@ async function pmAddItem() {
   if (r.ok) { pmToast(id + ' added (x' + qty + ')'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
 }
 
-async function pmRemoveAch(achId) {
+window.pmRemoveAch = async function(achId) {
   if (!confirm('Remove achievement "' + achId + '"?')) return
   const r = await apiFetch('DELETE', '/api/users/' + pmUserId + '/achievements/' + encodeURIComponent(achId))
   if (r.ok) { pmToast('Achievement removed'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
@@ -4338,8 +4300,31 @@ async function pmRefresh() {
   if (!pmUserId) return
   const data = await apiFetch('GET', '/api/users/' + pmUserId + '/details')
   if (!data.error) { pmData = data; pmRender() }
-  loadUsers() // refresh the table too
+  loadUsers()
 }
+
+// Event delegation for user row clicks
+document.addEventListener('click', function(e) {
+  const tr = e.target.closest('tr[data-uid]')
+  if (!tr) return
+  pmOpen(tr.dataset.uid, tr.dataset.uname)
+})
+
+})()
 </script>
+
+<!-- ── Player Management Drawer ──────────────────────────────────────────── -->
+<div class="drawer-overlay" id="pm-overlay" onclick="pmClose()"></div>
+<div class="drawer" id="pm-drawer">
+  <div class="drawer-head">
+    <h2 id="pm-title">Player</h2>
+    <button class="btn btn-ghost btn-sm" onclick="pmClose()">✕ Close</button>
+  </div>
+  <div class="drawer-body" id="pm-body">
+    <div style="text-align:center;padding:40px"><span class="spinner"></span></div>
+  </div>
+</div>
+<div class="pm-toast" id="pm-toast"></div>
+
 </body>
 </html>
