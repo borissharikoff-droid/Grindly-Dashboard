@@ -1847,7 +1847,7 @@ function renderUsersTable(users) {
     const xpPct  = xpNext > xpFull ? Math.round(((u.xp ?? 0) - xpFull) / (xpNext - xpFull) * 100) : 100
     const pct    = Math.min(Math.max(xpPct, 0), 100)
 
-    return `<tr onclick="pmOpen('${u.id}','${esc(u.username ?? '—').replace(/'/g, "\\'")}')">
+    return `<tr data-uid="${u.id}" data-uname="${esc(u.username ?? '—')}">
       <td>
         <span class="${freshOnline ? 'dot-online' : 'dot-offline'}"></span>
         <strong>${esc(u.username ?? '—')}</strong>
@@ -4119,6 +4119,14 @@ window.loadUsers = loadUsers
 
 <script>
 // ── Player Management ─────────────────────────────────────────────────────────
+
+// Event delegation for user row clicks
+document.addEventListener('click', function(e) {
+  const tr = e.target.closest('#users-tbody tr[data-uid]')
+  if (!tr) return
+  e.stopPropagation()
+  pmOpen(tr.dataset.uid, tr.dataset.uname)
+})
 
 let pmUserId = null
 let pmData   = null
