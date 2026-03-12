@@ -451,6 +451,157 @@ app.get('/api/economy', requireAuth, async (req, res) => {
   }
 })
 
+// ── Player Management ─────────────────────────────────────────────────────────
+
+// Get full player details (skills, inventory, chests, achievements, gold)
+app.get('/api/users/:id/details', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+    const [profileRes, skillsRes, inventoryRes, chestsRes, achievementsRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', uid).single(),
+      supabase.from('user_skills').select('skill_id, level, total_xp, prestige_count').eq('user_id', uid),
+      supabase.from('user_inventory').select('item_id, quantity').eq('user_id', uid).gt('quantity', 0),
+      supabase.from('user_chests').select('chest_type, quantity').eq('user_id', uid).gt('quantity', 0),
+      supabase.from('user_achievements').select('achievement_id, unlocked_at').eq('user_id', uid),
+    ])
+    if (profileRes.error) return res.status(404).json({ error: 'User not found' })
+    res.json({
+      profile: profileRes.data,
+      skills: skillsRes.data ?? [],
+      inventory: inventoryRes.data ?? [],
+      chests: chestsRes.data ?? [],
+      achievements: achievementsRes.data ?? [],
+    })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Set skill XP — inserts admin_skill_overrides row (applied on next sync) + updates user_skills directly
+app.post('/api/users/:id/skills', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+    const { skill_id, total_xp, level } = req.body
+    if (!skill_id || total_xp == null) return res.status(400).json({ error: 'skill_id and total_xp required' })
+    const xp = Math.max(0, Math.floor(Number(total_xp)))
+    const lvl = level ?? Math.floor(99 * Math.pow(xp / 3_600_000, 1 / 2.2))
+
+    // Insert override for client to pick up on next sync
+    await supabase.from('admin_skill_overrides').insert({ user_id: uid, skill_id, total_xp: xp, level: lvl })
+    // Also update user_skills directly so dashboard shows new value
+    await supabase.from('user_skills').upsert(
+      { user_id: uid, skill_id, total_xp: xp, level: lvl, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,skill_id' }
+    )
+    // Update profile level to max skill level
+    const { data: allSkills } = await supabase.from('user_skills').select('level').eq('user_id', uid)
+    if (allSkills?.length) {
+      const maxLevel = Math.max(...allSkills.map(s => s.level ?? 0))
+      await supabase.from('profiles').update({ level: maxLevel }).eq('id', uid)
+    }
+    res.json({ ok: true, total_xp: xp, level: lvl })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Reset all skills to 0
+app.post('/api/users/:id/reset-skills', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+    const { data: skills } = await supabase.from('user_skills').select('skill_id').eq('user_id', uid)
+    if (skills?.length) {
+      for (const s of skills) {
+        await supabase.from('admin_skill_overrides').insert({ user_id: uid, skill_id: s.skill_id, total_xp: 0, level: 0 })
+        await supabase.from('user_skills').update({ total_xp: 0, level: 0, updated_at: new Date().toISOString() }).eq('user_id', uid).eq('skill_id', s.skill_id)
+      }
+    }
+    await supabase.from('profiles').update({ level: 0 }).eq('id', uid)
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Set gold
+app.post('/api/users/:id/gold', requireAuth, async (req, res) => {
+  try {
+    const gold = Math.max(0, Math.floor(Number(req.body.gold ?? 0)))
+    const { error } = await supabase.from('profiles').update({ gold }).eq('id', req.params.id)
+    if (error) return res.status(500).json({ error: error.message })
+    res.json({ ok: true, gold })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Set streak
+app.post('/api/users/:id/streak', requireAuth, async (req, res) => {
+  try {
+    const streak_count = Math.max(0, Math.floor(Number(req.body.streak_count ?? 0)))
+    const { error } = await supabase.from('profiles').update({ streak_count }).eq('id', req.params.id)
+    if (error) return res.status(500).json({ error: error.message })
+    res.json({ ok: true, streak_count })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Grant/set inventory item
+app.post('/api/users/:id/inventory', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+    const { item_id, quantity } = req.body
+    if (!item_id || quantity == null) return res.status(400).json({ error: 'item_id and quantity required' })
+    const qty = Math.max(0, Math.floor(Number(quantity)))
+    if (qty === 0) {
+      await supabase.from('user_inventory').delete().eq('user_id', uid).eq('item_id', item_id)
+    } else {
+      await supabase.from('user_inventory').upsert(
+        { user_id: uid, item_id, quantity: qty, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,item_id' }
+      )
+    }
+    res.json({ ok: true, item_id, quantity: qty })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Grant/set chests
+app.post('/api/users/:id/chests', requireAuth, async (req, res) => {
+  try {
+    const uid = req.params.id
+    const { chest_type, quantity } = req.body
+    if (!chest_type || quantity == null) return res.status(400).json({ error: 'chest_type and quantity required' })
+    const qty = Math.max(0, Math.floor(Number(quantity)))
+    if (qty === 0) {
+      await supabase.from('user_chests').delete().eq('user_id', uid).eq('chest_type', chest_type)
+    } else {
+      await supabase.from('user_chests').upsert(
+        { user_id: uid, chest_type, quantity: qty, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,chest_type' }
+      )
+    }
+    res.json({ ok: true, chest_type, quantity: qty })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
+// Remove achievement
+app.delete('/api/users/:id/achievements/:achievementId', requireAuth, async (req, res) => {
+  try {
+    const { error } = await supabase.from('user_achievements').delete()
+      .eq('user_id', req.params.id)
+      .eq('achievement_id', req.params.achievementId)
+    if (error) return res.status(500).json({ error: error.message })
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
 // ── Static ────────────────────────────────────────────────────────────────────
 
 app.use(express.static(path.join(__dirname, 'public')))

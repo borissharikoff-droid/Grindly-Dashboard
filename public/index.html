@@ -237,6 +237,53 @@ tr:hover td{background:rgba(255,255,255,.018)}
 /* ── Page transitions ───────────────────────────────────────────────────────  */
 .page{animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Player Drawer ─────────────────────────────────────────────────────────  */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;backdrop-filter:blur(2px)}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;top:0;right:-520px;width:520px;max-width:100vw;height:100vh;background:var(--bg);border-left:1px solid var(--border);z-index:201;transition:right .3s ease;overflow-y:auto;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:1}
+.drawer-head h2{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.drawer-body{flex:1;padding:20px 24px;overflow-y:auto}
+.drawer-section{margin-bottom:24px}
+.drawer-section h3{font-size:13px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.drawer-section h3 .btn{text-transform:none;letter-spacing:0}
+
+.pm-skill-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.pm-skill-name{flex:1;font-weight:600;font-size:13px}
+.pm-skill-info{font-size:12px;color:var(--muted2);min-width:80px;text-align:right}
+.pm-skill-edit{display:flex;gap:4px;align-items:center}
+.pm-skill-edit .input{width:90px;padding:4px 8px;font-size:12px}
+
+.pm-item-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;font-size:13px}
+.pm-item-name{flex:1;font-weight:500}
+.pm-item-qty{color:var(--muted2);font-size:12px}
+.pm-item-actions{display:flex;gap:4px}
+.pm-item-actions .input{width:60px;padding:3px 6px;font-size:12px}
+
+.pm-ach-row{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:4px;font-size:12px}
+.pm-ach-name{flex:1}
+.pm-ach-date{color:var(--muted2);font-size:11px}
+
+.pm-add-row{display:flex;gap:6px;margin-top:8px}
+.pm-add-row .input{flex:1;padding:6px 10px;font-size:12px}
+.pm-add-row .input:first-child{flex:2}
+
+.pm-field-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pm-field-row label{font-size:13px;font-weight:500;min-width:70px}
+.pm-field-row .input{width:120px;padding:6px 10px;font-size:13px}
+
+.pm-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.pm-info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.pm-info-card .lbl{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.4px}
+.pm-info-card .val{font-size:18px;font-weight:700;margin-top:2px}
+
+.pm-toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#09090f;padding:10px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.pm-toast.show{opacity:1;transform:translateY(0)}
+
+#users-tbody tr{cursor:pointer}
+#users-tbody tr:hover{background:rgba(0,255,136,.03)}
 </style>
 </head>
 <body>
@@ -1207,14 +1254,19 @@ const AXIS_OPTS_FLIP = {
 }
 
 const SKILLS = {
-  developer:    { label: 'Developer',    icon: '💻', color: '#06aed4' },
-  designer:     { label: 'Designer',     icon: '🎨', color: '#ff6b35' },
-  gamer:        { label: 'Gamer',        icon: '🎮', color: '#7c6cff' },
-  communicator: { label: 'Communicator', icon: '💬', color: '#00ff88' },
-  researcher:   { label: 'Researcher',   icon: '🔬', color: '#ffd166' },
-  creator:      { label: 'Creator',      icon: '✏️',  color: '#f72585' },
-  learner:      { label: 'Learner',      icon: '📚', color: '#4cc9f0' },
-  listener:     { label: 'Listener',     icon: '🎧', color: '#b5e48c' },
+  developer:    { label: 'Developer',    icon: '💻', color: '#00ff88' },
+  designer:     { label: 'Designer',     icon: '🎨', color: '#ff6b9d' },
+  gamer:        { label: 'Gamer',        icon: '🎮', color: '#5865F2' },
+  communicator: { label: 'Communicator', icon: '💬', color: '#57F287' },
+  researcher:   { label: 'Researcher',   icon: '🔬', color: '#faa61a' },
+  creator:      { label: 'Creator',      icon: '🎬', color: '#eb459e' },
+  learner:      { label: 'Learner',      icon: '📚', color: '#00d4ff' },
+  listener:     { label: 'Listener',     icon: '🎵', color: '#1db954' },
+  farmer:       { label: 'Farmer',       icon: '🌾', color: '#84cc16' },
+  warrior:      { label: 'Warrior',      icon: '⚔️', color: '#EF4444' },
+  crafter:      { label: 'Crafter',      icon: '⚒️', color: '#f97316' },
+  chef:         { label: 'Chef',         icon: '🍳', color: '#fb923c' },
+  grindly:      { label: 'Grindly',      icon: '🏠', color: '#c084fc' },
 }
 
 const EMOJIS = ['📢','🚀','🎉','⚡','🛠','🐛','🎁','🏆','💥','⚔️','🌱','🔥']
@@ -1795,7 +1847,7 @@ function renderUsersTable(users) {
     const xpPct  = xpNext > xpFull ? Math.round(((u.xp ?? 0) - xpFull) / (xpNext - xpFull) * 100) : 100
     const pct    = Math.min(Math.max(xpPct, 0), 100)
 
-    return `<tr>
+    return `<tr onclick="pmOpen('${u.id}','${esc(u.username ?? '—').replace(/'/g, "\\'")}')">
       <td>
         <span class="${freshOnline ? 'dot-online' : 'dot-offline'}"></span>
         <strong>${esc(u.username ?? '—')}</strong>
@@ -2065,12 +2117,14 @@ const ITEM_CATALOG = [
   {"id":"ancient_scale","name":"Ancient Scale","slot":"material","rarity":"rare","icon":"🐉","description":"A scale shed by an ancient beast.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
   {"id":"void_crystal","name":"Void Crystal","slot":"material","rarity":"epic","icon":"🔮","description":"A crystallised fragment of the void.","perkType":"cosmetic","perkValue":0,"perkDescription":"Crafting material"},
   // ── Intermediate crafting materials ──
-  {"id":"compost","name":"Compost","slot":"material","rarity":"common","icon":"🧪","description":"Organic fertiliser. Apply to an empty farm plot (3 per plot) for +20% harvest yield and +5% farmer XP.","perkType":"cosmetic","perkValue":0,"perkDescription":"Farm consumable — 3 per plot, +20% yield, +5% XP"},
+  {"id":"compost","name":"Compost","slot":"material","rarity":"common","icon":"🧪","description":"Organic fertiliser. Apply to a farm plot for +35% yield and +5% farmer XP.","perkType":"cosmetic","perkValue":0,"perkDescription":"Farm consumable — +35% yield, +5% XP"},
   {"id":"iron_bar","name":"Iron Bar","slot":"material","rarity":"common","icon":"⬛","description":"Smelted iron. Used to forge equipment.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"fang_shard","name":"Fang Shard","slot":"material","rarity":"common","icon":"🦴","description":"Ground monster fangs. Used in blade crafting.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"essence_vial","name":"Essence Vial","slot":"material","rarity":"rare","icon":"🧪","description":"Concentrated magic essence.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"ancient_dust","name":"Ancient Dust","slot":"material","rarity":"rare","icon":"💨","description":"Ground ancient scales.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
   {"id":"void_fragment","name":"Void Fragment","slot":"material","rarity":"epic","icon":"💠","description":"Refined void crystal shard.","perkType":"cosmetic","perkValue":0,"perkDescription":"Intermediate crafting material"},
+  {"id":"dungeon_pass","name":"Dungeon Pass","slot":"material","rarity":"rare","icon":"🎫","description":"Instantly completes one dungeon run. Consume on auto-farm.","perkType":"cosmetic","perkValue":0,"perkDescription":"Consumable — auto-runs one dungeon"},
+  {"id":"death_insurance","name":"Death Insurance","slot":"material","rarity":"common","icon":"🛡️","description":"Auto-consumed on death to prevent item loss. Gold penalty still applies.","perkType":"cosmetic","perkValue":0,"perkDescription":"Consumable — prevents item loss on death"},
   // ── Common — Wooden Set ──
   {"id":"wooden_helm","name":"Wooden Helm","slot":"head","rarity":"common","icon":"🪖","description":"A crude helm carved from hardwood.","perkType":"atk_boost","perkValue":2,"perkDescription":"+2 ATK"},
   {"id":"wooden_plate","name":"Wooden Plate","slot":"body","rarity":"common","icon":"🪵","description":"Wooden planks strapped together as armor.","perkType":"hp_boost","perkValue":15,"perkDescription":"+15 HP"},
@@ -2162,7 +2216,9 @@ const ZONE_CATALOG = [
 
 const CRAFT_RECIPE_CATALOG = [
   // Farm consumable
-  { id:'recipe_compost',       output:'compost',           outputQty:3, isIntermediate:true,  ingredients:[{id:'wheat',qty:5},{id:'herbs',qty:3}],                                      levelRequired:0,  xpPerItem:30,   secPerItem:6 },
+  { id:'recipe_compost',          output:'compost',           outputQty:3, isIntermediate:true,  ingredients:[{id:'wheat',qty:3},{id:'herbs',qty:2}],                                      levelRequired:0,  xpPerItem:30,   secPerItem:6 },
+  { id:'recipe_dungeon_pass',     output:'dungeon_pass',      outputQty:1, isIntermediate:true,  ingredients:[{id:'wheat',qty:5},{id:'herbs',qty:3}],                                      levelRequired:5,  xpPerItem:40,   secPerItem:15 },
+  { id:'recipe_death_insurance',  output:'death_insurance',   outputQty:1, isIntermediate:true,  ingredients:[{id:'wheat',qty:5},{id:'herbs',qty:5}],                                      levelRequired:10, xpPerItem:25,   secPerItem:20 },
   // Tier 1 — Refine raw → intermediate
   { id:'recipe_iron_bar',      output:'iron_bar',          outputQty:1, isIntermediate:true,  ingredients:[{id:'ore_iron',qty:5}],                                                     levelRequired:0,  xpPerItem:45,   secPerItem:8 },
   { id:'recipe_fang_shard',    output:'fang_shard',        outputQty:1, isIntermediate:true,  ingredients:[{id:'monster_fang',qty:4}],                                                  levelRequired:0,  xpPerItem:55,   secPerItem:10 },
@@ -2172,20 +2228,20 @@ const CRAFT_RECIPE_CATALOG = [
   // Tier 2 — Craft gear from intermediates + plants
   { id:'recipe_iron_helm',     output:'craft_iron_helm',   outputQty:1, isIntermediate:false, ingredients:[{id:'iron_bar',qty:2},{id:'wheat',qty:3}],                                    levelRequired:3,  xpPerItem:40,   secPerItem:20 },
   { id:'recipe_fang_dagger',   output:'craft_fang_dagger', outputQty:1, isIntermediate:false, ingredients:[{id:'fang_shard',qty:2},{id:'herbs',qty:3}],                                  levelRequired:15, xpPerItem:70,   secPerItem:300 },
-  { id:'recipe_essence_ring',  output:'craft_essence_ring', outputQty:1, isIntermediate:false,ingredients:[{id:'essence_vial',qty:2},{id:'blossoms',qty:2}],                             levelRequired:30, xpPerItem:130,  secPerItem:600 },
-  { id:'recipe_scale_robe',    output:'craft_scale_robe',  outputQty:1, isIntermediate:false, ingredients:[{id:'ancient_dust',qty:2},{id:'orchids',qty:2}],                              levelRequired:45, xpPerItem:260,  secPerItem:1200 },
-  { id:'recipe_void_blade',    output:'craft_void_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'void_fragment',qty:2},{id:'star_bloom',qty:2}],                          levelRequired:65, xpPerItem:650,  secPerItem:2700 },
+  { id:'recipe_essence_ring',  output:'craft_essence_ring', outputQty:1, isIntermediate:false,ingredients:[{id:'essence_vial',qty:2},{id:'blossoms',qty:2}],                             levelRequired:30, xpPerItem:130,  secPerItem:600,  goldCost:500 },
+  { id:'recipe_scale_robe',    output:'craft_scale_robe',  outputQty:1, isIntermediate:false, ingredients:[{id:'ancient_dust',qty:2},{id:'orchids',qty:2}],                              levelRequired:45, xpPerItem:260,  secPerItem:1200, goldCost:1500 },
+  { id:'recipe_void_blade',    output:'craft_void_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'void_fragment',qty:2},{id:'star_bloom',qty:2}],                          levelRequired:65, xpPerItem:650,  secPerItem:2700, goldCost:3000 },
   // Tier 3 — Zone-drop gear
   { id:'recipe_slime_shield',  output:'craft_slime_shield', outputQty:1, isIntermediate:false, ingredients:[{id:'slime_gel',qty:5},{id:'wheat',qty:3}],                                  levelRequired:0,  xpPerItem:25,   secPerItem:15 },
   { id:'recipe_goblin_blade',  output:'craft_goblin_blade', outputQty:1, isIntermediate:false, ingredients:[{id:'goblin_tooth',qty:4},{id:'herbs',qty:3}],                               levelRequired:5,  xpPerItem:50,   secPerItem:25 },
-  { id:'recipe_wolf_pendant',  output:'craft_wolf_pendant', outputQty:1, isIntermediate:false, ingredients:[{id:'wolf_fang',qty:3},{id:'iron_bar',qty:1},{id:'blossoms',qty:2}],         levelRequired:20, xpPerItem:100,  secPerItem:480 },
-  { id:'recipe_orc_plate',     output:'craft_orc_plate',   outputQty:1, isIntermediate:false, ingredients:[{id:'orc_shard',qty:3},{id:'fang_shard',qty:2},{id:'orchids',qty:2}],         levelRequired:35, xpPerItem:200,  secPerItem:900 },
-  { id:'recipe_troll_cloak',   output:'craft_troll_cloak', outputQty:1, isIntermediate:false, ingredients:[{id:'troll_hide',qty:3},{id:'essence_vial',qty:1},{id:'orchids',qty:2}],      levelRequired:50, xpPerItem:400,  secPerItem:1800 },
-  { id:'recipe_dragon_crown',  output:'craft_dragon_crown', outputQty:1, isIntermediate:false,ingredients:[{id:'dragon_scale',qty:3},{id:'void_fragment',qty:1},{id:'star_bloom',qty:2}], levelRequired:70, xpPerItem:850,  secPerItem:3600 },
+  { id:'recipe_wolf_pendant',  output:'craft_wolf_pendant', outputQty:1, isIntermediate:false, ingredients:[{id:'wolf_fang',qty:3},{id:'iron_bar',qty:1},{id:'blossoms',qty:2}],         levelRequired:20, xpPerItem:100,  secPerItem:480,  goldCost:300 },
+  { id:'recipe_orc_plate',     output:'craft_orc_plate',   outputQty:1, isIntermediate:false, ingredients:[{id:'orc_shard',qty:3},{id:'fang_shard',qty:2},{id:'orchids',qty:2}],         levelRequired:35, xpPerItem:200,  secPerItem:900,  goldCost:800 },
+  { id:'recipe_troll_cloak',   output:'craft_troll_cloak', outputQty:1, isIntermediate:false, ingredients:[{id:'troll_hide',qty:3},{id:'essence_vial',qty:1},{id:'orchids',qty:2}],      levelRequired:50, xpPerItem:400,  secPerItem:1800, goldCost:2000 },
+  { id:'recipe_dragon_crown',  output:'craft_dragon_crown', outputQty:1, isIntermediate:false,ingredients:[{id:'dragon_scale',qty:3},{id:'void_fragment',qty:1},{id:'star_bloom',qty:2}], levelRequired:70, xpPerItem:850,  secPerItem:3600, goldCost:5000 },
   // Tier 4 — Boss-material gear
-  { id:'recipe_warlord_gauntlets', output:'craft_warlord_gauntlets', outputQty:1, isIntermediate:false, ingredients:[{id:'warlord_sigil',qty:2},{id:'orc_shard',qty:5},{id:'clovers',qty:3}],               levelRequired:40, xpPerItem:350,  secPerItem:1500 },
-  { id:'recipe_troll_aegis',       output:'craft_troll_aegis',       outputQty:1, isIntermediate:false, ingredients:[{id:'troll_heart',qty:2},{id:'troll_hide',qty:5},{id:'ancient_dust',qty:2},{id:'crystal_root',qty:1}], levelRequired:60, xpPerItem:700,  secPerItem:3000 },
-  { id:'recipe_dragonfire_blade',  output:'craft_dragonfire_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'dragon_heart',qty:2},{id:'dragon_scale',qty:5},{id:'void_fragment',qty:2},{id:'star_bloom',qty:3}], levelRequired:80, xpPerItem:1500, secPerItem:5400 },
+  { id:'recipe_warlord_gauntlets', output:'craft_warlord_gauntlets', outputQty:1, isIntermediate:false, ingredients:[{id:'warlord_sigil',qty:1},{id:'orc_shard',qty:5},{id:'clovers',qty:3}],               levelRequired:40, xpPerItem:350,  secPerItem:1500, goldCost:1500 },
+  { id:'recipe_troll_aegis',       output:'craft_troll_aegis',       outputQty:1, isIntermediate:false, ingredients:[{id:'troll_heart',qty:1},{id:'troll_hide',qty:5},{id:'ancient_dust',qty:2},{id:'crystal_root',qty:1}], levelRequired:60, xpPerItem:700,  secPerItem:3000, goldCost:4000 },
+  { id:'recipe_dragonfire_blade',  output:'craft_dragonfire_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'dragon_heart',qty:1},{id:'dragon_scale',qty:5},{id:'void_fragment',qty:2},{id:'star_bloom',qty:3}], levelRequired:80, xpPerItem:1500, secPerItem:5400, goldCost:8000 },
 ]
 
 const CHEST_CATALOG = [
@@ -4041,6 +4097,236 @@ function gcResetIcons() {
   gcSetDirty()
 }
 })()
+</script>
+
+<!-- ── Player Management Drawer ──────────────────────────────────────────── -->
+<div class="drawer-overlay" id="pm-overlay" onclick="pmClose()"></div>
+<div class="drawer" id="pm-drawer">
+  <div class="drawer-head">
+    <h2 id="pm-title">Player</h2>
+    <button class="btn btn-ghost btn-sm" onclick="pmClose()">✕ Close</button>
+  </div>
+  <div class="drawer-body" id="pm-body">
+    <div style="text-align:center;padding:40px"><span class="spinner"></span></div>
+  </div>
+</div>
+<div class="pm-toast" id="pm-toast"></div>
+
+<script>
+// ── Player Management ─────────────────────────────────────────────────────────
+
+let pmUserId = null
+let pmData   = null
+
+const SKILL_NAMES = ['developer','designer','gamer','communicator','researcher','creator','learner','listener','chef']
+const SKILL_LABELS = { developer:'Developer', designer:'Designer', gamer:'Gamer', communicator:'Communicator', researcher:'Researcher', creator:'Creator', learner:'Learner', listener:'Listener', chef:'Chef' }
+const SKILL_ICONS  = { developer:'💻', designer:'🎨', gamer:'🎮', communicator:'💬', researcher:'🔍', creator:'✏️', learner:'📚', listener:'🎧', chef:'🍳' }
+const CHEST_TYPES  = ['common_chest','rare_chest','epic_chest','legendary_chest']
+const CHEST_LABELS = { common_chest:'Common', rare_chest:'Rare', epic_chest:'Epic', legendary_chest:'Legendary' }
+const CHEST_COLORS = { common_chest:'#aaa', rare_chest:'#06aed4', epic_chest:'#7c6cff', legendary_chest:'#ffd166' }
+
+function pmToast(msg) {
+  const el = document.getElementById('pm-toast')
+  el.textContent = msg
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 2000)
+}
+
+function xpToLevel(xp) { return Math.min(99, Math.floor(99 * Math.pow(Math.max(0, xp) / 3_600_000, 1 / 2.2))) }
+function levelToXp(lvl) { return Math.floor(Math.pow(lvl / 99, 2.2) * 3_600_000) }
+
+async function pmOpen(userId, username) {
+  pmUserId = userId
+  document.getElementById('pm-title').innerHTML = '🛠 ' + esc(username || 'Player')
+  document.getElementById('pm-overlay').classList.add('open')
+  document.getElementById('pm-drawer').classList.add('open')
+  document.getElementById('pm-body').innerHTML = '<div style="text-align:center;padding:40px"><span class="spinner"></span></div>'
+
+  const data = await apiFetch('GET', '/api/users/' + userId + '/details')
+  if (data.error) {
+    document.getElementById('pm-body').innerHTML = '<p style="color:var(--red)">Error: ' + esc(data.error) + '</p>'
+    return
+  }
+  pmData = data
+  pmRender()
+}
+
+function pmClose() {
+  document.getElementById('pm-overlay').classList.remove('open')
+  document.getElementById('pm-drawer').classList.remove('open')
+  pmUserId = null
+  pmData = null
+}
+
+function pmRender() {
+  const d = pmData
+  const p = d.profile
+  const body = document.getElementById('pm-body')
+
+  // Info cards
+  let html = '<div class="pm-info-grid">'
+  html += '<div class="pm-info-card"><div class="lbl">Level</div><div class="val">' + (p.level ?? 0) + '</div></div>'
+  html += '<div class="pm-info-card"><div class="lbl">Gold</div><div class="val" style="color:var(--yellow)">' + (p.gold ?? 0).toLocaleString() + '</div></div>'
+  html += '<div class="pm-info-card"><div class="lbl">Streak</div><div class="val" style="color:var(--orange)">' + (p.streak_count ?? 0) + 'd</div></div>'
+  html += '<div class="pm-info-card"><div class="lbl">Status</div><div class="val" style="font-size:13px;color:var(--muted2)">' + (p.is_online ? '<span style="color:var(--green)">Online</span>' : 'Offline') + '</div></div>'
+  html += '</div>'
+
+  // ── Gold & Streak edits ──
+  html += '<div class="drawer-section">'
+  html += '<h3>Quick Edit</h3>'
+  html += '<div class="pm-field-row"><label>Gold</label><input class="input" type="number" id="pm-gold" value="' + (p.gold ?? 0) + '" min="0"/><button class="btn btn-green btn-sm" onclick="pmSetGold()">Set</button></div>'
+  html += '<div class="pm-field-row"><label>Streak</label><input class="input" type="number" id="pm-streak" value="' + (p.streak_count ?? 0) + '" min="0"/><button class="btn btn-green btn-sm" onclick="pmSetStreak()">Set</button></div>'
+  html += '</div>'
+
+  // ── Skills ──
+  html += '<div class="drawer-section">'
+  html += '<h3>Skills <button class="btn btn-red btn-sm" onclick="pmResetAllSkills()">Reset All</button></h3>'
+  const skillMap = {}
+  for (const s of d.skills) skillMap[s.skill_id] = s
+  for (const sid of SKILL_NAMES) {
+    const s = skillMap[sid] || { level: 0, total_xp: 0, prestige_count: 0 }
+    const icon = SKILL_ICONS[sid] || '⚡'
+    const label = SKILL_LABELS[sid] || sid
+    html += '<div class="pm-skill-row">'
+    html += '<span>' + icon + '</span>'
+    html += '<span class="pm-skill-name">' + label + '</span>'
+    html += '<span class="pm-skill-info">Lv ' + (s.level ?? 0) + ' &middot; ' + (s.total_xp ?? 0).toLocaleString() + ' XP' + (s.prestige_count ? ' &middot; P' + s.prestige_count : '') + '</span>'
+    html += '<div class="pm-skill-edit">'
+    html += '<input class="input" type="number" id="pm-skill-xp-' + sid + '" placeholder="XP" value="' + (s.total_xp ?? 0) + '" min="0" max="3600000"/>'
+    html += '<button class="btn btn-green btn-sm" onclick="pmSetSkill(\'' + sid + '\')">Set</button>'
+    html += '</div></div>'
+  }
+  html += '</div>'
+
+  // ── Chests ──
+  html += '<div class="drawer-section">'
+  html += '<h3>Chests</h3>'
+  const chestMap = {}
+  for (const c of d.chests) chestMap[c.chest_type] = c.quantity
+  for (const ct of CHEST_TYPES) {
+    const qty = chestMap[ct] || 0
+    const label = CHEST_LABELS[ct]
+    const color = CHEST_COLORS[ct]
+    html += '<div class="pm-item-row">'
+    html += '<span style="color:' + color + ';font-weight:600">' + label + '</span>'
+    html += '<span class="pm-item-qty">x' + qty + '</span>'
+    html += '<div class="pm-item-actions">'
+    html += '<input class="input" type="number" id="pm-chest-' + ct + '" value="' + qty + '" min="0"/>'
+    html += '<button class="btn btn-green btn-sm" onclick="pmSetChest(\'' + ct + '\')">Set</button>'
+    html += '</div></div>'
+  }
+  html += '</div>'
+
+  // ── Inventory ──
+  html += '<div class="drawer-section">'
+  html += '<h3>Inventory (' + d.inventory.length + ')</h3>'
+  const sortedInv = [...d.inventory].sort((a, b) => a.item_id.localeCompare(b.item_id))
+  for (const item of sortedInv) {
+    html += '<div class="pm-item-row">'
+    html += '<span class="pm-item-name">' + esc(item.item_id) + '</span>'
+    html += '<span class="pm-item-qty">x' + item.quantity + '</span>'
+    html += '<div class="pm-item-actions">'
+    html += '<input class="input" type="number" data-inv-item="' + esc(item.item_id) + '" value="' + item.quantity + '" min="0"/>'
+    html += '<button class="btn btn-green btn-sm" onclick="pmSetItem(\'' + esc(item.item_id).replace(/'/g, "\\'") + '\')">Set</button>'
+    html += '<button class="btn btn-red btn-sm" onclick="pmRemoveItem(\'' + esc(item.item_id).replace(/'/g, "\\'") + '\')">Del</button>'
+    html += '</div></div>'
+  }
+  // Add new item
+  html += '<div class="pm-add-row">'
+  html += '<input class="input" id="pm-new-item-id" placeholder="item_id (e.g. iron_sword)"/>'
+  html += '<input class="input" type="number" id="pm-new-item-qty" placeholder="qty" value="1" min="1" style="flex:0 0 70px"/>'
+  html += '<button class="btn btn-green btn-sm" onclick="pmAddItem()">Add</button>'
+  html += '</div>'
+  html += '</div>'
+
+  // ── Achievements ──
+  html += '<div class="drawer-section">'
+  html += '<h3>Achievements (' + d.achievements.length + ')</h3>'
+  if (!d.achievements.length) {
+    html += '<p style="color:var(--muted);font-size:12px">No achievements unlocked</p>'
+  } else {
+    const sortedAch = [...d.achievements].sort((a, b) => a.achievement_id.localeCompare(b.achievement_id))
+    for (const a of sortedAch) {
+      html += '<div class="pm-ach-row">'
+      html += '<span class="pm-ach-name">' + esc(a.achievement_id) + '</span>'
+      html += '<span class="pm-ach-date">' + (a.unlocked_at ? new Date(a.unlocked_at).toLocaleDateString() : '') + '</span>'
+      html += '<button class="btn btn-red btn-sm" onclick="pmRemoveAch(\'' + esc(a.achievement_id).replace(/'/g, "\\'") + '\')">Remove</button>'
+      html += '</div>'
+    }
+  }
+  html += '</div>'
+
+  // ── User ID ──
+  html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">'
+  html += '<span style="font-size:11px;color:var(--muted)">UUID: ' + esc(p.id) + '</span>'
+  html += '</div>'
+
+  body.innerHTML = html
+}
+
+async function pmSetGold() {
+  const gold = document.getElementById('pm-gold')?.value
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/gold', { gold: Number(gold) })
+  if (r.ok) { pmToast('Gold updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmSetStreak() {
+  const streak = document.getElementById('pm-streak')?.value
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/streak', { streak_count: Number(streak) })
+  if (r.ok) { pmToast('Streak updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmSetSkill(skillId) {
+  const xp = Number(document.getElementById('pm-skill-xp-' + skillId)?.value ?? 0)
+  const level = xpToLevel(xp)
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/skills', { skill_id: skillId, total_xp: xp, level })
+  if (r.ok) { pmToast(skillId + ' XP set to ' + xp.toLocaleString()); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmResetAllSkills() {
+  if (!confirm('Reset ALL skills for this player to 0?')) return
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/reset-skills')
+  if (r.ok) { pmToast('All skills reset'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmSetChest(chestType) {
+  const qty = Number(document.getElementById('pm-chest-' + chestType)?.value ?? 0)
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/chests', { chest_type: chestType, quantity: qty })
+  if (r.ok) { pmToast('Chests updated'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmSetItem(itemId) {
+  const el = document.querySelector('[data-inv-item="' + CSS.escape(itemId) + '"]')
+  const qty = Number(el?.value ?? 0)
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: itemId, quantity: qty })
+  if (r.ok) { pmToast(itemId + ' qty set to ' + qty); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmRemoveItem(itemId) {
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: itemId, quantity: 0 })
+  if (r.ok) { pmToast(itemId + ' removed'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmAddItem() {
+  const id  = document.getElementById('pm-new-item-id')?.value?.trim()
+  const qty = Number(document.getElementById('pm-new-item-qty')?.value ?? 1)
+  if (!id) return pmToast('Enter an item ID')
+  const r = await apiFetch('POST', '/api/users/' + pmUserId + '/inventory', { item_id: id, quantity: qty })
+  if (r.ok) { pmToast(id + ' added (x' + qty + ')'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmRemoveAch(achId) {
+  if (!confirm('Remove achievement "' + achId + '"?')) return
+  const r = await apiFetch('DELETE', '/api/users/' + pmUserId + '/achievements/' + encodeURIComponent(achId))
+  if (r.ok) { pmToast('Achievement removed'); pmRefresh() } else pmToast('Error: ' + (r.error || 'unknown'))
+}
+
+async function pmRefresh() {
+  if (!pmUserId) return
+  const data = await apiFetch('GET', '/api/users/' + pmUserId + '/details')
+  if (!data.error) { pmData = data; pmRender() }
+  loadUsers() // refresh the table too
+}
 </script>
 </body>
 </html>
