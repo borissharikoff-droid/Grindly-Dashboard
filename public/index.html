@@ -4096,6 +4096,11 @@ function gcResetIcons() {
   delete gcConfig.uiIcons
   gcSetDirty()
 }
+
+// Expose helpers needed by player management panel
+window.apiFetch = apiFetch
+window.esc = esc
+window.loadUsers = loadUsers
 })()
 </script>
 
