@@ -646,6 +646,328 @@ app.delete('/api/users/:id', requireAuth, async (req, res) => {
   }
 })
 
+// ── Abuse Detection / User Analytics ─────────────────────────────────────────
+
+app.get('/api/abuse-detection', requireAuth, async (req, res) => {
+  try {
+    const data = await cached('abuse_detection', 5 * 60 * 1000, async () => {
+      const alerts = []
+      const now = new Date()
+      const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
+      const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+      // ── 1. XP anomalies: users with extremely high XP in any skill ──
+      const { data: xpOutliers } = await supabase
+        .from('user_skills')
+        .select('user_id, skill_id, total_xp, level, updated_at')
+        .gt('total_xp', 1_000_000)
+        .order('total_xp', { ascending: false })
+        .limit(50)
+
+      // Get profile info for flagged users
+      const flaggedUserIds = new Set()
+      const userProfileCache = {}
+
+      if (xpOutliers?.length) {
+        for (const row of xpOutliers) flaggedUserIds.add(row.user_id)
+      }
+
+      // ── 2. Gold anomalies: users with extreme gold ──
+      const { data: goldOutliers } = await supabase
+        .from('profiles')
+        .select('id, username, gold, level, streak_count, updated_at, created_at')
+        .order('gold', { ascending: false })
+        .limit(20)
+
+      // Calculate gold stats for thresholds
+      const { data: allGold } = await supabase.from('profiles').select('gold')
+      const goldValues = (allGold || []).map(r => Number(r.gold) || 0)
+      const avgGold = goldValues.length ? goldValues.reduce((a, b) => a + b, 0) / goldValues.length : 0
+      const goldStdDev = goldValues.length > 1
+        ? Math.sqrt(goldValues.reduce((sum, g) => sum + Math.pow(g - avgGold, 2), 0) / goldValues.length)
+        : 0
+      const goldThreshold = avgGold + 3 * goldStdDev
+
+      if (goldOutliers?.length) {
+        for (const u of goldOutliers) {
+          if (Number(u.gold) > goldThreshold && goldThreshold > 0) {
+            flaggedUserIds.add(u.id)
+            alerts.push({
+              type: 'gold_anomaly',
+              severity: Number(u.gold) > avgGold + 5 * goldStdDev ? 'high' : 'medium',
+              user_id: u.id,
+              username: u.username,
+              detail: `Gold: ${Number(u.gold).toLocaleString()} (avg: ${Math.round(avgGold).toLocaleString()}, threshold: ${Math.round(goldThreshold).toLocaleString()})`,
+              value: Number(u.gold),
+              timestamp: u.updated_at,
+            })
+          }
+        }
+      }
+
+      // ── 3. Session anomalies: extremely long or many sessions ──
+      const { data: recentSessions } = await supabase
+        .from('session_summaries')
+        .select('user_id, start_time, end_time, duration_seconds')
+        .gte('start_time', weekAgo)
+        .order('duration_seconds', { ascending: false })
+        .limit(200)
+
+      if (recentSessions?.length) {
+        // Flag sessions over 12h
+        for (const s of recentSessions) {
+          const dur = Number(s.duration_seconds) || 0
+          if (dur > 12 * 3600) {
+            flaggedUserIds.add(s.user_id)
+            alerts.push({
+              type: 'long_session',
+              severity: dur > 24 * 3600 ? 'high' : 'medium',
+              user_id: s.user_id,
+              username: null,
+              detail: `Session lasted ${(dur / 3600).toFixed(1)}h (${new Date(s.start_time).toLocaleDateString()})`,
+              value: dur,
+              timestamp: s.start_time,
+            })
+          }
+        }
+
+        // Count sessions per user in last 7 days
+        const sessionsPerUser = {}
+        const totalDurPerUser = {}
+        for (const s of recentSessions) {
+          sessionsPerUser[s.user_id] = (sessionsPerUser[s.user_id] || 0) + 1
+          totalDurPerUser[s.user_id] = (totalDurPerUser[s.user_id] || 0) + (Number(s.duration_seconds) || 0)
+        }
+        for (const [uid, total] of Object.entries(totalDurPerUser)) {
+          // Over 60h in a week is suspicious
+          if (total > 60 * 3600) {
+            flaggedUserIds.add(uid)
+            alerts.push({
+              type: 'excessive_playtime',
+              severity: total > 100 * 3600 ? 'high' : 'medium',
+              user_id: uid,
+              username: null,
+              detail: `${(total / 3600).toFixed(1)}h total in last 7 days (${sessionsPerUser[uid]} sessions)`,
+              value: total,
+              timestamp: null,
+            })
+          }
+        }
+      }
+
+      // ── 4. Streak anomalies: unusually high streaks for account age ──
+      const { data: streakUsers } = await supabase
+        .from('profiles')
+        .select('id, username, streak_count, created_at')
+        .gt('streak_count', 0)
+        .order('streak_count', { ascending: false })
+        .limit(50)
+
+      if (streakUsers?.length) {
+        for (const u of streakUsers) {
+          const accountAgeDays = (now - new Date(u.created_at)) / (24 * 60 * 60 * 1000)
+          // Streak is more than account age (impossible without manipulation)
+          if (u.streak_count > accountAgeDays + 1) {
+            flaggedUserIds.add(u.id)
+            alerts.push({
+              type: 'streak_anomaly',
+              severity: 'high',
+              user_id: u.id,
+              username: u.username,
+              detail: `Streak ${u.streak_count}d but account is only ${Math.floor(accountAgeDays)}d old`,
+              value: u.streak_count,
+              timestamp: u.created_at,
+            })
+          }
+        }
+      }
+
+      // ── 5. XP growth rate: check if any skill XP exceeds what's possible ──
+      if (xpOutliers?.length) {
+        // Get profile data for XP outliers
+        const xpUserIds = [...new Set(xpOutliers.map(r => r.user_id))]
+        const { data: xpProfiles } = await supabase
+          .from('profiles')
+          .select('id, username, created_at')
+          .in('id', xpUserIds)
+
+        const profileMap = {}
+        for (const p of (xpProfiles || [])) profileMap[p.id] = p
+
+        for (const row of xpOutliers) {
+          const profile = profileMap[row.user_id]
+          if (!profile) continue
+          const accountAgeDays = Math.max(1, (now - new Date(profile.created_at)) / (24 * 60 * 60 * 1000))
+          const xpPerDay = row.total_xp / accountAgeDays
+          // Max reasonable XP per day: ~16h active at ~1 XP/sec = ~57600 XP/day per skill
+          // Be generous: 100K/day is extremely suspicious
+          if (xpPerDay > 100_000) {
+            alerts.push({
+              type: 'xp_rate_anomaly',
+              severity: xpPerDay > 500_000 ? 'high' : 'medium',
+              user_id: row.user_id,
+              username: profile.username,
+              detail: `${row.skill_id}: ${Math.round(xpPerDay).toLocaleString()} XP/day avg (${Number(row.total_xp).toLocaleString()} total, account ${Math.floor(accountAgeDays)}d old)`,
+              value: xpPerDay,
+              timestamp: row.updated_at,
+            })
+          }
+        }
+      }
+
+      // ── 6. Marketplace suspicious activity ──
+      const { data: trades } = await supabase
+        .from('trade_history')
+        .select('buyer_id, seller_id, item_id, unit_price, quantity, total_gold, traded_at')
+        .gte('traded_at', weekAgo)
+        .order('traded_at', { ascending: false })
+        .limit(500)
+
+      if (trades?.length) {
+        // Self-trading detection (same buyer/seller via alt accounts)
+        // Check for pairs that trade frequently with each other
+        const pairTrades = {}
+        for (const t of trades) {
+          if (!t.buyer_id || !t.seller_id) continue
+          const pair = [t.buyer_id, t.seller_id].sort().join('|')
+          if (!pairTrades[pair]) pairTrades[pair] = { count: 0, totalGold: 0, buyer: t.buyer_id, seller: t.seller_id }
+          pairTrades[pair].count++
+          pairTrades[pair].totalGold += Number(t.total_gold) || 0
+        }
+        for (const [pair, info] of Object.entries(pairTrades)) {
+          if (info.count >= 5) {
+            flaggedUserIds.add(info.buyer)
+            flaggedUserIds.add(info.seller)
+            alerts.push({
+              type: 'frequent_trading_pair',
+              severity: info.count >= 10 ? 'high' : 'medium',
+              user_id: info.buyer,
+              username: null,
+              detail: `${info.count} trades between 2 users totaling ${info.totalGold.toLocaleString()} gold in 7 days`,
+              value: info.count,
+              timestamp: null,
+              extra: { pair: pair.split('|') },
+            })
+          }
+        }
+
+        // Suspiciously cheap or expensive trades (price manipulation)
+        // Group by item to find avg price
+        const itemPrices = {}
+        for (const t of trades) {
+          if (!itemPrices[t.item_id]) itemPrices[t.item_id] = []
+          itemPrices[t.item_id].push(Number(t.unit_price) || 0)
+        }
+        for (const [itemId, prices] of Object.entries(itemPrices)) {
+          if (prices.length < 3) continue
+          const avg = prices.reduce((a, b) => a + b, 0) / prices.length
+          for (const t of trades.filter(tr => tr.item_id === itemId)) {
+            const price = Number(t.unit_price) || 0
+            if (avg > 0 && (price < avg * 0.1 || price > avg * 10)) {
+              flaggedUserIds.add(t.buyer_id)
+              flaggedUserIds.add(t.seller_id)
+              alerts.push({
+                type: 'price_anomaly',
+                severity: 'medium',
+                user_id: t.seller_id,
+                username: null,
+                detail: `${itemId} traded at ${price} gold (avg: ${Math.round(avg)} gold) — ${price < avg ? 'suspiciously cheap' : 'suspiciously expensive'}`,
+                value: price,
+                timestamp: t.traded_at,
+              })
+            }
+          }
+        }
+      }
+
+      // ── 7. New accounts with high level (possible exploit) ──
+      const { data: newHighLevel } = await supabase
+        .from('profiles')
+        .select('id, username, level, created_at, gold')
+        .gte('created_at', weekAgo)
+        .gt('level', 10)
+        .order('level', { ascending: false })
+        .limit(20)
+
+      if (newHighLevel?.length) {
+        for (const u of newHighLevel) {
+          const ageDays = (now - new Date(u.created_at)) / (24 * 60 * 60 * 1000)
+          flaggedUserIds.add(u.id)
+          alerts.push({
+            type: 'fast_progression',
+            severity: u.level > 30 ? 'high' : 'medium',
+            user_id: u.id,
+            username: u.username,
+            detail: `Level ${u.level} reached in ${ageDays.toFixed(1)} days, ${Number(u.gold).toLocaleString()} gold`,
+            value: u.level,
+            timestamp: u.created_at,
+          })
+        }
+      }
+
+      // ── Resolve missing usernames ──
+      const needNames = alerts.filter(a => !a.username && a.user_id)
+      if (needNames.length) {
+        const ids = [...new Set(needNames.map(a => a.user_id))]
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', ids.slice(0, 50))
+        if (profiles) {
+          const nameMap = {}
+          for (const p of profiles) nameMap[p.id] = p.username
+          for (const a of alerts) {
+            if (!a.username && nameMap[a.user_id]) a.username = nameMap[a.user_id]
+          }
+        }
+      }
+
+      // ── Sort by severity (high first), then deduplicate ──
+      const severityOrder = { high: 0, medium: 1, low: 2 }
+      alerts.sort((a, b) => (severityOrder[a.severity] ?? 2) - (severityOrder[b.severity] ?? 2))
+
+      // Deduplicate: one alert per user+type
+      const seen = new Set()
+      const deduped = []
+      for (const a of alerts) {
+        const key = a.user_id + '|' + a.type
+        if (seen.has(key)) continue
+        seen.add(key)
+        deduped.push(a)
+      }
+
+      // ── Build user detail summaries for flagged users ──
+      const flaggedList = [...flaggedUserIds].slice(0, 50)
+      let flaggedProfiles = []
+      if (flaggedList.length) {
+        const { data: fp } = await supabase
+          .from('profiles')
+          .select('id, username, level, gold, streak_count, created_at, updated_at, is_online')
+          .in('id', flaggedList)
+        flaggedProfiles = fp || []
+      }
+
+      return {
+        alerts: deduped.slice(0, 100),
+        totalAlerts: deduped.length,
+        highCount: deduped.filter(a => a.severity === 'high').length,
+        mediumCount: deduped.filter(a => a.severity === 'medium').length,
+        flaggedUsers: flaggedProfiles,
+        thresholds: {
+          goldAvg: Math.round(avgGold),
+          goldStdDev: Math.round(goldStdDev),
+          goldThreshold: Math.round(goldThreshold),
+        },
+        generatedAt: new Date().toISOString(),
+      }
+    })
+    res.json(data)
+  } catch (err) {
+    console.error('/api/abuse-detection', err)
+    res.status(500).json({ error: String(err) })
+  }
+})
+
 // ── Static ────────────────────────────────────────────────────────────────────
 
 app.use(express.static(path.join(__dirname, 'public')))

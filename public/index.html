@@ -94,6 +94,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .c-blue .card-val{color:var(--blue)} .c-blue::after{background:var(--blue)}
 .c-orange .card-val{color:var(--orange)} .c-orange::after{background:var(--orange)}
 .c-pink .card-val{color:var(--pink)} .c-pink::after{background:var(--pink)}
+.c-red .card-val{color:var(--red)} .c-red::after{background:var(--red)}
 .card-icon{font-size:20px;margin-bottom:8px;line-height:1}
 .card-label{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
 .card-val{font-size:28px;font-weight:700;letter-spacing:-.8px;line-height:1}
@@ -148,6 +149,15 @@ th.sort-desc::after{content:' ↓';color:var(--green)}
 td{padding:10px 20px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03)}
 /* Compact mode */
 body.compact th,body.compact td{padding:6px 16px}
+
+/* ── Alert badges ───────────────────────────────────────────────────────────  */
+.sev-high{background:rgba(255,77,109,.15);color:var(--red);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.sev-medium{background:rgba(255,107,53,.15);color:var(--orange);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.sev-low{background:rgba(136,136,170,.15);color:var(--muted2);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.alert-type{font-size:11px;color:var(--muted2);background:rgba(255,255,255,.04);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.alert-row:hover{background:rgba(255,255,255,.02)}
+.flagged-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.flagged-card:hover{border-color:rgba(255,77,109,.3)}
 body.compact .card-val{font-size:22px}
 body.compact .card{padding:14px 16px}
 /* Stat card click-to-copy */
@@ -348,6 +358,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <button class="tab-btn" onclick="showTab('polls',this);loadPolls()">📊 Polls</button>
     <button class="tab-btn" onclick="showTab('gameconfig',this);loadGameConfig()">🎮 Game Config</button>
     <button class="tab-btn" onclick="showTab('economy',this)">💰 Economy</button>
+    <button class="tab-btn" onclick="showTab('alerts',this);loadAlerts()">🚨 Alerts</button>
   </nav>
 
   <!-- Content -->
@@ -362,6 +373,17 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div class="card c-yellow copyable" onclick="copyCard(this,'c-sessions')"><div class="card-icon">⏱</div><div class="card-label">Sessions Today</div><div class="card-val" id="c-sessions">—</div><div class="card-trend" id="t-sessions"></div><div class="card-spark" id="spark-sessions"></div></div>
         <div class="card c-orange copyable" onclick="copyCard(this,'c-avg')"><div class="card-icon">⚡</div><div class="card-label">Avg Session</div><div class="card-val" id="c-avg">—</div><div class="card-trend trend-neutral">duration</div></div>
         <div class="card c-pink copyable"   onclick="copyCard(this,'c-hours')"><div class="card-icon">🏆</div><div class="card-label">Total Hours</div><div class="card-val" id="c-hours">—</div><div class="card-trend trend-neutral">all time</div></div>
+      </div>
+
+      <!-- Alerts Summary -->
+      <div id="overview-alerts" style="display:none;margin-bottom:24px">
+        <div class="chart-box" style="border-color:rgba(255,77,109,.2)">
+          <div class="box-title" style="color:var(--red)">🚨 Active Alerts <span class="box-badge" id="ov-alert-badge" style="background:rgba(255,77,109,.15);color:var(--red)">0</span></div>
+          <div id="ov-alert-list" style="max-height:200px;overflow-y:auto"></div>
+          <div style="margin-top:10px;text-align:right">
+            <button class="btn btn-ghost btn-sm" onclick="document.querySelector('.tab-btn:last-child').click()">View All Alerts →</button>
+          </div>
+        </div>
       </div>
 
       <!-- DAU + User Growth -->
@@ -544,6 +566,68 @@ tr:hover td{background:rgba(255,255,255,.018)}
       <div class="chart-box">
         <div class="box-title">Most Traded Items <span class="box-badge" style="background:rgba(124,108,255,.12);color:var(--purple)" id="ec-trade-total-badge"></span></div>
         <div id="ec-top-traded" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- ── Alerts / Abuse Detection ──────────────────────────────────────── -->
+    <div class="page" id="page-alerts">
+      <div class="cards" id="alert-cards">
+        <div class="card c-red"><div class="card-icon">🚨</div><div class="card-label">Total Alerts</div><div class="card-val" id="al-total">—</div></div>
+        <div class="card c-red"><div class="card-icon">🔴</div><div class="card-label">High Severity</div><div class="card-val" id="al-high">—</div></div>
+        <div class="card c-orange"><div class="card-icon">🟠</div><div class="card-label">Medium Severity</div><div class="card-val" id="al-medium">—</div></div>
+        <div class="card c-purple"><div class="card-icon">👥</div><div class="card-label">Flagged Users</div><div class="card-val" id="al-flagged">—</div></div>
+      </div>
+
+      <!-- Thresholds info -->
+      <div class="chart-box" style="margin-bottom:14px">
+        <div class="box-title">Detection Thresholds</div>
+        <div id="al-thresholds" style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted2)"></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-ghost btn-sm active-pill" id="al-filter-all" onclick="filterAlerts('all')">All</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-high" onclick="filterAlerts('high')">🔴 High</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-medium" onclick="filterAlerts('medium')">🟠 Medium</button>
+        <span style="color:var(--muted);font-size:11px;margin-left:8px">|</span>
+        <button class="btn btn-ghost btn-sm" id="al-filter-gold_anomaly" onclick="filterAlerts('gold_anomaly')">💰 Gold</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-xp_rate_anomaly" onclick="filterAlerts('xp_rate_anomaly')">⚡ XP Rate</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-long_session" onclick="filterAlerts('long_session')">⏱ Sessions</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-streak_anomaly" onclick="filterAlerts('streak_anomaly')">🔥 Streak</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-fast_progression" onclick="filterAlerts('fast_progression')">📈 Fast Level</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-frequent_trading_pair" onclick="filterAlerts('frequent_trading_pair')">🤝 Trading</button>
+        <button class="btn btn-ghost btn-sm" id="al-filter-price_anomaly" onclick="filterAlerts('price_anomaly')">💸 Price</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" onclick="loadAlerts(true)">↻ Refresh</button>
+      </div>
+
+      <!-- Alerts list -->
+      <div class="table-box">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px">Severity</th>
+              <th style="width:140px">Type</th>
+              <th>Player</th>
+              <th>Details</th>
+              <th style="width:100px">Time</th>
+              <th style="width:60px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="alerts-tbody">
+            <tr><td colspan="6" class="empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Flagged users summary -->
+      <div class="chart-box" style="margin-top:14px">
+        <div class="box-title">Flagged Users Summary</div>
+        <div id="al-flagged-users" style="max-height:400px;overflow-y:auto"></div>
+      </div>
+
+      <div style="margin-top:12px;font-size:11px;color:var(--muted)">
+        <span id="al-generated-at"></span>
       </div>
     </div>
 
@@ -1282,6 +1366,8 @@ let refreshTimer = null
 let userSortCol  = 'last_seen'
 let userSortAsc  = false
 let onlineOnly   = false
+let alertsData   = null
+let alertFilter  = 'all'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1423,6 +1509,7 @@ function restoreRefreshInterval() {
 async function forceRefresh() {
   document.getElementById('last-refresh').textContent = 'Refreshing…'
   economyLoaded = false
+  alertsLoaded = false
   const [stats] = await Promise.all([apiFetch('GET', '/api/stats?force=1'), loadUsers()])
   statsData = stats
   renderOverview(stats)
@@ -1461,7 +1548,7 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
   const tabs = document.querySelectorAll('.tab-btn')
-  if (e.key >= '1' && e.key <= '7') { const idx = parseInt(e.key, 10) - 1; if (tabs[idx]) tabs[idx].click() }
+  if (e.key >= '1' && e.key <= '9') { const idx = parseInt(e.key, 10) - 1; if (tabs[idx]) tabs[idx].click() }
   if (e.key === 'r' || e.key === 'R') forceRefresh()
   if (e.key === 'Escape') document.getElementById('settings-panel')?.classList.remove('open')
 })
@@ -1476,6 +1563,7 @@ function showTab(id, btn) {
   if (id === 'announcements') loadAnnouncements()
   if (id === 'users' && allUsers.length === 0) loadUsers()
   if (id === 'economy') loadEconomy()
+  if (id === 'alerts') loadAlerts()
 }
 
 // ── Load all ──────────────────────────────────────────────────────────────────
@@ -1490,6 +1578,8 @@ async function loadAll() {
   renderOverview(stats)
   renderAnalytics(stats)
   renderSkills(stats)
+  // Load alerts in background for overview widget
+  loadAlerts()
   document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
 }
 
@@ -3919,6 +4009,190 @@ function gcResetZone() {
   }
   gcCloseZoneModal()
   gcRenderBosses()
+}
+
+// ─── Alerts / Abuse Detection ─────────────────────────────────────────────────
+
+let alertsLoaded = false
+
+const ALERT_TYPE_LABELS = {
+  gold_anomaly: '💰 Gold Anomaly',
+  xp_rate_anomaly: '⚡ XP Rate',
+  long_session: '⏱ Long Session',
+  excessive_playtime: '⏱ Excessive Play',
+  streak_anomaly: '🔥 Streak',
+  fast_progression: '📈 Fast Level',
+  frequent_trading_pair: '🤝 Frequent Trading',
+  price_anomaly: '💸 Price Anomaly',
+}
+
+async function loadAlerts(force) {
+  if (alertsLoaded && !force) return
+  alertsLoaded = true
+  var tbody = document.getElementById('alerts-tbody')
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr>'
+
+  var data = await apiFetch('GET', '/api/abuse-detection')
+  if (!data || data.error) {
+    alertsLoaded = false
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Error loading alerts</td></tr>'
+    return
+  }
+  alertsData = data
+  renderAlerts()
+  renderOverviewAlerts()
+}
+
+function filterAlerts(filter) {
+  alertFilter = filter
+  document.querySelectorAll('[id^="al-filter-"]').forEach(function(btn) {
+    btn.classList.remove('active-pill')
+  })
+  var el = document.getElementById('al-filter-' + filter)
+  if (el) el.classList.add('active-pill')
+  renderAlerts()
+}
+
+function renderAlerts() {
+  var d = alertsData
+  if (!d) return
+
+  document.getElementById('al-total').textContent = d.totalAlerts || 0
+  document.getElementById('al-high').textContent = d.highCount || 0
+  document.getElementById('al-medium').textContent = d.mediumCount || 0
+  document.getElementById('al-flagged').textContent = (d.flaggedUsers || []).length
+
+  // Thresholds
+  var thr = d.thresholds || {}
+  var thrEl = document.getElementById('al-thresholds')
+  if (thrEl) {
+    thrEl.innerHTML =
+      '<div>💰 Gold avg: <strong style="color:var(--yellow)">' + fmtNum(thr.goldAvg || 0) + '</strong></div>' +
+      '<div>💰 Gold std dev: <strong style="color:var(--yellow)">' + fmtNum(thr.goldStdDev || 0) + '</strong></div>' +
+      '<div>💰 Gold flag threshold (avg + 3σ): <strong style="color:var(--red)">' + fmtNum(thr.goldThreshold || 0) + '</strong></div>' +
+      '<div>⏱ Session flag: <strong style="color:var(--red)">>12h</strong></div>' +
+      '<div>⏱ Weekly playtime flag: <strong style="color:var(--red)">>60h</strong></div>' +
+      '<div>⚡ XP rate flag: <strong style="color:var(--red)">>100K/day/skill</strong></div>'
+  }
+
+  // Filter alerts
+  var alerts = d.alerts || []
+  if (alertFilter === 'high') alerts = alerts.filter(function(a) { return a.severity === 'high' })
+  else if (alertFilter === 'medium') alerts = alerts.filter(function(a) { return a.severity === 'medium' })
+  else if (alertFilter !== 'all') alerts = alerts.filter(function(a) { return a.type === alertFilter })
+
+  // Render table
+  var tbody = document.getElementById('alerts-tbody')
+  if (!tbody) return
+  if (!alerts.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No alerts matching filter</td></tr>'
+  } else {
+    tbody.innerHTML = alerts.map(function(a) {
+      var sevClass = a.severity === 'high' ? 'sev-high' : a.severity === 'medium' ? 'sev-medium' : 'sev-low'
+      var typeLabel = ALERT_TYPE_LABELS[a.type] || a.type
+      return '<tr class="alert-row">' +
+        '<td><span class="' + sevClass + '">' + a.severity.toUpperCase() + '</span></td>' +
+        '<td><span class="alert-type">' + typeLabel + '</span></td>' +
+        '<td><strong style="cursor:pointer;color:var(--green)" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">' + esc(a.username || '?') + '</strong></td>' +
+        '<td style="font-size:12px;color:var(--muted2);max-width:400px;overflow:hidden;text-overflow:ellipsis" title="' + esc(a.detail) + '">' + esc(a.detail) + '</td>' +
+        '<td style="font-size:11px;color:var(--muted)">' + (a.timestamp ? fmtTime(a.timestamp) : '—') + '</td>' +
+        '<td><button class="btn btn-ghost btn-sm" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">Inspect</button></td>' +
+        '</tr>'
+    }).join('')
+  }
+
+  // Flagged users summary
+  var fuEl = document.getElementById('al-flagged-users')
+  var flagged = d.flaggedUsers || []
+  if (fuEl) {
+    if (!flagged.length) {
+      fuEl.innerHTML = '<div class="empty">No flagged users</div>'
+    } else {
+      // Count alerts per user
+      var alertsByUser = {}
+      for (var i = 0; i < (d.alerts || []).length; i++) {
+        var uid = d.alerts[i].user_id
+        if (!alertsByUser[uid]) alertsByUser[uid] = { high: 0, medium: 0, types: [] }
+        if (d.alerts[i].severity === 'high') alertsByUser[uid].high++
+        else alertsByUser[uid].medium++
+        if (alertsByUser[uid].types.indexOf(d.alerts[i].type) === -1) alertsByUser[uid].types.push(d.alerts[i].type)
+      }
+
+      fuEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px">' +
+        flagged.sort(function(a, b) {
+          var aStats = alertsByUser[a.id] || { high: 0, medium: 0 }
+          var bStats = alertsByUser[b.id] || { high: 0, medium: 0 }
+          return (bStats.high * 10 + bStats.medium) - (aStats.high * 10 + aStats.medium)
+        }).map(function(u) {
+          var stats = alertsByUser[u.id] || { high: 0, medium: 0, types: [] }
+          var ageDays = Math.floor((Date.now() - new Date(u.created_at).getTime()) / (24 * 60 * 60 * 1000))
+          var borderColor = stats.high > 0 ? 'rgba(255,77,109,.3)' : 'rgba(255,107,53,.2)'
+          return '<div class="flagged-card" style="border-color:' + borderColor + ';cursor:pointer" onclick="alertOpenUser(\'' + u.id + '\',\'' + esc(u.username || '?').replace(/'/g, "\\'") + '\')">' +
+            '<div style="flex:1;min-width:0">' +
+              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+                '<strong style="font-size:13px">' + esc(u.username || '?') + '</strong>' +
+                '<span class="level-badge">Lv ' + (u.level || 0) + '</span>' +
+                (u.is_online ? '<span class="dot-online"></span>' : '') +
+              '</div>' +
+              '<div style="font-size:11px;color:var(--muted2);display:flex;gap:10px;flex-wrap:wrap">' +
+                '<span>💰 ' + fmtNum(Number(u.gold) || 0) + '</span>' +
+                '<span>🔥 ' + (u.streak_count || 0) + 'd</span>' +
+                '<span>📅 ' + ageDays + 'd old</span>' +
+              '</div>' +
+              '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">' +
+                (stats.high > 0 ? '<span class="sev-high">' + stats.high + ' high</span>' : '') +
+                (stats.medium > 0 ? '<span class="sev-medium">' + stats.medium + ' medium</span>' : '') +
+                stats.types.map(function(t) {
+                  return '<span class="alert-type" style="font-size:10px">' + (ALERT_TYPE_LABELS[t] || t) + '</span>'
+                }).join('') +
+              '</div>' +
+            '</div>' +
+            '<span style="font-size:18px;color:var(--muted2)">→</span>' +
+          '</div>'
+        }).join('') +
+      '</div>'
+    }
+  }
+
+  // Generated at
+  var genEl = document.getElementById('al-generated-at')
+  if (genEl && d.generatedAt) genEl.textContent = 'Data generated at ' + new Date(d.generatedAt).toLocaleString() + ' (cached 5 min)'
+}
+
+function alertOpenUser(userId, username) {
+  if (userId && typeof pmOpen === 'function') pmOpen(userId, username)
+}
+
+function renderOverviewAlerts() {
+  var d = alertsData
+  var container = document.getElementById('overview-alerts')
+  var list = document.getElementById('ov-alert-list')
+  var badge = document.getElementById('ov-alert-badge')
+  if (!d || !container || !list) return
+
+  var highAlerts = (d.alerts || []).filter(function(a) { return a.severity === 'high' })
+  var allAlerts = d.alerts || []
+
+  if (!allAlerts.length) {
+    container.style.display = 'none'
+    return
+  }
+
+  container.style.display = 'block'
+  badge.textContent = allAlerts.length + (highAlerts.length ? ' (' + highAlerts.length + ' high)' : '')
+
+  // Show top 5 alerts
+  var top = allAlerts.slice(0, 5)
+  list.innerHTML = top.map(function(a) {
+    var sevClass = a.severity === 'high' ? 'sev-high' : 'sev-medium'
+    var typeLabel = ALERT_TYPE_LABELS[a.type] || a.type
+    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span class="' + sevClass + '" style="flex-shrink:0">' + a.severity.toUpperCase() + '</span>' +
+      '<span class="alert-type" style="flex-shrink:0">' + typeLabel + '</span>' +
+      '<strong style="font-size:12px;cursor:pointer;color:var(--green);flex-shrink:0" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">' + esc(a.username || '?') + '</strong>' +
+      '<span style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.detail) + '</span>' +
+    '</div>'
+  }).join('')
 }
 
 // ─── Economy ─────────────────────────────────────────────────────────────────
