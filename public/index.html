@@ -158,6 +158,20 @@ body.compact th,body.compact td{padding:6px 16px}
 .alert-row:hover{background:rgba(255,255,255,.02)}
 .flagged-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
 .flagged-card:hover{border-color:rgba(255,77,109,.3)}
+.al-cat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+.al-cat-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.al-cat-icon{font-size:22px}
+.al-cat-title{font-size:14px;font-weight:700;color:var(--text)}
+.al-cat-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+.al-cat-desc{font-size:12px;color:var(--muted2);margin-bottom:12px;line-height:1.5}
+.al-cat-hint{font-size:11px;color:var(--muted);font-style:italic;margin-bottom:10px;padding:6px 10px;background:rgba(255,255,255,.02);border-radius:8px;border-left:3px solid var(--border)}
+.al-entry{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:var(--card2);border:1px solid var(--border);margin-bottom:6px;transition:border-color .15s;cursor:pointer}
+.al-entry:hover{border-color:rgba(34,197,94,.3)}
+.al-entry-sev{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+.al-entry-user{font-size:13px;font-weight:600;color:var(--green);min-width:100px;flex-shrink:0}
+.al-entry-detail{font-size:12px;color:var(--muted2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.al-entry-time{font-size:11px;color:var(--muted);flex-shrink:0;font-family:monospace}
+.al-cat-empty{font-size:12px;color:var(--muted);padding:8px 12px}
 body.compact .card-val{font-size:22px}
 body.compact .card{padding:14px 16px}
 /* Stat card click-to-copy */
@@ -360,7 +374,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <button class="tab-btn" onclick="showTab('polls',this);loadPolls()">📊 Polls</button>
     <button class="tab-btn" onclick="showTab('gameconfig',this);loadGameConfig()">🎮 Game Config</button>
     <button class="tab-btn" onclick="showTab('economy',this)">💰 Economy</button>
-    <button class="tab-btn" onclick="showTab('alerts',this);loadAlerts()">🚨 Alerts</button>
+    <button class="tab-btn" onclick="showTab('alerts',this);loadAlerts()" id="tab-btn-alerts" style="position:relative">🚨 Alerts <span id="alert-tab-badge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--red);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;padding:0 4px"></span></button>
   </nav>
 
   <!-- Content -->
@@ -573,63 +587,29 @@ tr:hover td{background:rgba(255,255,255,.018)}
 
     <!-- ── Alerts / Abuse Detection ──────────────────────────────────────── -->
     <div class="page" id="page-alerts">
+      <!-- Summary cards -->
       <div class="cards" id="alert-cards">
         <div class="card c-red"><div class="card-icon">🚨</div><div class="card-label">Total Alerts</div><div class="card-val" id="al-total">—</div></div>
-        <div class="card c-red"><div class="card-icon">🔴</div><div class="card-label">High Severity</div><div class="card-val" id="al-high">—</div></div>
-        <div class="card c-orange"><div class="card-icon">🟠</div><div class="card-label">Medium Severity</div><div class="card-val" id="al-medium">—</div></div>
+        <div class="card c-red"><div class="card-icon">🔴</div><div class="card-label">High — Likely cheating</div><div class="card-val" id="al-high">—</div></div>
+        <div class="card c-orange"><div class="card-icon">🟠</div><div class="card-label">Medium — Suspicious</div><div class="card-val" id="al-medium">—</div></div>
         <div class="card c-purple"><div class="card-icon">👥</div><div class="card-label">Flagged Users</div><div class="card-val" id="al-flagged">—</div></div>
       </div>
 
-      <!-- Thresholds info -->
-      <div class="chart-box" style="margin-bottom:14px">
-        <div class="box-title">Detection Thresholds</div>
-        <div id="al-thresholds" style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted2)"></div>
-      </div>
-
-      <!-- Filter bar -->
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-ghost btn-sm active-pill" id="al-filter-all" onclick="filterAlerts('all')">All</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-high" onclick="filterAlerts('high')">🔴 High</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-medium" onclick="filterAlerts('medium')">🟠 Medium</button>
-        <span style="color:var(--muted);font-size:11px;margin-left:8px">|</span>
-        <button class="btn btn-ghost btn-sm" id="al-filter-gold_anomaly" onclick="filterAlerts('gold_anomaly')">💰 Gold</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-xp_rate_anomaly" onclick="filterAlerts('xp_rate_anomaly')">⚡ XP Rate</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-long_session" onclick="filterAlerts('long_session')">⏱ Sessions</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-streak_anomaly" onclick="filterAlerts('streak_anomaly')">🔥 Streak</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-fast_progression" onclick="filterAlerts('fast_progression')">📈 Fast Level</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-frequent_trading_pair" onclick="filterAlerts('frequent_trading_pair')">🤝 Trading</button>
-        <button class="btn btn-ghost btn-sm" id="al-filter-price_anomaly" onclick="filterAlerts('price_anomaly')">💸 Price</button>
-        <span style="flex:1"></span>
+      <!-- Refresh -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span id="al-generated-at" style="font-size:11px;color:var(--muted)"></span>
         <button class="btn btn-ghost btn-sm" onclick="loadAlerts(true)">↻ Refresh</button>
       </div>
 
-      <!-- Alerts list -->
-      <div class="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:70px">Severity</th>
-              <th style="width:140px">Type</th>
-              <th>Player</th>
-              <th>Details</th>
-              <th style="width:100px">Time</th>
-              <th style="width:60px">Action</th>
-            </tr>
-          </thead>
-          <tbody id="alerts-tbody">
-            <tr><td colspan="6" class="empty">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- Alert categories — rendered by JS -->
+      <div id="al-categories"><div class="empty"><span class="spinner"></span> Scanning for abuse...</div></div>
 
-      <!-- Flagged users summary -->
-      <div class="chart-box" style="margin-top:14px">
-        <div class="box-title">Flagged Users Summary</div>
-        <div id="al-flagged-users" style="max-height:400px;overflow-y:auto"></div>
-      </div>
-
-      <div style="margin-top:12px;font-size:11px;color:var(--muted)">
-        <span id="al-generated-at"></span>
+      <!-- Flagged users at bottom -->
+      <div id="al-flagged-section" style="display:none;margin-top:20px">
+        <div class="chart-box">
+          <div class="box-title">👥 All Flagged Users</div>
+          <div id="al-flagged-users" style="max-height:500px;overflow-y:auto"></div>
+        </div>
       </div>
     </div>
 
@@ -4189,6 +4169,70 @@ function gcResetZone() {
 
 let alertsLoaded = false
 
+// Category definitions — each groups related alert types with human-readable explanation
+const ALERT_CATEGORIES = [
+  {
+    id: 'bot_afk',
+    icon: '🤖',
+    title: 'Possible Bot / AFK Abuse',
+    desc: 'Players with abnormally long sessions or extreme weekly playtime. If someone plays 15+ hours straight without breaks, they are likely AFK-farming or using a bot.',
+    hint: 'Check if they are using Dungeon Pass items. If not and sessions are 15h+, this is likely an AFK exploit.',
+    types: ['long_session', 'excessive_playtime'],
+    borderColor: 'rgba(255,77,109,.25)',
+    countColor: 'var(--red)',
+  },
+  {
+    id: 'xp_cheat',
+    icon: '⚡',
+    title: 'XP Manipulation',
+    desc: 'Players gaining XP faster than physically possible. The max legit rate is ~58K XP/day per skill (16h active). If someone has 100K+/day, they are cheating.',
+    hint: 'Compare their account age vs total XP. A new account with millions of XP = guaranteed cheat.',
+    types: ['xp_rate_anomaly'],
+    borderColor: 'rgba(168,85,247,.25)',
+    countColor: '#a855f7',
+  },
+  {
+    id: 'gold_exploit',
+    icon: '💰',
+    title: 'Gold Exploit',
+    desc: 'Players with gold far above the statistical average (3+ standard deviations). Could be from marketplace manipulation, duplication glitch, or injected data.',
+    hint: 'Cross-check with their trade history. If gold appeared without trades or arena wins, it was injected.',
+    types: ['gold_anomaly'],
+    borderColor: 'rgba(251,191,36,.25)',
+    countColor: '#fbbf24',
+  },
+  {
+    id: 'streak_hack',
+    icon: '🔥',
+    title: 'Streak Hack',
+    desc: 'Players whose streak count is longer than their account age. This is physically impossible without database manipulation.',
+    hint: 'Streak 30 but account is 5 days old = 100% cheating. Reset their streak immediately.',
+    types: ['streak_anomaly'],
+    borderColor: 'rgba(255,107,53,.25)',
+    countColor: 'var(--orange)',
+  },
+  {
+    id: 'fast_level',
+    icon: '📈',
+    title: 'Suspicious Progression',
+    desc: 'New accounts that leveled up too fast. Reaching level 10+ within a few days is suspicious, level 30+ is almost certainly cheating.',
+    hint: 'Could also be an experienced player on an alt account. Check session count and variety of skills.',
+    types: ['fast_progression'],
+    borderColor: 'rgba(34,197,94,.25)',
+    countColor: '#22c55e',
+  },
+  {
+    id: 'market_abuse',
+    icon: '🤝',
+    title: 'Marketplace Abuse',
+    desc: 'Frequent trading between the same two accounts (gold laundering) or items sold at 10x or 0.1x the average price (price manipulation).',
+    hint: 'Frequent trading pairs could be alt accounts transferring gold. Price anomalies could be wash trading.',
+    types: ['frequent_trading_pair', 'price_anomaly'],
+    borderColor: 'rgba(56,189,248,.25)',
+    countColor: '#38bdf8',
+  },
+]
+
 const ALERT_TYPE_LABELS = {
   gold_anomaly: '💰 Gold Anomaly',
   xp_rate_anomaly: '⚡ XP Rate',
@@ -4203,28 +4247,19 @@ const ALERT_TYPE_LABELS = {
 async function loadAlerts(force) {
   if (alertsLoaded && !force) return
   alertsLoaded = true
-  var tbody = document.getElementById('alerts-tbody')
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr>'
+  var catEl = document.getElementById('al-categories')
+  if (catEl) catEl.innerHTML = '<div class="empty"><span class="spinner"></span> Scanning for abuse...</div>'
 
   var data = await apiFetch('GET', '/api/abuse-detection')
   if (!data || data.error) {
     alertsLoaded = false
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Error loading alerts</td></tr>'
+    if (catEl) catEl.innerHTML = '<div class="empty">Error loading alerts</div>'
     return
   }
   alertsData = data
   renderAlerts()
   renderOverviewAlerts()
-}
-
-function filterAlerts(filter) {
-  alertFilter = filter
-  document.querySelectorAll('[id^="al-filter-"]').forEach(function(btn) {
-    btn.classList.remove('active-pill')
-  })
-  var el = document.getElementById('al-filter-' + filter)
-  if (el) el.classList.add('active-pill')
-  renderAlerts()
+  updateAlertTabBadge()
 }
 
 function renderAlerts() {
@@ -4236,105 +4271,134 @@ function renderAlerts() {
   document.getElementById('al-medium').textContent = d.mediumCount || 0
   document.getElementById('al-flagged').textContent = (d.flaggedUsers || []).length
 
-  // Thresholds
-  var thr = d.thresholds || {}
-  var thrEl = document.getElementById('al-thresholds')
-  if (thrEl) {
-    thrEl.innerHTML =
-      '<div>💰 Gold avg: <strong style="color:var(--yellow)">' + fmtNum(thr.goldAvg || 0) + '</strong></div>' +
-      '<div>💰 Gold std dev: <strong style="color:var(--yellow)">' + fmtNum(thr.goldStdDev || 0) + '</strong></div>' +
-      '<div>💰 Gold flag threshold (avg + 3σ): <strong style="color:var(--red)">' + fmtNum(thr.goldThreshold || 0) + '</strong></div>' +
-      '<div>⏱ Session flag: <strong style="color:var(--red)">>12h</strong></div>' +
-      '<div>⏱ Weekly playtime flag: <strong style="color:var(--red)">>60h</strong></div>' +
-      '<div>⚡ XP rate flag: <strong style="color:var(--red)">>100K/day/skill</strong></div>'
-  }
-
-  // Filter alerts
   var alerts = d.alerts || []
-  if (alertFilter === 'high') alerts = alerts.filter(function(a) { return a.severity === 'high' })
-  else if (alertFilter === 'medium') alerts = alerts.filter(function(a) { return a.severity === 'medium' })
-  else if (alertFilter !== 'all') alerts = alerts.filter(function(a) { return a.type === alertFilter })
+  var catEl = document.getElementById('al-categories')
+  if (!catEl) return
 
-  // Render table
-  var tbody = document.getElementById('alerts-tbody')
-  if (!tbody) return
   if (!alerts.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">No alerts matching filter</td></tr>'
-  } else {
-    tbody.innerHTML = alerts.map(function(a) {
-      var sevClass = a.severity === 'high' ? 'sev-high' : a.severity === 'medium' ? 'sev-medium' : 'sev-low'
-      var typeLabel = ALERT_TYPE_LABELS[a.type] || a.type
-      return '<tr class="alert-row">' +
-        '<td><span class="' + sevClass + '">' + a.severity.toUpperCase() + '</span></td>' +
-        '<td><span class="alert-type">' + typeLabel + '</span></td>' +
-        '<td><strong style="cursor:pointer;color:var(--green)" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">' + esc(a.username || '?') + '</strong></td>' +
-        '<td style="font-size:12px;color:var(--muted2);max-width:400px;overflow:hidden;text-overflow:ellipsis" title="' + esc(a.detail) + '">' + esc(a.detail) + '</td>' +
-        '<td style="font-size:11px;color:var(--muted)">' + (a.timestamp ? fmtTime(a.timestamp) : '—') + '</td>' +
-        '<td><button class="btn btn-ghost btn-sm" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">Inspect</button></td>' +
-        '</tr>'
-    }).join('')
+    catEl.innerHTML = '<div class="al-cat" style="border-color:rgba(34,197,94,.25);text-align:center;padding:30px">' +
+      '<div style="font-size:32px;margin-bottom:8px">✅</div>' +
+      '<div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px">All Clear</div>' +
+      '<div style="font-size:12px;color:var(--muted2)">No suspicious activity detected. Everything looks clean.</div>' +
+    '</div>'
+    document.getElementById('al-flagged-section').style.display = 'none'
+    return
   }
 
-  // Flagged users summary
-  var fuEl = document.getElementById('al-flagged-users')
-  var flagged = d.flaggedUsers || []
-  if (fuEl) {
-    if (!flagged.length) {
-      fuEl.innerHTML = '<div class="empty">No flagged users</div>'
+  // Group alerts by category
+  var html = ''
+  ALERT_CATEGORIES.forEach(function(cat) {
+    var catAlerts = alerts.filter(function(a) { return cat.types.indexOf(a.type) !== -1 })
+    var highCount = catAlerts.filter(function(a) { return a.severity === 'high' }).length
+    var medCount = catAlerts.filter(function(a) { return a.severity === 'medium' }).length
+
+    html += '<div class="al-cat" style="border-color:' + (catAlerts.length ? cat.borderColor : 'var(--border)') + '">'
+    html += '<div class="al-cat-header">'
+    html += '<span class="al-cat-icon">' + cat.icon + '</span>'
+    html += '<span class="al-cat-title">' + cat.title + '</span>'
+    if (catAlerts.length) {
+      if (highCount) html += '<span class="al-cat-count sev-high">' + highCount + ' high</span>'
+      if (medCount) html += '<span class="al-cat-count sev-medium">' + medCount + ' medium</span>'
     } else {
-      // Count alerts per user
-      var alertsByUser = {}
-      for (var i = 0; i < (d.alerts || []).length; i++) {
-        var uid = d.alerts[i].user_id
-        if (!alertsByUser[uid]) alertsByUser[uid] = { high: 0, medium: 0, types: [] }
-        if (d.alerts[i].severity === 'high') alertsByUser[uid].high++
-        else alertsByUser[uid].medium++
-        if (alertsByUser[uid].types.indexOf(d.alerts[i].type) === -1) alertsByUser[uid].types.push(d.alerts[i].type)
-      }
-
-      fuEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px">' +
-        flagged.sort(function(a, b) {
-          var aStats = alertsByUser[a.id] || { high: 0, medium: 0 }
-          var bStats = alertsByUser[b.id] || { high: 0, medium: 0 }
-          return (bStats.high * 10 + bStats.medium) - (aStats.high * 10 + aStats.medium)
-        }).map(function(u) {
-          var stats = alertsByUser[u.id] || { high: 0, medium: 0, types: [] }
-          var ageDays = Math.floor((Date.now() - new Date(u.created_at).getTime()) / (24 * 60 * 60 * 1000))
-          var borderColor = stats.high > 0 ? 'rgba(255,77,109,.3)' : 'rgba(255,107,53,.2)'
-          return '<div class="flagged-card" style="border-color:' + borderColor + ';cursor:pointer" onclick="alertOpenUser(\'' + u.id + '\',\'' + esc(u.username || '?').replace(/'/g, "\\'") + '\')">' +
-            '<div style="flex:1;min-width:0">' +
-              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
-                '<strong style="font-size:13px">' + esc(u.username || '?') + '</strong>' +
-                '<span class="level-badge">Lv ' + (u.level || 0) + '</span>' +
-                (u.is_online ? '<span class="dot-online"></span>' : '') +
-              '</div>' +
-              '<div style="font-size:11px;color:var(--muted2);display:flex;gap:10px;flex-wrap:wrap">' +
-                '<span>💰 ' + fmtNum(Number(u.gold) || 0) + '</span>' +
-                '<span>🔥 ' + (u.streak_count || 0) + 'd</span>' +
-                '<span>📅 ' + ageDays + 'd old</span>' +
-              '</div>' +
-              '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">' +
-                (stats.high > 0 ? '<span class="sev-high">' + stats.high + ' high</span>' : '') +
-                (stats.medium > 0 ? '<span class="sev-medium">' + stats.medium + ' medium</span>' : '') +
-                stats.types.map(function(t) {
-                  return '<span class="alert-type" style="font-size:10px">' + (ALERT_TYPE_LABELS[t] || t) + '</span>'
-                }).join('') +
-              '</div>' +
-            '</div>' +
-            '<span style="font-size:18px;color:var(--muted2)">→</span>' +
-          '</div>'
-        }).join('') +
-      '</div>'
+      html += '<span style="font-size:11px;color:var(--green);font-weight:600">OK</span>'
     }
+    html += '</div>'
+    html += '<div class="al-cat-desc">' + cat.desc + '</div>'
+
+    if (catAlerts.length) {
+      html += '<div class="al-cat-hint">' + cat.hint + '</div>'
+      catAlerts.forEach(function(a) {
+        var sevColor = a.severity === 'high' ? 'var(--red)' : 'var(--orange)'
+        var uname = esc(a.username || '?')
+        var uid = a.user_id || ''
+        html += '<div class="al-entry" onclick="alertOpenUser(\'' + uid + '\',\'' + uname.replace(/'/g, "\\x27") + '\')">'
+        html += '<div class="al-entry-sev" style="background:' + sevColor + '" title="' + a.severity + '"></div>'
+        html += '<span class="al-entry-user">' + uname + '</span>'
+        html += '<span class="al-entry-detail" title="' + esc(a.detail) + '">' + esc(a.detail) + '</span>'
+        html += '<span class="al-entry-time">' + (a.timestamp ? fmtTime(a.timestamp) : '') + '</span>'
+        html += '</div>'
+      })
+    } else {
+      html += '<div class="al-cat-empty">No alerts in this category</div>'
+    }
+    html += '</div>'
+  })
+
+  catEl.innerHTML = html
+
+  // Flagged users section
+  var flagged = d.flaggedUsers || []
+  var fuSection = document.getElementById('al-flagged-section')
+  var fuEl = document.getElementById('al-flagged-users')
+  if (!flagged.length) {
+    fuSection.style.display = 'none'
+    return
   }
+  fuSection.style.display = 'block'
+
+  var alertsByUser = {}
+  for (var i = 0; i < alerts.length; i++) {
+    var uid = alerts[i].user_id
+    if (!alertsByUser[uid]) alertsByUser[uid] = { high: 0, medium: 0, types: [] }
+    if (alerts[i].severity === 'high') alertsByUser[uid].high++
+    else alertsByUser[uid].medium++
+    if (alertsByUser[uid].types.indexOf(alerts[i].type) === -1) alertsByUser[uid].types.push(alerts[i].type)
+  }
+
+  fuEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px">' +
+    flagged.sort(function(a, b) {
+      var aS = alertsByUser[a.id] || { high: 0, medium: 0 }
+      var bS = alertsByUser[b.id] || { high: 0, medium: 0 }
+      return (bS.high * 10 + bS.medium) - (aS.high * 10 + aS.medium)
+    }).map(function(u) {
+      var stats = alertsByUser[u.id] || { high: 0, medium: 0, types: [] }
+      var ageDays = Math.floor((Date.now() - new Date(u.created_at).getTime()) / (24 * 60 * 60 * 1000))
+      var borderColor = stats.high > 0 ? 'rgba(255,77,109,.3)' : 'rgba(255,107,53,.2)'
+      var uname = esc(u.username || '?')
+      return '<div class="flagged-card" style="border-color:' + borderColor + ';cursor:pointer" onclick="alertOpenUser(\'' + u.id + '\',\'' + uname.replace(/'/g, "\\x27") + '\')">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+            '<strong style="font-size:13px">' + uname + '</strong>' +
+            '<span class="level-badge">Lv ' + (u.level || 0) + '</span>' +
+            (u.is_online ? '<span class="dot-online"></span>' : '') +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--muted2);display:flex;gap:10px;flex-wrap:wrap">' +
+            '<span>💰 ' + fmtNum(Number(u.gold) || 0) + '</span>' +
+            '<span>🔥 ' + (u.streak_count || 0) + 'd</span>' +
+            '<span>📅 ' + ageDays + 'd old</span>' +
+          '</div>' +
+          '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">' +
+            (stats.high > 0 ? '<span class="sev-high">' + stats.high + ' high</span>' : '') +
+            (stats.medium > 0 ? '<span class="sev-medium">' + stats.medium + ' medium</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<span style="font-size:18px;color:var(--muted2)">\u2192</span>' +
+      '</div>'
+    }).join('') +
+  '</div>'
 
   // Generated at
   var genEl = document.getElementById('al-generated-at')
-  if (genEl && d.generatedAt) genEl.textContent = 'Data generated at ' + new Date(d.generatedAt).toLocaleString() + ' (cached 5 min)'
+  if (genEl && d.generatedAt) genEl.textContent = 'Updated ' + new Date(d.generatedAt).toLocaleString() + ' (cached 5 min)'
 }
 
 function alertOpenUser(userId, username) {
   if (userId && typeof pmOpen === 'function') pmOpen(userId, username)
+}
+
+/** Update the red badge on the Alerts tab button */
+function updateAlertTabBadge() {
+  var badge = document.getElementById('alert-tab-badge')
+  if (!badge || !alertsData) return
+  var high = alertsData.highCount || 0
+  var total = alertsData.totalAlerts || 0
+  if (total > 0) {
+    badge.style.display = ''
+    badge.textContent = high > 0 ? high : total
+    badge.style.background = high > 0 ? 'var(--red)' : 'var(--orange)'
+  } else {
+    badge.style.display = 'none'
+  }
 }
 
 function renderOverviewAlerts() {
@@ -4355,15 +4419,16 @@ function renderOverviewAlerts() {
   container.style.display = 'block'
   badge.textContent = allAlerts.length + (highAlerts.length ? ' (' + highAlerts.length + ' high)' : '')
 
-  // Show top 5 alerts
+  // Show top 5 alerts with clear descriptions
   var top = allAlerts.slice(0, 5)
   list.innerHTML = top.map(function(a) {
     var sevClass = a.severity === 'high' ? 'sev-high' : 'sev-medium'
     var typeLabel = ALERT_TYPE_LABELS[a.type] || a.type
-    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">' +
+    var uname = esc(a.username || '?')
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
       '<span class="' + sevClass + '" style="flex-shrink:0">' + a.severity.toUpperCase() + '</span>' +
       '<span class="alert-type" style="flex-shrink:0">' + typeLabel + '</span>' +
-      '<strong style="font-size:12px;cursor:pointer;color:var(--green);flex-shrink:0" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + esc(a.username || '?').replace(/'/g, "\\'") + '\')">' + esc(a.username || '?') + '</strong>' +
+      '<strong style="font-size:12px;cursor:pointer;color:var(--green);flex-shrink:0" onclick="alertOpenUser(\'' + (a.user_id || '') + '\',\'' + uname.replace(/'/g, "\\x27") + '\')">' + uname + '</strong>' +
       '<span style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.detail) + '</span>' +
     '</div>'
   }).join('')
