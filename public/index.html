@@ -4636,7 +4636,6 @@ function iconOverrideUpload(fileInput, rowOverride) {
         const fmt = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/png'
         const dataUrl = canvas.toDataURL(fmt, 0.9)
         applyPreview(dataUrl)
-        } catch (err) {
       }
       img.src = e.target.result
     }
