@@ -4585,46 +4585,61 @@ function fmtNum(n) {
 
 /** Upload handler for icon override rows — reads file, resizes to 64×64 WebP, shows preview */
 function iconOverrideUpload(fileInput) {
-  const row = fileInput.closest('.icon-override-row')
-  if (!row) return
-  const file = fileInput.files?.[0]
-  if (!file) return
-  if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10 MB'); return }
+  try {
+    const row = fileInput.closest('.icon-override-row')
+    if (!row) { alert('DEBUG: row not found'); return }
+    const file = fileInput.files?.[0]
+    if (!file) { alert('DEBUG: no file selected'); return }
+    if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10 MB'); return }
 
-  // SVG: read as text and convert to data URI directly (no canvas resize)
-  if (file.type === 'image/svg+xml') {
+    const applyPreview = (dataUrl) => {
+      try {
+        iconOverrideSetPreview(row, dataUrl)
+        gcSetDirty()
+      } catch (err) {
+        alert('DEBUG preview error: ' + err.message)
+      }
+    }
+
+    // SVG: read as data URI directly (no canvas resize)
+    if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
+      const reader = new FileReader()
+      reader.onload = (e) => applyPreview(e.target.result)
+      reader.onerror = (e) => alert('DEBUG SVG read error: ' + reader.error)
+      reader.readAsDataURL(file)
+      return
+    }
+
+    // Raster: resize to 64×64 via canvas
     const reader = new FileReader()
+    reader.onerror = () => alert('DEBUG read error: ' + reader.error)
     reader.onload = (e) => {
-      const dataUrl = e.target.result
-      iconOverrideSetPreview(row, dataUrl)
-      gcSetDirty()
+      const img = new Image()
+      img.onerror = () => alert('DEBUG img load error for type: ' + file.type)
+      img.onload = () => {
+        try {
+          const MAX = 64
+          let w = img.width, h = img.height
+          if (w > MAX || h > MAX) {
+            if (w >= h) { h = Math.round(h * MAX / w); w = MAX }
+            else        { w = Math.round(w * MAX / h); h = MAX }
+          }
+          const canvas = document.createElement('canvas')
+          canvas.width = w; canvas.height = h
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+          const fmt = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/png'
+          const dataUrl = canvas.toDataURL(fmt, 0.9)
+          applyPreview(dataUrl)
+        } catch (err) {
+          alert('DEBUG canvas error: ' + err.message)
+        }
+      }
+      img.src = e.target.result
     }
     reader.readAsDataURL(file)
-    return
+  } catch (err) {
+    alert('DEBUG upload error: ' + err.message)
   }
-
-  // Raster: resize to 64×64 via canvas
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const img = new Image()
-    img.onload = () => {
-      const MAX = 64
-      let w = img.width, h = img.height
-      if (w > MAX || h > MAX) {
-        if (w >= h) { h = Math.round(h * MAX / w); w = MAX }
-        else        { w = Math.round(w * MAX / h); h = MAX }
-      }
-      const canvas = document.createElement('canvas')
-      canvas.width = w; canvas.height = h
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-      const fmt = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/png'
-      const dataUrl = canvas.toDataURL(fmt, 0.9)
-      iconOverrideSetPreview(row, dataUrl)
-      gcSetDirty()
-    }
-    img.src = e.target.result
-  }
-  reader.readAsDataURL(file)
 }
 
 function iconOverrideSetPreview(row, dataUrl) {
