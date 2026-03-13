@@ -263,6 +263,40 @@ app.delete('/api/announcements/:id', requireAuth, async (req, res) => {
   res.json({ ok: true })
 })
 
+// ── Patch Notes ──────────────────────────────────────────────────────────────
+
+app.get('/api/patch-notes', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('patch_notes')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(20)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data ?? [])
+})
+
+app.post('/api/patch-notes', requireAuth, async (req, res) => {
+  const { version, title, date, items } = req.body
+  if (!version?.trim() || !title?.trim()) {
+    return res.status(400).json({ error: 'version and title are required' })
+  }
+  const row = {
+    version: version.trim(),
+    title: title.trim(),
+    date: date || new Date().toISOString().slice(0, 10),
+    items: items || [],
+  }
+  const { data, error } = await supabase.from('patch_notes').insert(row).select().single()
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data)
+})
+
+app.delete('/api/patch-notes/:id', requireAuth, async (req, res) => {
+  const { error } = await supabase.from('patch_notes').delete().eq('id', req.params.id)
+  if (error) return res.status(500).json({ error: error.message })
+  res.json({ ok: true })
+})
+
 // ── Polls ─────────────────────────────────────────────────────────────────────
 
 app.get('/api/polls', requireAuth, async (req, res) => {
