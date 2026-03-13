@@ -2495,12 +2495,15 @@ const CHEST_CATALOG = [
   { id:'legendary_chest', name:'Legendary Bag', icon:'💎', itemWeights:[{itemId:'shadow_helm',weight:2},{itemId:'shadow_plate',weight:2},{itemId:'shadow_sword',weight:2},{itemId:'shadow_legs',weight:2},{itemId:'shadow_ring',weight:2},{itemId:'golden_helm',weight:3},{itemId:'golden_plate',weight:3},{itemId:'golden_sword',weight:3},{itemId:'golden_legs',weight:3},{itemId:'golden_ring',weight:3},{itemId:'void_helm',weight:1},{itemId:'void_plate',weight:1},{itemId:'void_sword',weight:1},{itemId:'void_legs',weight:1},{itemId:'void_ring',weight:1},{itemId:'atk_potion',weight:2},{itemId:'hp_potion',weight:2},{itemId:'regen_potion',weight:2}] },
 ]
 
-let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, zoneOverrides:{}, craftOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{} }
+let gcConfig = { itemOverrides:{}, hiddenItems:[], customItems:[], bossOverrides:{}, zoneOverrides:{}, craftOverrides:{}, chestWeightOverrides:{}, chestOverrides:{}, seedOverrides:{}, seedZipOverrides:{}, seedDropTableOverrides:{}, farmConfig:{}, goldDropOverrides:{}, dropRateOverrides:{}, pityOverrides:{}, combatConfig:{}, uiIcons:{} }
 let gcDirty = false
 let gcLoaded = false
+let gcIconsRendered = false
 let gcCurrentSubtab = 'items'
 
 function gcTab(tab) {
+  // Collect icons before leaving the Icons sub-tab so uploads aren't lost
+  if (gcCurrentSubtab === 'icons' && tab !== 'icons') gcCollectIcons()
   gcCurrentSubtab = tab
   document.querySelectorAll('.gc-subtab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
   document.getElementById('gc-items').style.display  = tab === 'items'  ? '' : 'none'
@@ -4659,6 +4662,7 @@ function iconOverrideGetValue(row) {
 }
 
 function gcRenderIcons() {
+  gcIconsRendered = true
   const ui = gcConfig.uiIcons ?? {}
 
   // Gold
@@ -4699,6 +4703,9 @@ function gcRenderIcons() {
 }
 
 function gcCollectIcons() {
+  // If the Icons tab was never opened, preserve whatever was loaded from Supabase
+  if (!gcIconsRendered) return
+
   const ui = {}
 
   // Gold
