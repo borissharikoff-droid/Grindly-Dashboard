@@ -4583,6 +4583,7 @@ function fmtNum(n) {
 
 /** Click handler for Upload buttons — creates a temporary file input to avoid display:none issues */
 function iconUploadClick(btn) {
+  alert('Upload button clicked! Row: ' + (btn.closest('.icon-override-row')?.dataset?.key || 'none'))
   const row = btn.closest('.icon-override-row')
   if (!row) return
   const inp = document.createElement('input')
