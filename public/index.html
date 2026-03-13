@@ -2645,7 +2645,7 @@ function gcUpdatePerkUI() {
   gcAutoDesc()
 }
 
-const SKILL_LABELS = { developer:'Developer', designer:'Designer', gamer:'Gamer', communicator:'Communicator', researcher:'Researcher', creator:'Creator', learner:'Learner', listener:'Listener' }
+const SKILL_LABELS = { developer:'Developer', designer:'Designer', gamer:'Gamer', communicator:'Communicator', researcher:'Researcher', creator:'Creator', learner:'Learner', listener:'Listener', farmer:'Farmer', warrior:'Warrior', crafter:'Crafter', chef:'Chef' }
 
 function gcAutoDesc() {
   const type  = document.getElementById('gc-f-perktype').value
@@ -4913,10 +4913,9 @@ let pmUserId = null
 let pmData   = null
 
 const SKILL_NAMES = ['developer','designer','gamer','communicator','researcher','creator','learner','listener','farmer','warrior','crafter','chef']
-const SKILL_LABELS = { developer:'Developer', designer:'Designer', gamer:'Gamer', communicator:'Communicator', researcher:'Researcher', creator:'Creator', learner:'Learner', listener:'Listener', farmer:'Farmer', warrior:'Warrior', crafter:'Crafter', chef:'Chef' }
 const SKILL_ICONS  = { developer:'💻', designer:'🎨', gamer:'🎮', communicator:'💬', researcher:'🔍', creator:'✏️', learner:'📚', listener:'🎧', farmer:'🌾', warrior:'⚔️', crafter:'⚒️', chef:'🍳' }
 const CHEST_TYPES  = ['common_chest','rare_chest','epic_chest','legendary_chest']
-const CHEST_LABELS = { common_chest:'Common', rare_chest:'Rare', epic_chest:'Epic', legendary_chest:'Legendary' }
+const PM_CHEST_LABELS = { common_chest:'Common', rare_chest:'Rare', epic_chest:'Epic', legendary_chest:'Legendary' }
 const CHEST_COLORS = { common_chest:'#aaa', rare_chest:'#06aed4', epic_chest:'#7c6cff', legendary_chest:'#ffd166' }
 
 function pmToast(msg) {
@@ -4994,7 +4993,7 @@ function pmRender() {
   for (const c of d.chests) chestMap[c.chest_type] = c.quantity
   for (const ct of CHEST_TYPES) {
     const qty = chestMap[ct] || 0
-    const clabel = CHEST_LABELS[ct]
+    const clabel = PM_CHEST_LABELS[ct]
     const color = CHEST_COLORS[ct]
     html += '<div class="pm-item-row">'
     html += '<span style="color:' + color + ';font-weight:600">' + clabel + '</span>'
