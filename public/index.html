@@ -2179,7 +2179,7 @@ async function publishPatchNotes() {
     return
   }
   status.className = 'status-ok'
-  status.textContent = '✓ Published! Users will see the What\\'s New modal instantly.'
+  status.textContent = '\u2713 Published! Users will see the What\u2019s New modal instantly.'
   document.getElementById('pn-version').value = ''
   document.getElementById('pn-title').value = ''
   document.getElementById('pn-date').value = ''
@@ -2229,7 +2229,7 @@ async function loadPatchNotes() {
 }
 
 async function deletePatchNote(id, btn) {
-  if (!confirm('Delete this patch note? Users who haven\\'t seen it yet won\\'t see it.')) return
+  if (!confirm('Delete this patch note? Users who have not seen it yet will not see it.')) return
   btn.textContent = '…'
   btn.disabled = true
   await apiFetch('DELETE', '/api/patch-notes/' + id)
