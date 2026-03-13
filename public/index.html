@@ -204,6 +204,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .status-err{color:var(--red)}
 .ann-list{display:flex;flex-direction:column;gap:10px}
 .ann-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:flex-start;gap:14px}
+.icon-override-row{display:flex;align-items:center;gap:10px}
 .ann-emoji{font-size:26px;line-height:1;flex-shrink:0;padding-top:2px}
 .ann-content{flex:1;min-width:0}
 .ann-title{font-weight:600;font-size:14px}
@@ -1001,14 +1002,20 @@ tr:hover td{background:rgba(255,255,255,.018)}
 
       <!-- Icons sub-tab -->
       <div id="gc-icons" style="display:none">
-        <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Override any UI icon in the app. Enter an emoji or leave blank to use the default. Changes apply after Save &amp; Apply.</div>
+        <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Override any UI icon in the app. Enter an emoji <strong>or upload an image</strong> (SVG/PNG). Leave blank to use the default. Changes apply after Save &amp; Apply.</div>
 
         <!-- Gold icon -->
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
           <div class="sec-title" style="margin-bottom:10px">Currency</div>
-          <div style="display:flex;align-items:center;gap:10px">
+          <div class="icon-override-row" data-key="gold" data-group="misc">
             <label style="font-size:12px;min-width:80px">Gold icon</label>
-            <input class="input" id="gc-icon-gold" placeholder="🪙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/>
+            <img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/>
+            <input class="input icon-ov-emoji" placeholder="🪙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">
+              📁 Upload
+              <input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/>
+            </label>
+            <button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button>
             <span style="font-size:11px;color:var(--muted)">Default: 🪙</span>
           </div>
         </div>
@@ -1017,10 +1024,10 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
           <div class="sec-title" style="margin-bottom:10px">Navbar — Primary Tabs</div>
           <div style="display:flex;flex-direction:column;gap:8px" id="gc-icon-nav-primary">
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Home</label><input class="input gc-nav-icon" data-tab="home" placeholder="⏱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⏱</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Skills</label><input class="input gc-nav-icon" data-tab="skills" placeholder="⚡" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚡</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Friends</label><input class="input gc-nav-icon" data-tab="friends" placeholder="👥" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 👥</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Stats</label><input class="input gc-nav-icon" data-tab="stats" placeholder="📊" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 📊</span></div>
+            <div class="icon-override-row" data-key="home" data-group="nav"><label style="font-size:12px;min-width:80px">Home</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav-icon" data-tab="home" placeholder="⏱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: ⏱</span></div>
+            <div class="icon-override-row" data-key="skills" data-group="nav"><label style="font-size:12px;min-width:80px">Skills</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav-icon" data-tab="skills" placeholder="⚡" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: ⚡</span></div>
+            <div class="icon-override-row" data-key="friends" data-group="nav"><label style="font-size:12px;min-width:80px">Friends</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav-icon" data-tab="friends" placeholder="👥" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 👥</span></div>
+            <div class="icon-override-row" data-key="stats" data-group="nav"><label style="font-size:12px;min-width:80px">Stats</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav-icon" data-tab="stats" placeholder="📊" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 📊</span></div>
           </div>
         </div>
 
@@ -1028,13 +1035,14 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
           <div class="sec-title" style="margin-bottom:10px">Navbar — More Menu Tabs</div>
           <div style="display:flex;flex-direction:column;gap:8px" id="gc-icon-nav-secondary">
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Inventory</label><input class="input gc-nav2-icon" data-tab="inventory" placeholder="🎒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🎒</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Market</label><input class="input gc-nav2-icon" data-tab="marketplace" placeholder="🛒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🛒</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Arena</label><input class="input gc-nav2-icon" data-tab="arena" placeholder="⚔️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚔️</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Farm</label><input class="input gc-nav2-icon" data-tab="farm" placeholder="🌱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 🌱</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Craft</label><input class="input gc-nav2-icon" data-tab="craft" placeholder="⚒️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚒️</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Profile</label><input class="input gc-nav2-icon" data-tab="profile" placeholder="👤" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: 👤</span></div>
-            <div style="display:flex;align-items:center;gap:10px"><label style="font-size:12px;min-width:80px">Settings</label><input class="input gc-nav2-icon" data-tab="settings" placeholder="⚙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><span style="font-size:11px;color:var(--muted)">Default: ⚙</span></div>
+            <div class="icon-override-row" data-key="inventory" data-group="nav2"><label style="font-size:12px;min-width:80px">Inventory</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="inventory" placeholder="🎒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 🎒</span></div>
+            <div class="icon-override-row" data-key="marketplace" data-group="nav2"><label style="font-size:12px;min-width:80px">Market</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="marketplace" placeholder="🛒" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 🛒</span></div>
+            <div class="icon-override-row" data-key="arena" data-group="nav2"><label style="font-size:12px;min-width:80px">Arena</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="arena" placeholder="⚔️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: ⚔️</span></div>
+            <div class="icon-override-row" data-key="farm" data-group="nav2"><label style="font-size:12px;min-width:80px">Farm</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="farm" placeholder="🌱" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 🌱</span></div>
+            <div class="icon-override-row" data-key="craft" data-group="nav2"><label style="font-size:12px;min-width:80px">Craft</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="craft" placeholder="⚒️" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: ⚒️</span></div>
+            <div class="icon-override-row" data-key="cooking" data-group="nav2"><label style="font-size:12px;min-width:80px">Cook</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="cooking" placeholder="🍳" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 🍳</span></div>
+            <div class="icon-override-row" data-key="profile" data-group="nav2"><label style="font-size:12px;min-width:80px">Profile</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="profile" placeholder="👤" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: 👤</span></div>
+            <div class="icon-override-row" data-key="settings" data-group="nav2"><label style="font-size:12px;min-width:80px">Settings</label><img class="icon-ov-preview" src="" style="display:none;width:36px;height:36px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:var(--bg)"/><input class="input icon-ov-emoji gc-nav2-icon" data-tab="settings" placeholder="⚙" maxlength="8" style="width:80px;text-align:center;font-size:18px" oninput="gcSetDirty()"/><label class="btn btn-ghost btn-sm" style="cursor:pointer;padding:6px 10px;font-size:11px">📁 Upload<input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" onchange="iconOverrideUpload(this)" style="display:none"/></label><button class="btn btn-ghost btn-sm icon-ov-clear" onclick="iconOverrideClear(this)" style="display:none;padding:6px 8px;font-size:11px;color:var(--red)">✕</button><span style="font-size:11px;color:var(--muted)">Default: ⚙</span></div>
           </div>
         </div>
 
@@ -4494,34 +4502,147 @@ function fmtNum(n) {
 
 // ── Icons sub-tab ──────────────────────────────────────────────────────────
 
+// ── Icon override upload helpers ─────────────────────────────────────────────
+
+/** Upload handler for icon override rows — reads file, resizes to 64×64 WebP, shows preview */
+function iconOverrideUpload(fileInput) {
+  const row = fileInput.closest('.icon-override-row')
+  if (!row) return
+  const file = fileInput.files?.[0]
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10 MB'); return }
+
+  // SVG: read as text and convert to data URI directly (no canvas resize)
+  if (file.type === 'image/svg+xml') {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const dataUrl = e.target.result
+      iconOverrideSetPreview(row, dataUrl)
+      gcSetDirty()
+    }
+    reader.readAsDataURL(file)
+    return
+  }
+
+  // Raster: resize to 64×64 via canvas
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const img = new Image()
+    img.onload = () => {
+      const MAX = 64
+      let w = img.width, h = img.height
+      if (w > MAX || h > MAX) {
+        if (w >= h) { h = Math.round(h * MAX / w); w = MAX }
+        else        { w = Math.round(w * MAX / h); h = MAX }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      const fmt = canvas.toDataURL('image/webp', 0.01).startsWith('data:image/webp') ? 'image/webp' : 'image/png'
+      const dataUrl = canvas.toDataURL(fmt, 0.9)
+      iconOverrideSetPreview(row, dataUrl)
+      gcSetDirty()
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+function iconOverrideSetPreview(row, dataUrl) {
+  const preview = row.querySelector('.icon-ov-preview')
+  const clearBtn = row.querySelector('.icon-ov-clear')
+  const emojiInput = row.querySelector('.icon-ov-emoji')
+  if (dataUrl) {
+    preview.src = dataUrl; preview.style.display = ''
+    clearBtn.style.display = ''
+    row.dataset.image = dataUrl
+    // Disable emoji input when image is set
+    if (emojiInput) { emojiInput.value = ''; emojiInput.disabled = true; emojiInput.style.opacity = '0.3' }
+  } else {
+    preview.src = ''; preview.style.display = 'none'
+    clearBtn.style.display = 'none'
+    delete row.dataset.image
+    if (emojiInput) { emojiInput.disabled = false; emojiInput.style.opacity = '' }
+  }
+}
+
+function iconOverrideClear(btn) {
+  const row = btn.closest('.icon-override-row')
+  if (!row) return
+  const fileInput = row.querySelector('input[type="file"]')
+  if (fileInput) fileInput.value = ''
+  iconOverrideSetPreview(row, '')
+  gcSetDirty()
+}
+
+/** Get the effective value for an icon-override-row: image data URI > emoji > empty */
+function iconOverrideGetValue(row) {
+  if (row.dataset.image) return row.dataset.image
+  const emoji = row.querySelector('.icon-ov-emoji')
+  return (emoji?.value ?? '').trim()
+}
+
 function gcRenderIcons() {
   const ui = gcConfig.uiIcons ?? {}
-  const goldEl = document.getElementById('gc-icon-gold')
-  if (goldEl) goldEl.value = ui.gold ?? ''
-  document.querySelectorAll('.gc-nav-icon').forEach(el => {
-    el.value = (ui.navTabs ?? {})[el.dataset.tab] ?? ''
+
+  // Gold
+  const goldRow = document.querySelector('.icon-override-row[data-key="gold"]')
+  if (goldRow) {
+    const val = ui.gold ?? ''
+    if (val.startsWith('data:')) {
+      iconOverrideSetPreview(goldRow, val)
+    } else {
+      iconOverrideSetPreview(goldRow, '')
+      goldRow.querySelector('.icon-ov-emoji').value = val
+    }
+  }
+
+  // Nav tabs
+  const navMap = ui.navTabs ?? {}
+  document.querySelectorAll('.icon-override-row[data-group="nav"]').forEach(row => {
+    const val = navMap[row.dataset.key] ?? ''
+    if (val.startsWith('data:') || val.startsWith('http')) {
+      iconOverrideSetPreview(row, val)
+    } else {
+      iconOverrideSetPreview(row, '')
+      row.querySelector('.icon-ov-emoji').value = val
+    }
   })
-  document.querySelectorAll('.gc-nav2-icon').forEach(el => {
-    el.value = (ui.navSecondaryTabs ?? {})[el.dataset.tab] ?? ''
+
+  // Nav2 tabs
+  const nav2Map = ui.navSecondaryTabs ?? {}
+  document.querySelectorAll('.icon-override-row[data-group="nav2"]').forEach(row => {
+    const val = nav2Map[row.dataset.key] ?? ''
+    if (val.startsWith('data:') || val.startsWith('http')) {
+      iconOverrideSetPreview(row, val)
+    } else {
+      iconOverrideSetPreview(row, '')
+      row.querySelector('.icon-ov-emoji').value = val
+    }
   })
 }
 
 function gcCollectIcons() {
   const ui = {}
-  const goldVal = (document.getElementById('gc-icon-gold')?.value ?? '').trim()
+
+  // Gold
+  const goldRow = document.querySelector('.icon-override-row[data-key="gold"]')
+  const goldVal = goldRow ? iconOverrideGetValue(goldRow) : ''
   if (goldVal) ui.gold = goldVal
 
+  // Nav tabs
   const navTabs = {}
-  document.querySelectorAll('.gc-nav-icon').forEach(el => {
-    const v = (el.value ?? '').trim()
-    if (v) navTabs[el.dataset.tab] = v
+  document.querySelectorAll('.icon-override-row[data-group="nav"]').forEach(row => {
+    const v = iconOverrideGetValue(row)
+    if (v) navTabs[row.dataset.key] = v
   })
   if (Object.keys(navTabs).length) ui.navTabs = navTabs
 
+  // Nav2 tabs
   const navSecondaryTabs = {}
-  document.querySelectorAll('.gc-nav2-icon').forEach(el => {
-    const v = (el.value ?? '').trim()
-    if (v) navSecondaryTabs[el.dataset.tab] = v
+  document.querySelectorAll('.icon-override-row[data-group="nav2"]').forEach(row => {
+    const v = iconOverrideGetValue(row)
+    if (v) navSecondaryTabs[row.dataset.key] = v
   })
   if (Object.keys(navSecondaryTabs).length) ui.navSecondaryTabs = navSecondaryTabs
 
@@ -4530,9 +4651,13 @@ function gcCollectIcons() {
 }
 
 function gcResetIcons() {
-  document.getElementById('gc-icon-gold').value = ''
-  document.querySelectorAll('.gc-nav-icon').forEach(el => { el.value = '' })
-  document.querySelectorAll('.gc-nav2-icon').forEach(el => { el.value = '' })
+  document.querySelectorAll('.icon-override-row').forEach(row => {
+    iconOverrideSetPreview(row, '')
+    const emoji = row.querySelector('.icon-ov-emoji')
+    if (emoji) emoji.value = ''
+    const fileInput = row.querySelector('input[type="file"]')
+    if (fileInput) fileInput.value = ''
+  })
   delete gcConfig.uiIcons
   gcSetDirty()
 }
