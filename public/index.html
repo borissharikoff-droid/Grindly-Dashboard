@@ -4222,6 +4222,16 @@ const ALERT_CATEGORIES = [
     countColor: '#22c55e',
   },
   {
+    id: 'dungeon_farm',
+    icon: '⛏️',
+    title: 'Dungeon Farm Abuse (AFK / Bug Exploit)',
+    desc: 'Players running the dungeon auto-farm non-stop for hours. Each run should cost 1 Dungeon Pass. If someone has 100+ runs/day or farms for hours without breaks, they are either AFK-exploiting or found a bug where passes are not consumed.',
+    hint: 'Check their dungeon_pass inventory count vs total runs. If runs >> passes ever owned, the pass consumption is bugged for them. Also check if they farm the same zone (e.g. zone1 = Slime Forest) endlessly.',
+    types: ['dungeon_farm_abuse'],
+    borderColor: 'rgba(239,68,68,.25)',
+    countColor: '#ef4444',
+  },
+  {
     id: 'market_abuse',
     icon: '🤝',
     title: 'Marketplace Abuse',
@@ -4242,6 +4252,7 @@ const ALERT_TYPE_LABELS = {
   fast_progression: '📈 Fast Level',
   frequent_trading_pair: '🤝 Frequent Trading',
   price_anomaly: '💸 Price Anomaly',
+  dungeon_farm_abuse: '⛏️ Dungeon Farm',
 }
 
 async function loadAlerts(force) {

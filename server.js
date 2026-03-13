@@ -939,6 +939,62 @@ app.get('/api/abuse-detection', requireAuth, async (req, res) => {
         }
       }
 
+      // ── 8. Dungeon farm abuse: excessive auto-farm runs ──
+      // Each auto-farm run costs 1 Dungeon Pass. If someone has tons of runs
+      // over sustained periods, they may be exploiting a bug where passes aren't consumed.
+      const { data: dungeonRuns } = await supabase
+        .from('analytics_events')
+        .select('user_id, created_at')
+        .eq('event_name', 'arena_dungeon_start')
+        .gte('created_at', weekAgo)
+        .order('created_at', { ascending: true })
+        .limit(5000)
+
+      if (dungeonRuns?.length) {
+        // Group by user
+        const runsByUser = {}
+        for (const r of dungeonRuns) {
+          if (!runsByUser[r.user_id]) runsByUser[r.user_id] = []
+          runsByUser[r.user_id].push(new Date(r.created_at).getTime())
+        }
+
+        for (const [uid, timestamps] of Object.entries(runsByUser)) {
+          const totalRuns = timestamps.length
+          const spanHours = (timestamps[timestamps.length - 1] - timestamps[0]) / (3600 * 1000)
+          const runsPerDay = spanHours > 0 ? (totalRuns / spanHours) * 24 : totalRuns
+
+          // Calculate longest continuous farming streak (runs with <10min gaps)
+          let maxStreak = 1, curStreak = 1, maxStreakHours = 0
+          for (let i = 1; i < timestamps.length; i++) {
+            const gap = (timestamps[i] - timestamps[i - 1]) / 60000 // minutes
+            if (gap < 10) {
+              curStreak++
+              if (curStreak > maxStreak) {
+                maxStreak = curStreak
+                maxStreakHours = (timestamps[i] - timestamps[i - curStreak + 1]) / (3600 * 1000)
+              }
+            } else {
+              curStreak = 1
+            }
+          }
+
+          // Flag: >80 runs/day or >50 continuous runs (hours of non-stop farming)
+          if (totalRuns >= 80 || maxStreak >= 50) {
+            flaggedUserIds.add(uid)
+            const severity = (totalRuns >= 200 || maxStreak >= 100) ? 'high' : 'medium'
+            alerts.push({
+              type: 'dungeon_farm_abuse',
+              severity,
+              user_id: uid,
+              username: null,
+              detail: `${totalRuns} dungeon runs in 7d (${runsPerDay.toFixed(0)}/day avg). Longest non-stop streak: ${maxStreak} runs (${maxStreakHours.toFixed(1)}h). Likely AFK auto-farm exploit.`,
+              value: totalRuns,
+              timestamp: new Date(timestamps[timestamps.length - 1]).toISOString(),
+            })
+          }
+        }
+      }
+
       // ── Resolve missing usernames ──
       const needNames = alerts.filter(a => !a.username && a.user_id)
       if (needNames.length) {
