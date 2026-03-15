@@ -589,12 +589,14 @@ app.post('/api/users/:id/inventory', requireAuth, async (req, res) => {
     if (!item_id || quantity == null) return res.status(400).json({ error: 'item_id and quantity required' })
     const qty = Math.max(0, Math.floor(Number(quantity)))
     if (qty === 0) {
-      await supabase.from('user_inventory').delete().eq('user_id', uid).eq('item_id', item_id)
+      const { error } = await supabase.from('user_inventory').delete().eq('user_id', uid).eq('item_id', item_id)
+      if (error) return res.status(500).json({ error: error.message })
     } else {
-      await supabase.from('user_inventory').upsert(
+      const { error } = await supabase.from('user_inventory').upsert(
         { user_id: uid, item_id, quantity: qty, updated_at: new Date().toISOString() },
         { onConflict: 'user_id,item_id' }
       )
+      if (error) return res.status(500).json({ error: error.message })
     }
     res.json({ ok: true, item_id, quantity: qty })
   } catch (err) {
@@ -610,12 +612,14 @@ app.post('/api/users/:id/chests', requireAuth, async (req, res) => {
     if (!chest_type || quantity == null) return res.status(400).json({ error: 'chest_type and quantity required' })
     const qty = Math.max(0, Math.floor(Number(quantity)))
     if (qty === 0) {
-      await supabase.from('user_chests').delete().eq('user_id', uid).eq('chest_type', chest_type)
+      const { error } = await supabase.from('user_chests').delete().eq('user_id', uid).eq('chest_type', chest_type)
+      if (error) return res.status(500).json({ error: error.message })
     } else {
-      await supabase.from('user_chests').upsert(
+      const { error } = await supabase.from('user_chests').upsert(
         { user_id: uid, chest_type, quantity: qty, updated_at: new Date().toISOString() },
         { onConflict: 'user_id,chest_type' }
       )
+      if (error) return res.status(500).json({ error: error.message })
     }
     res.json({ ok: true, chest_type, quantity: qty })
   } catch (err) {
