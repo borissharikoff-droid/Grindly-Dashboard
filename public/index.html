@@ -2512,7 +2512,25 @@ const ITEM_CATALOG = [
   {"id":"craft_warlord_gauntlets","name":"Warlord Gauntlets","slot":"ring","rarity":"epic","icon":"🔱","description":"Gauntlets infused with the Warlord\\u0027s sigil.","perkType":"atk_boost","perkValue":6,"perkDescription":"+6 ATK · +10 HP"},
   {"id":"craft_dragon_crown","name":"Dragon Crown","slot":"head","rarity":"legendary","icon":"👑","description":"A crown forged from dragon scales.","perkType":"atk_boost","perkValue":8,"perkDescription":"+8 ATK · +30 HP"},
   {"id":"craft_troll_aegis","name":"Troll Aegis","slot":"body","rarity":"legendary","icon":"💜","description":"Armor fueled by a troll heart.","perkType":"hp_boost","perkValue":40,"perkDescription":"+40 HP · +8 HP Regen/s"},
-  {"id":"craft_dragonfire_blade","name":"Dragonfire Blade","slot":"weapon","rarity":"mythic","icon":"🔥","description":"Forged in dragonfire — the ultimate weapon.","perkType":"atk_boost","perkValue":20,"perkDescription":"+20 ATK · +15 HP · +5 HP Regen/s"}
+  {"id":"craft_dragonfire_blade","name":"Dragonfire Blade","slot":"weapon","rarity":"mythic","icon":"🔥","description":"Forged in dragonfire — the ultimate weapon.","perkType":"atk_boost","perkValue":20,"perkDescription":"+20 ATK · +15 HP · +5 HP Regen/s"},
+  // ── Zone 7 materials ──
+  {"id":"shadow_dust","name":"Shadow Dust","slot":"plant","rarity":"epic","icon":"💀","description":"Dropped by undead in the Shadow Crypt. Craft into Lich Set.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Shadow Crypt"},
+  {"id":"lich_crystal","name":"Lich Crystal","slot":"material","rarity":"legendary","icon":"💎","description":"Crystallized necrotic energy torn from the Necromancer Lord.","perkType":"cosmetic","perkValue":0,"perkDescription":"Boss material — Necromancer Lord"},
+  // ── Zone 8 materials ──
+  {"id":"storm_shard","name":"Storm Shard","slot":"plant","rarity":"legendary","icon":"⚡","description":"Dropped by storm creatures in the Celestial Spire. Craft into Titan Set.","perkType":"harvested_plant","perkValue":0,"perkDescription":"Crafting material — Celestial Spire"},
+  {"id":"titan_core","name":"Titan Core","slot":"material","rarity":"mythic","icon":"🔮","description":"The core of the Storm Titan — radiates boundless celestial energy.","perkType":"cosmetic","perkValue":0,"perkDescription":"Boss material — Storm Titan"},
+  // ── Zone 7 — Lich Set (Legendary) ──
+  {"id":"craft_lich_helm","name":"Lich Helm","slot":"head","rarity":"legendary","icon":"💀","description":"A helm carved from lich bone, imbued with necrotic energy.","perkType":"atk_boost","perkValue":18,"perkDescription":"+18 ATK · +60 HP · +8% XP"},
+  {"id":"craft_lich_plate","name":"Lich Plate","slot":"body","rarity":"legendary","icon":"🛡️","description":"Shadow-forged plate that drinks incoming damage.","perkType":"hp_boost","perkValue":150,"perkDescription":"+150 HP · +10 ATK · +8 DEF"},
+  {"id":"craft_lich_sword","name":"Lich Blade","slot":"weapon","rarity":"legendary","icon":"⚔️","description":"A sword of crystallized necromantic energy — drains life on hit.","perkType":"atk_boost","perkValue":22,"perkDescription":"+22 ATK · +6 HP Regen/s"},
+  {"id":"craft_lich_legs","name":"Lich Greaves","slot":"legs","rarity":"legendary","icon":"🦿","description":"Greaves inscribed with death runes — light as shadow.","perkType":"atk_boost","perkValue":16,"perkDescription":"+16 ATK · +70 HP"},
+  {"id":"craft_lich_ring","name":"Lich Sigil Ring","slot":"ring","rarity":"legendary","icon":"💎","description":"A ring bearing the Necromancer Lord\u0027s sigil — pulses with dark vitality.","perkType":"atk_boost","perkValue":12,"perkDescription":"+12 ATK · +7 HP Regen/s"},
+  // ── Zone 8 — Titan Set (Mythic) ──
+  {"id":"craft_titan_helm","name":"Titan Helm","slot":"head","rarity":"mythic","icon":"⚡","description":"Forged from a Titan Core — channels the power of storms.","perkType":"atk_boost","perkValue":24,"perkDescription":"+24 ATK · +100 HP · +8% XP"},
+  {"id":"craft_titan_plate","name":"Titan Plate","slot":"body","rarity":"mythic","icon":"🌩️","description":"Storm-hardened plate that nullifies the strongest blows.","perkType":"hp_boost","perkValue":200,"perkDescription":"+200 HP · +14 ATK · +15 DEF · Streak Shield"},
+  {"id":"craft_titan_sword","name":"Storm Titan Blade","slot":"weapon","rarity":"mythic","icon":"⚡","description":"Lightning crystallized into a blade — the sky screams when it swings.","perkType":"atk_boost","perkValue":28,"perkDescription":"+28 ATK · +8 HP Regen/s"},
+  {"id":"craft_titan_legs","name":"Titan Greaves","slot":"legs","rarity":"mythic","icon":"🦿","description":"Greaves charged with celestial static — each step crackles.","perkType":"atk_boost","perkValue":20,"perkDescription":"+20 ATK · +100 HP"},
+  {"id":"craft_titan_ring","name":"Titan Core Ring","slot":"ring","rarity":"mythic","icon":"🔮","description":"A ring housing a shard of the Storm Titan\u0027s core — radiates limitless energy.","perkType":"atk_boost","perkValue":16,"perkDescription":"+16 ATK · +10 HP Regen/s · +8% XP"}
 ]
 
 const BOSS_CATALOG = [
@@ -2522,6 +2540,8 @@ const BOSS_CATALOG = [
   { id:'orc',    name:'Orc Warlord',    icon:'👹', hp:129600, atk:8,   rewards:{chestTier:'epic_chest'},      materialDropId:'warlord_sigil', materialDropQty:1, requirements:{minAtk:18,minHp:280,minHpRegen:8} },
   { id:'troll',  name:'Troll Overlord', icon:'🧌', hp:270000, atk:13,  rewards:{chestTier:'epic_chest'},      materialDropId:'troll_heart',   materialDropQty:1, requirements:{minAtk:25,minHp:380,minHpRegen:13} },
   { id:'dragon', name:'Ancient Dragon', icon:'🐉', hp:567000, atk:20,  rewards:{chestTier:'legendary_chest'}, materialDropId:'dragon_heart',  materialDropQty:1, requirements:{minAtk:35,minHp:500,minHpRegen:20} },
+  { id:'lich',   name:'Necromancer Lord', icon:'💀', hp:6500, atk:20, def:13, atkSpread:0.4, rewards:{chestTier:'legendary_chest'}, materialDropId:'lich_crystal', materialDropQty:1, requirements:{minAtk:75,minHp:380,minHpRegen:13,minDef:8} },
+  { id:'titan',  name:'Storm Titan',      icon:'⚡', hp:10000, atk:28, def:18, atkSpread:0.45, rewards:{chestTier:'legendary_chest'}, materialDropId:'titan_core', materialDropQty:1, requirements:{minAtk:100,minHp:500,minHpRegen:18,minDef:15} },
 ]
 
 const ZONE_CATALOG = [
@@ -2555,6 +2575,16 @@ const ZONE_CATALOG = [
     { id:'dragon_guard', name:'Dragon Guard', icon:'🐉', hp:180000, atk:15.0, xpReward:55000,  goldMin:1500,  goldMax:2500, materialDropId:'dragon_scale', materialDropChance:0.4, materialDropQty:3 },
     { id:'dragon_elder', name:'Elder Dragon', icon:'🐉', hp:300000, atk:18.0, xpReward:90000,  goldMin:2200,  goldMax:3500, materialDropId:'dragon_scale', materialDropChance:0.5, materialDropQty:4 },
   ]},
+  { id:'zone7', name:'Shadow Crypt',    icon:'💀', themeColor:'#a855f7', bossId:'lich',   warriorLevel:55, gateItems:[], entryCost:[{itemId:'dragon_scale',quantity:2},{itemId:'dragon_heart',quantity:1}], mobs:[
+    { id:'skeleton_archer', name:'Skeleton Archer', icon:'💀', hp:2800, atk:16,   def:8,  atkSpread:0.3,  xpReward:35000,  goldMin:280, goldMax:420,  materialDropId:'shadow_dust', materialDropChance:0.3, materialDropQty:2 },
+    { id:'zombie_knight',   name:'Zombie Knight',   icon:'💀', hp:4000, atk:17,   def:10, atkSpread:0.3,  xpReward:55000,  goldMin:380, goldMax:580,  materialDropId:'shadow_dust', materialDropChance:0.4, materialDropQty:3 },
+    { id:'lich_apprentice', name:'Lich Apprentice', icon:'💀', hp:5200, atk:18.5, def:11, atkSpread:0.35, xpReward:80000,  goldMin:480, goldMax:700,  materialDropId:'shadow_dust', materialDropChance:0.5, materialDropQty:4 },
+  ]},
+  { id:'zone8', name:'Celestial Spire', icon:'⚡', themeColor:'#38bdf8', bossId:'titan',  warriorLevel:75, gateItems:[], entryCost:[{itemId:'lich_crystal',quantity:2},{itemId:'troll_heart',quantity:1}], mobs:[
+    { id:'sky_serpent',     name:'Sky Serpent',     icon:'🐍', hp:4500, atk:21, def:11, atkSpread:0.3,  xpReward:100000, goldMin:450, goldMax:650,  materialDropId:'storm_shard', materialDropChance:0.3, materialDropQty:2 },
+    { id:'thunder_drake',   name:'Thunder Drake',   icon:'🦅', hp:6200, atk:23, def:13, atkSpread:0.35, xpReward:160000, goldMin:600, goldMax:900,  materialDropId:'storm_shard', materialDropChance:0.4, materialDropQty:3 },
+    { id:'storm_elemental', name:'Storm Elemental', icon:'🌪️', hp:8000, atk:25, def:15, atkSpread:0.4,  xpReward:230000, goldMin:750, goldMax:1100, materialDropId:'storm_shard', materialDropChance:0.5, materialDropQty:4 },
+  ]},
 ]
 
 const CRAFT_RECIPE_CATALOG = [
@@ -2585,6 +2615,18 @@ const CRAFT_RECIPE_CATALOG = [
   { id:'recipe_warlord_gauntlets', output:'craft_warlord_gauntlets', outputQty:1, isIntermediate:false, ingredients:[{id:'warlord_sigil',qty:1},{id:'orc_shard',qty:5},{id:'clovers',qty:3}],               levelRequired:40, xpPerItem:350,  secPerItem:1500, goldCost:1500 },
   { id:'recipe_troll_aegis',       output:'craft_troll_aegis',       outputQty:1, isIntermediate:false, ingredients:[{id:'troll_heart',qty:1},{id:'troll_hide',qty:5},{id:'ancient_dust',qty:2},{id:'crystal_root',qty:1}], levelRequired:60, xpPerItem:700,  secPerItem:3000, goldCost:4000 },
   { id:'recipe_dragonfire_blade',  output:'craft_dragonfire_blade',  outputQty:1, isIntermediate:false, ingredients:[{id:'dragon_heart',qty:1},{id:'dragon_scale',qty:5},{id:'void_fragment',qty:2},{id:'star_bloom',qty:3}], levelRequired:80, xpPerItem:1500, secPerItem:5400, goldCost:8000 },
+  // Tier 5 — Zone 7 Lich Set
+  { id:'recipe_lich_helm',  output:'craft_lich_helm',  outputQty:1, isIntermediate:false, ingredients:[{id:'shadow_dust',qty:3},{id:'lich_crystal',qty:1},{id:'void_crystal',qty:2}],                  levelRequired:70, xpPerItem:1000, secPerItem:2700, goldCost:5000 },
+  { id:'recipe_lich_plate', output:'craft_lich_plate', outputQty:1, isIntermediate:false, ingredients:[{id:'shadow_dust',qty:5},{id:'lich_crystal',qty:2},{id:'orchids',qty:3}],                       levelRequired:80, xpPerItem:1200, secPerItem:4500, goldCost:8000 },
+  { id:'recipe_lich_sword', output:'craft_lich_sword', outputQty:1, isIntermediate:false, ingredients:[{id:'shadow_dust',qty:4},{id:'lich_crystal',qty:1},{id:'void_fragment',qty:2}],                 levelRequired:75, xpPerItem:1100, secPerItem:3600, goldCost:6000 },
+  { id:'recipe_lich_legs',  output:'craft_lich_legs',  outputQty:1, isIntermediate:false, ingredients:[{id:'shadow_dust',qty:3},{id:'lich_crystal',qty:1},{id:'star_bloom',qty:2}],                    levelRequired:72, xpPerItem:900,  secPerItem:2400, goldCost:4000 },
+  { id:'recipe_lich_ring',  output:'craft_lich_ring',  outputQty:1, isIntermediate:false, ingredients:[{id:'shadow_dust',qty:2},{id:'lich_crystal',qty:1}],                                           levelRequired:68, xpPerItem:800,  secPerItem:1800, goldCost:3000 },
+  // Tier 6 — Zone 8 Titan Set
+  { id:'recipe_titan_helm',  output:'craft_titan_helm',  outputQty:1, isIntermediate:false, ingredients:[{id:'storm_shard',qty:3},{id:'titan_core',qty:1},{id:'lich_crystal',qty:2}],                  levelRequired:85, xpPerItem:2000, secPerItem:5400,  goldCost:12000 },
+  { id:'recipe_titan_plate', output:'craft_titan_plate', outputQty:1, isIntermediate:false, ingredients:[{id:'storm_shard',qty:5},{id:'titan_core',qty:2},{id:'orchids',qty:3}],                       levelRequired:90, xpPerItem:2500, secPerItem:7200,  goldCost:18000 },
+  { id:'recipe_titan_sword', output:'craft_titan_sword', outputQty:1, isIntermediate:false, ingredients:[{id:'storm_shard',qty:4},{id:'titan_core',qty:1},{id:'shadow_dust',qty:4}],                   levelRequired:88, xpPerItem:2200, secPerItem:6000,  goldCost:15000 },
+  { id:'recipe_titan_legs',  output:'craft_titan_legs',  outputQty:1, isIntermediate:false, ingredients:[{id:'storm_shard',qty:3},{id:'titan_core',qty:1},{id:'star_bloom',qty:2}],                    levelRequired:85, xpPerItem:1800, secPerItem:4800,  goldCost:10000 },
+  { id:'recipe_titan_ring',  output:'craft_titan_ring',  outputQty:1, isIntermediate:false, ingredients:[{id:'storm_shard',qty:2},{id:'titan_core',qty:1},{id:'lich_crystal',qty:1}],                  levelRequired:82, xpPerItem:1600, secPerItem:4200,  goldCost:8000 },
 ]
 
 const CHEST_CATALOG = [
@@ -4012,6 +4054,8 @@ function gcRenderCraft() {
     { label: 'Tier 2 — Intermediate Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_iron_helm','recipe_fang_dagger','recipe_essence_ring','recipe_scale_robe','recipe_void_blade'].includes(r.id)) },
     { label: 'Tier 3 — Zone-Drop Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_slime_shield','recipe_goblin_blade','recipe_wolf_pendant','recipe_orc_plate','recipe_troll_cloak','recipe_dragon_crown'].includes(r.id)) },
     { label: 'Tier 4 — Boss Gear', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_warlord_gauntlets','recipe_troll_aegis','recipe_dragonfire_blade'].includes(r.id)) },
+    { label: 'Tier 5 — Lich Set (Zone 7)', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_lich_helm','recipe_lich_plate','recipe_lich_sword','recipe_lich_legs','recipe_lich_ring'].includes(r.id)) },
+    { label: 'Tier 6 — Titan Set (Zone 8)', recipes: CRAFT_RECIPE_CATALOG.filter(r => !r.isIntermediate && ['recipe_titan_helm','recipe_titan_plate','recipe_titan_sword','recipe_titan_legs','recipe_titan_ring'].includes(r.id)) },
   ]
 
   let html = ''
