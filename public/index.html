@@ -366,7 +366,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
   <!-- Tabs -->
   <nav class="tabs">
     <button class="tab-btn active" onclick="showTab('overview',this)">📊 Overview</button>
-    <button class="tab-btn" onclick="showTab('analytics',this)">🔍 Analytics</button>
+    <button class="tab-btn" onclick="showTab('analytics',this);loadDeepStats()">🔍 Analytics</button>
     <button class="tab-btn" onclick="showTab('skills',this)">⚡ Skills</button>
     <button class="tab-btn" onclick="showTab('users',this)">👥 Users</button>
     <button class="tab-btn" onclick="showTab('announcements',this)">📢 Announcements</button>
@@ -375,7 +375,6 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <button class="tab-btn" onclick="showTab('gameconfig',this);loadGameConfig()">🎮 Game Config</button>
     <button class="tab-btn" onclick="showTab('economy',this)">💰 Economy</button>
     <button class="tab-btn" onclick="showTab('alerts',this);loadAlerts()" id="tab-btn-alerts" style="position:relative">🚨 Alerts <span id="alert-tab-badge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--red);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;padding:0 4px"></span></button>
-    <button class="tab-btn" onclick="showTab('deepanalytics',this);loadDeepStats()">📈 Deep Analytics</button>
   </nav>
 
   <!-- Content -->
@@ -479,6 +478,84 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div class="box-title">Feature Adoption — distinct users (30d)</div>
         <div style="margin-top:4px" id="adoption-list"></div>
       </div>
+
+      <!-- ── Deep Analytics (merged) ──────────────────────────────────────── -->
+      <div id="deep-loading" style="display:flex;align-items:center;justify-content:center;padding:40px;gap:12px;margin-top:14px">
+        <span class="spinner"></span>
+        <span style="color:var(--muted2);font-size:13px">Loading deep analytics…</span>
+      </div>
+      <div id="deep-content" style="display:none;margin-top:14px">
+
+        <!-- Tab Engagement -->
+        <div class="chart-grid g2" style="margin-bottom:14px">
+          <div class="chart-box">
+            <div class="box-title">Avg Time per Tab (seconds)</div>
+            <div class="chart-wrap h220"><canvas id="deep-tab-time-chart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Tab Time — Top Visits</div>
+            <div id="deep-tab-time-table" style="margin-top:4px;overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- Combat Breakdown -->
+        <div class="table-box" style="margin-bottom:14px">
+          <div class="table-header"><h3>Combat Breakdown by Zone</h3></div>
+          <div style="overflow-x:auto"><table id="deep-combat-table">
+            <thead><tr><th>Zone</th><th>Boss Kills</th><th>Dungeon Completes</th><th>Deaths</th><th>Completion Rate</th><th>Unique Fighters</th></tr></thead>
+            <tbody id="deep-combat-body"></tbody>
+          </table></div>
+        </div>
+
+        <!-- Chest Opens + Equip Stats -->
+        <div class="chart-grid g2" style="margin-bottom:14px">
+          <div class="chart-box">
+            <div class="box-title">Chest Opens by Type</div>
+            <div class="chart-wrap h220"><canvas id="deep-chest-chart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Item Equips — Most Popular</div>
+            <div id="deep-equip-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- Farming + Crafting -->
+        <div class="chart-grid g2" style="margin-bottom:14px">
+          <div class="chart-box">
+            <div class="box-title">Top Seeds Planted</div>
+            <div id="deep-farming-table" style="overflow-x:auto"></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Top Crafted Items (Last 30 Days)</div>
+            <div id="deep-crafting-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- Guild & Raid Adoption -->
+        <div class="chart-grid g2" style="margin-bottom:14px">
+          <div class="chart-box">
+            <div class="box-title">Guild Adoption</div>
+            <div id="deep-guild-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Raid Stats by Tier</div>
+            <div id="deep-raid-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- Level-Ups + Retention Cohorts -->
+        <div class="chart-grid g2" style="margin-bottom:14px">
+          <div class="chart-box">
+            <div class="box-title">Level-Ups per Skill</div>
+            <div class="chart-wrap h220"><canvas id="deep-levelup-chart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Retention Cohorts (by first session week)</div>
+            <div id="deep-retention-table" style="overflow-x:auto;max-height:260px"></div>
+          </div>
+        </div>
+
+      </div><!-- /deep-content -->
     </div>
 
     <!-- ── Skills ─────────────────────────────────────────────────────────── -->
@@ -1251,88 +1328,6 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-ghost btn-sm" onclick="gcResetCraftRecipe()">Reset</button>
         </div>
       </div>
-    </div>
-
-    <!-- ── Deep Analytics ────────────────────────────────────────────────── -->
-    <div class="page" id="page-deepanalytics">
-      <div id="deep-loading" style="display:flex;align-items:center;justify-content:center;padding:60px;gap:12px">
-        <span class="spinner"></span>
-        <span style="color:var(--muted2);font-size:13px">Loading deep analytics…</span>
-      </div>
-      <div id="deep-content" style="display:none">
-
-        <!-- 1. Tab Engagement -->
-        <div class="chart-grid g2" style="margin-bottom:24px">
-          <div class="chart-box">
-            <div class="box-title">Avg Time per Tab (seconds)</div>
-            <div class="chart-wrap h220"><canvas id="deep-tab-time-chart"></canvas></div>
-          </div>
-          <div class="chart-box">
-            <div class="box-title">Tab Time — Top Visits</div>
-            <div id="deep-tab-time-table" style="margin-top:4px;overflow-x:auto"></div>
-          </div>
-        </div>
-
-        <!-- 2. Combat Breakdown -->
-        <div class="table-box" style="margin-bottom:24px">
-          <div class="table-header"><h3>Combat Breakdown by Zone</h3></div>
-          <div style="overflow-x:auto"><table id="deep-combat-table">
-            <thead><tr><th>Zone</th><th>Boss Kills</th><th>Dungeon Completes</th><th>Deaths</th><th>Completion Rate</th><th>Unique Fighters</th></tr></thead>
-            <tbody id="deep-combat-body"></tbody>
-          </table></div>
-        </div>
-
-        <!-- 3. Chest Opens -->
-        <div class="chart-grid g2" style="margin-bottom:24px">
-          <div class="chart-box">
-            <div class="box-title">Chest Opens by Type</div>
-            <div class="chart-wrap h220"><canvas id="deep-chest-chart"></canvas></div>
-          </div>
-          <div class="chart-box">
-            <div class="box-title">Item Equips — Most Popular</div>
-            <div id="deep-equip-table" style="overflow-x:auto"></div>
-          </div>
-        </div>
-
-        <!-- 4. Farming Activity -->
-        <div class="chart-grid g2" style="margin-bottom:24px">
-          <div class="chart-box">
-            <div class="box-title">Top Seeds Planted</div>
-            <div id="deep-farming-table" style="overflow-x:auto"></div>
-          </div>
-          <!-- 5. Crafting Activity -->
-          <div class="chart-box">
-            <div class="box-title">Top Crafted Items (Last 30 Days)</div>
-            <div id="deep-crafting-table" style="overflow-x:auto"></div>
-          </div>
-        </div>
-
-        <!-- 6. Guild & Raid Adoption -->
-        <div class="chart-grid g2" style="margin-bottom:24px">
-          <div class="chart-box">
-            <div class="box-title">Guild Adoption</div>
-            <div id="deep-guild-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
-          </div>
-          <div class="chart-box">
-            <div class="box-title">Raid Stats by Tier</div>
-            <div id="deep-raid-table" style="overflow-x:auto"></div>
-          </div>
-        </div>
-
-        <!-- 7. Skill Level-Ups -->
-        <div class="chart-grid g2" style="margin-bottom:24px">
-          <div class="chart-box">
-            <div class="box-title">Level-Ups per Skill</div>
-            <div class="chart-wrap h220"><canvas id="deep-levelup-chart"></canvas></div>
-          </div>
-          <!-- 8. Retention Cohorts -->
-          <div class="chart-box">
-            <div class="box-title">Retention Cohorts (by registration week)</div>
-            <div id="deep-retention-table" style="overflow-x:auto;max-height:260px"></div>
-          </div>
-        </div>
-
-      </div><!-- /deep-content -->
     </div>
 
   </div><!-- /content -->
