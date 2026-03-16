@@ -375,6 +375,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
     <button class="tab-btn" onclick="showTab('gameconfig',this);loadGameConfig()">🎮 Game Config</button>
     <button class="tab-btn" onclick="showTab('economy',this)">💰 Economy</button>
     <button class="tab-btn" onclick="showTab('alerts',this);loadAlerts()" id="tab-btn-alerts" style="position:relative">🚨 Alerts <span id="alert-tab-badge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:99px;background:var(--red);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;padding:0 4px"></span></button>
+    <button class="tab-btn" onclick="showTab('deepanalytics',this);loadDeepStats()">📈 Deep Analytics</button>
   </nav>
 
   <!-- Content -->
@@ -1250,6 +1251,88 @@ tr:hover td{background:rgba(255,255,255,.018)}
           <button class="btn btn-ghost btn-sm" onclick="gcResetCraftRecipe()">Reset</button>
         </div>
       </div>
+    </div>
+
+    <!-- ── Deep Analytics ────────────────────────────────────────────────── -->
+    <div class="page" id="page-deepanalytics">
+      <div id="deep-loading" style="display:flex;align-items:center;justify-content:center;padding:60px;gap:12px">
+        <span class="spinner"></span>
+        <span style="color:var(--muted2);font-size:13px">Loading deep analytics…</span>
+      </div>
+      <div id="deep-content" style="display:none">
+
+        <!-- 1. Tab Engagement -->
+        <div class="chart-grid g2" style="margin-bottom:24px">
+          <div class="chart-box">
+            <div class="box-title">Avg Time per Tab (seconds)</div>
+            <div class="chart-wrap h220"><canvas id="deep-tab-time-chart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Tab Time — Top Visits</div>
+            <div id="deep-tab-time-table" style="margin-top:4px;overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- 2. Combat Breakdown -->
+        <div class="table-box" style="margin-bottom:24px">
+          <div class="table-header"><h3>Combat Breakdown by Zone</h3></div>
+          <div style="overflow-x:auto"><table id="deep-combat-table">
+            <thead><tr><th>Zone</th><th>Boss Kills</th><th>Dungeon Completes</th><th>Deaths</th><th>Completion Rate</th><th>Unique Fighters</th></tr></thead>
+            <tbody id="deep-combat-body"></tbody>
+          </table></div>
+        </div>
+
+        <!-- 3. Chest Opens -->
+        <div class="chart-grid g2" style="margin-bottom:24px">
+          <div class="chart-box">
+            <div class="box-title">Chest Opens by Type</div>
+            <div class="chart-wrap h220"><canvas id="deep-chest-chart"></canvas></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Item Equips — Most Popular</div>
+            <div id="deep-equip-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- 4. Farming Activity -->
+        <div class="chart-grid g2" style="margin-bottom:24px">
+          <div class="chart-box">
+            <div class="box-title">Top Seeds Planted</div>
+            <div id="deep-farming-table" style="overflow-x:auto"></div>
+          </div>
+          <!-- 5. Crafting Activity -->
+          <div class="chart-box">
+            <div class="box-title">Top Crafted Items (Last 30 Days)</div>
+            <div id="deep-crafting-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- 6. Guild & Raid Adoption -->
+        <div class="chart-grid g2" style="margin-bottom:24px">
+          <div class="chart-box">
+            <div class="box-title">Guild Adoption</div>
+            <div id="deep-guild-cards" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">Raid Stats by Tier</div>
+            <div id="deep-raid-table" style="overflow-x:auto"></div>
+          </div>
+        </div>
+
+        <!-- 7. Skill Level-Ups -->
+        <div class="chart-grid g2" style="margin-bottom:24px">
+          <div class="chart-box">
+            <div class="box-title">Level-Ups per Skill</div>
+            <div class="chart-wrap h220"><canvas id="deep-levelup-chart"></canvas></div>
+          </div>
+          <!-- 8. Retention Cohorts -->
+          <div class="chart-box">
+            <div class="box-title">Retention Cohorts (by registration week)</div>
+            <div id="deep-retention-table" style="overflow-x:auto;max-height:260px"></div>
+          </div>
+        </div>
+
+      </div><!-- /deep-content -->
     </div>
 
   </div><!-- /content -->
@@ -4467,6 +4550,195 @@ function renderOverviewAlerts() {
       '<span style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.detail) + '</span>' +
     '</div>'
   }).join('')
+}
+
+// ─── Deep Analytics ──────────────────────────────────────────────────────────
+
+let deepStatsLoaded = false
+let deepStatsData = null
+let deepTabTimeChart = null
+let deepChestChart = null
+let deepLevelupChart = null
+
+async function loadDeepStats(force) {
+  if (deepStatsLoaded && !force) return
+  deepStatsLoaded = true
+
+  var loadingEl = document.getElementById('deep-loading')
+  var contentEl = document.getElementById('deep-content')
+  if (loadingEl) loadingEl.style.display = 'flex'
+  if (contentEl) contentEl.style.display = 'none'
+
+  var data = await apiFetch('GET', '/api/deep-stats' + (force ? '?force=1' : ''))
+  if (!data || data.error) {
+    deepStatsLoaded = false
+    if (loadingEl) loadingEl.innerHTML = '<span style="color:var(--red)">Error loading deep analytics</span>'
+    return
+  }
+  deepStatsData = data
+  if (loadingEl) loadingEl.style.display = 'none'
+  if (contentEl) contentEl.style.display = 'block'
+  renderDeepStats(data)
+}
+
+function renderDeepStats(d) {
+  // 1. Tab Time chart
+  var tabRows = d.tabTimeStats || []
+  if (tabRows.length) {
+    var tabLabels = tabRows.map(function(r) { return r.tab_id })
+    var tabData   = tabRows.map(function(r) { return Number(r.avg_seconds) })
+    if (deepTabTimeChart) { deepTabTimeChart.destroy(); deepTabTimeChart = null }
+    deepTabTimeChart = mkChart('deep-tab-time-chart', 'bar', tabLabels, [{
+      data: tabData,
+      backgroundColor: 'rgba(0,212,255,0.6)',
+      borderColor: 'rgba(0,212,255,1)',
+      borderWidth: 1, borderRadius: 4,
+    }], { indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#55557a' } }, y: { grid: { display: false }, ticks: { color: '#ddddf5' } } } })
+
+    var tbl = document.getElementById('deep-tab-time-table')
+    if (tbl) {
+      var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Tab</th><th>Avg Sec</th><th>Visits</th><th>Users</th></tr></thead><tbody>'
+      tabRows.slice(0, 8).forEach(function(r) {
+        html += '<tr><td style="color:var(--blue)">' + esc(r.tab_id) + '</td><td>' + Number(r.avg_seconds).toFixed(1) + 's</td><td>' + fmtNum(r.total_visits) + '</td><td>' + fmtNum(r.unique_users) + '</td></tr>'
+      })
+      html += '</tbody></table>'
+      tbl.innerHTML = html
+    }
+  }
+
+  // 2. Combat table
+  var combatRows = d.combatStats || []
+  var combatBody = document.getElementById('deep-combat-body')
+  if (combatBody) {
+    if (!combatRows.length) {
+      combatBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No combat data yet</td></tr>'
+    } else {
+      combatBody.innerHTML = combatRows.map(function(r) {
+        var total = Number(r.dungeon_completes) + Number(r.dungeon_deaths)
+        var rate = total > 0 ? Math.round(Number(r.dungeon_completes) / total * 100) : 0
+        var zoneDisplay = r.zone_id && r.zone_id !== 'null' ? esc(r.zone_id) : '<span style="color:var(--muted)">standalone</span>'
+        return '<tr><td>' + zoneDisplay + '</td><td style="color:var(--green)">' + fmtNum(r.boss_kills) + '</td><td style="color:var(--blue)">' + fmtNum(r.dungeon_completes) + '</td><td style="color:var(--red)">' + fmtNum(r.dungeon_deaths) + '</td><td><span style="color:' + (rate >= 50 ? 'var(--green)' : 'var(--orange)') + '">' + rate + '%</span></td><td>' + fmtNum(r.unique_fighters) + '</td></tr>'
+      }).join('')
+    }
+  }
+
+  // 3. Chest chart
+  var chestRows = d.chestStats || []
+  if (chestRows.length) {
+    var chestColors = { common_chest: 'rgba(100,200,100,0.7)', rare_chest: 'rgba(56,189,248,0.7)', epic_chest: 'rgba(192,132,252,0.7)', legendary_chest: 'rgba(250,204,21,0.7)' }
+    if (deepChestChart) { deepChestChart.destroy(); deepChestChart = null }
+    deepChestChart = mkChart('deep-chest-chart', 'bar', chestRows.map(function(r){return r.chest_type}), [{
+      data: chestRows.map(function(r){return Number(r.open_count)}),
+      backgroundColor: chestRows.map(function(r){return chestColors[r.chest_type] || 'rgba(124,108,255,0.6)'}),
+      borderWidth: 0, borderRadius: 4,
+    }], { indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#55557a' } }, y: { grid: { display: false }, ticks: { color: '#ddddf5' } } } })
+  }
+
+  // Equip stats table
+  var equipRows = (d.equipStats || []).slice(0, 10)
+  var equipEl = document.getElementById('deep-equip-table')
+  if (equipEl) {
+    var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Item</th><th>Slot</th><th>Equips</th><th>Users</th></tr></thead><tbody>'
+    if (!equipRows.length) html += '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No equip data yet</td></tr>'
+    equipRows.forEach(function(r) {
+      html += '<tr><td style="color:var(--purple)">' + esc(r.item_id) + '</td><td style="color:var(--muted2)">' + esc(r.slot) + '</td><td>' + fmtNum(r.equip_count) + '</td><td>' + fmtNum(r.unique_users) + '</td></tr>'
+    })
+    html += '</tbody></table>'
+    equipEl.innerHTML = html
+  }
+
+  // 4. Farming table
+  var farmRows = (d.farmingStats || []).slice(0, 10)
+  var farmEl = document.getElementById('deep-farming-table')
+  if (farmEl) {
+    var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Seed</th><th>Plants</th><th>Farmers</th></tr></thead><tbody>'
+    if (!farmRows.length) html += '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">No farming data yet</td></tr>'
+    farmRows.forEach(function(r) {
+      html += '<tr><td style="color:var(--green)">' + esc(r.seed_id) + '</td><td>' + fmtNum(r.plant_count) + '</td><td>' + fmtNum(r.unique_farmers) + '</td></tr>'
+    })
+    html += '</tbody></table>'
+    farmEl.innerHTML = html
+  }
+
+  // 5. Crafting table
+  var craftRows = (d.craftingStats || []).slice(0, 10)
+  var craftEl = document.getElementById('deep-crafting-table')
+  if (craftEl) {
+    var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Item</th><th>Crafted</th><th>Crafters</th></tr></thead><tbody>'
+    if (!craftRows.length) html += '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">No crafting data yet</td></tr>'
+    craftRows.forEach(function(r) {
+      html += '<tr><td style="color:var(--orange)">' + esc(r.item_id) + '</td><td>' + fmtNum(r.craft_count) + '</td><td>' + fmtNum(r.unique_crafters) + '</td></tr>'
+    })
+    html += '</tbody></table>'
+    craftEl.innerHTML = html
+  }
+
+  // 6. Guild stats cards
+  var guildMetrics = d.guildStats || []
+  var guildEl = document.getElementById('deep-guild-cards')
+  if (guildEl) {
+    var metricMap = {}
+    guildMetrics.forEach(function(r) { metricMap[r.metric] = Number(r.value) })
+    var gColors = { guilds_created: 'var(--green)', guild_joins: 'var(--blue)', guild_leaves: 'var(--red)', unique_guild_members: 'var(--purple)' }
+    var gLabels = { guilds_created: 'Guilds Created', guild_joins: 'Joins', guild_leaves: 'Leaves', unique_guild_members: 'Unique Members' }
+    var metricsOrder = ['guilds_created', 'unique_guild_members', 'guild_joins', 'guild_leaves']
+    guildEl.innerHTML = metricsOrder.map(function(key) {
+      return '<div style="flex:1;min-width:100px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 16px">' +
+        '<div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">' + gLabels[key] + '</div>' +
+        '<div style="font-size:24px;font-weight:700;color:' + gColors[key] + '">' + fmtNum(metricMap[key] || 0) + '</div>' +
+        '</div>'
+    }).join('')
+  }
+
+  // Raid stats table
+  var raidRows = d.raidStats || []
+  var raidEl = document.getElementById('deep-raid-table')
+  if (raidEl) {
+    var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Tier</th><th>Completions</th><th>Failures</th><th>Rate</th><th>Raiders</th></tr></thead><tbody>'
+    if (!raidRows.length) html += '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">No raid data yet</td></tr>'
+    raidRows.forEach(function(r) {
+      var rate = Number(r.completion_rate)
+      html += '<tr><td style="color:var(--yellow)">' + esc(r.tier) + '</td><td style="color:var(--green)">' + fmtNum(r.completions) + '</td><td style="color:var(--red)">' + fmtNum(r.failures) + '</td><td><span style="color:' + (rate >= 50 ? 'var(--green)' : 'var(--orange)') + '">' + rate + '%</span></td><td>' + fmtNum(r.unique_raiders) + '</td></tr>'
+    })
+    html += '</tbody></table>'
+    raidEl.innerHTML = html
+  }
+
+  // 7. Level-up chart
+  var levelRows = d.levelupStats || []
+  if (levelRows.length) {
+    var lvlColors = levelRows.map(function(r) {
+      var s = SKILLS[r.skill_id]
+      return s ? s.color : '#7c6cff'
+    })
+    if (deepLevelupChart) { deepLevelupChart.destroy(); deepLevelupChart = null }
+    deepLevelupChart = mkChart('deep-levelup-chart', 'bar', levelRows.map(function(r){
+      var s = SKILLS[r.skill_id]; return s ? (s.icon + ' ' + s.label) : r.skill_id
+    }), [{
+      data: levelRows.map(function(r){return Number(r.total_levelups)}),
+      backgroundColor: lvlColors.map(function(c){ return c.replace(')', ',0.7)').replace('rgb(', 'rgba(').replace('#', '') }),
+      borderWidth: 0, borderRadius: 4,
+    }], { scales: { y: { beginAtZero: true } } })
+  }
+
+  // 8. Retention cohorts table
+  var retentionRows = d.retentionCohorts || []
+  var retEl = document.getElementById('deep-retention-table')
+  if (retEl) {
+    var html = '<table style="width:100%;font-size:12px"><thead><tr><th>Cohort Week</th><th>Size</th><th>D1 Ret.</th><th>D1 %</th><th>D7 Ret.</th><th>D7 %</th><th>D30 Ret.</th><th>D30 %</th></tr></thead><tbody>'
+    if (!retentionRows.length) html += '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px">No retention data yet</td></tr>'
+    retentionRows.forEach(function(r) {
+      var d1c = 'color:' + (Number(r.d1_rate) >= 20 ? 'var(--green)' : Number(r.d1_rate) >= 10 ? 'var(--orange)' : 'var(--red)')
+      var d7c = 'color:' + (Number(r.d7_rate) >= 10 ? 'var(--green)' : Number(r.d7_rate) >= 5 ? 'var(--orange)' : 'var(--red)')
+      var d30c = 'color:' + (Number(r.d30_rate) >= 5 ? 'var(--green)' : Number(r.d30_rate) >= 2 ? 'var(--orange)' : 'var(--red)')
+      html += '<tr><td style="color:var(--muted2)">' + esc(r.cohort_week) + '</td><td>' + fmtNum(r.cohort_size) + '</td>' +
+        '<td>' + fmtNum(r.d1_retained) + '</td><td style="' + d1c + '">' + r.d1_rate + '%</td>' +
+        '<td>' + fmtNum(r.d7_retained) + '</td><td style="' + d7c + '">' + r.d7_rate + '%</td>' +
+        '<td>' + fmtNum(r.d30_retained) + '</td><td style="' + d30c + '">' + r.d30_rate + '%</td></tr>'
+    })
+    html += '</tbody></table>'
+    retEl.innerHTML = html
+  }
 }
 
 // ─── Economy ─────────────────────────────────────────────────────────────────

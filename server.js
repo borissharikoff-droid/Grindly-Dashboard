@@ -1062,6 +1062,56 @@ app.get('/api/abuse-detection', requireAuth, async (req, res) => {
   }
 })
 
+// ── Deep Analytics ────────────────────────────────────────────────────────────
+
+app.get('/api/deep-stats', requireAuth, async (req, res) => {
+  try {
+    if (req.query.force === '1') invalidate('deep_stats')
+    const data = await cached('deep_stats', 10 * 60 * 1000, async () => {
+      const [
+        chestStats,
+        farmingStats,
+        combatStats,
+        tabTimeStats,
+        guildStats,
+        raidStats,
+        equipStats,
+        levelupStats,
+        craftingStats,
+        retentionCohorts,
+      ] = await Promise.all([
+        rpc('admin_chest_stats'),
+        rpc('admin_farming_stats'),
+        rpc('admin_combat_stats'),
+        rpc('admin_tab_time_stats'),
+        rpc('admin_guild_stats'),
+        rpc('admin_raid_stats'),
+        rpc('admin_equip_stats'),
+        rpc('admin_levelup_stats'),
+        rpc('admin_crafting_stats'),
+        rpc('admin_retention_cohorts'),
+      ])
+      return {
+        chestStats,
+        farmingStats,
+        combatStats,
+        tabTimeStats,
+        guildStats,
+        raidStats,
+        equipStats,
+        levelupStats,
+        craftingStats,
+        retentionCohorts,
+        generatedAt: new Date().toISOString(),
+      }
+    })
+    res.json(data)
+  } catch (err) {
+    console.error('/api/deep-stats', err)
+    res.status(500).json({ error: String(err) })
+  }
+})
+
 // ── Static ────────────────────────────────────────────────────────────────────
 
 app.use(express.static(path.join(__dirname, 'public')))
