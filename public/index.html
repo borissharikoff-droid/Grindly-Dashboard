@@ -434,11 +434,13 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
         <div class="chart-box">
           <div class="box-title">Health Metrics</div>
-          <div class="cards" style="margin-bottom:0;margin-top:4px;grid-template-columns:1fr 1fr">
+          <div class="cards" style="margin-bottom:0;margin-top:4px;grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">
             <div class="card c-green" style="padding:12px 14px"><div class="card-label">DAU / Total</div><div class="card-val" id="c-dau-pct" style="font-size:22px">—</div><div class="card-trend trend-neutral">engagement rate</div></div>
             <div class="card c-blue" style="padding:12px 14px"><div class="card-label">7d Avg DAU</div><div class="card-val" id="c-7d-dau" style="font-size:22px">—</div><div class="card-trend trend-neutral">weekly average</div></div>
             <div class="card c-yellow" style="padding:12px 14px"><div class="card-label">Events Today</div><div class="card-val" id="c-events-today" style="font-size:22px">—</div><div class="card-trend" id="t-events"></div></div>
             <div class="card c-purple" style="padding:12px 14px"><div class="card-label">Events/Session</div><div class="card-val" id="c-events-per" style="font-size:22px">—</div><div class="card-trend trend-neutral">avg depth</div></div>
+            <div class="card c-orange" style="padding:12px 14px"><div class="card-label">WAU (7d)</div><div class="card-val" id="c-wau" style="font-size:22px">—</div><div class="card-trend trend-neutral">weekly active</div></div>
+            <div class="card c-pink" style="padding:12px 14px"><div class="card-label">30d Total Hours</div><div class="card-val" id="c-30d-hours" style="font-size:22px">—</div><div class="card-trend trend-neutral">last 30 days</div></div>
           </div>
         </div>
       </div>
@@ -1603,8 +1605,12 @@ async function doLogin() {
   if (r.ok) {
     document.getElementById('login-screen').style.display = 'none'
     document.getElementById('app').style.display = 'flex'
-    loadAll()
     buildEmojiPicker()
+    restoreCompact()
+    restoreRefreshInterval()
+    startOnlinePoller()
+    loadAll()
+    loadAnnouncements()
   } else {
     err.textContent = 'Wrong password'
   }
@@ -1642,16 +1648,32 @@ function restoreRefreshInterval() {
   setRefreshInterval(saved)
 }
 
+// Poll online user count every 30s independently of full refresh
+let _onlineTimer = null
+function startOnlinePoller() {
+  if (_onlineTimer) clearInterval(_onlineTimer)
+  _onlineTimer = setInterval(async () => {
+    const data = await apiFetch('GET', '/api/stats')
+    if (data && !data.error && data.onlineNow != null) {
+      document.getElementById('c-online').textContent = data.onlineNow
+      document.getElementById('c-users').textContent  = data.totalUsers ?? document.getElementById('c-users').textContent
+    }
+  }, 30 * 1000)
+}
+
 async function forceRefresh() {
   document.getElementById('last-refresh').textContent = 'Refreshing…'
   economyLoaded = false
   alertsLoaded = false
+  deepStatsLoaded = false
   const [stats] = await Promise.all([apiFetch('GET', '/api/stats?force=1'), loadUsers()])
   statsData = stats
   renderOverview(stats)
   renderAnalytics(stats)
   renderSkills(stats)
   if (document.getElementById('page-economy')?.classList.contains('active')) loadEconomy()
+  if (document.getElementById('page-alerts')?.classList.contains('active')) loadAlerts(true)
+  if (document.getElementById('page-analytics')?.classList.contains('active')) loadDeepStats(true)
   document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
 }
 
@@ -1762,6 +1784,18 @@ function renderOverview(d) {
   document.getElementById('t-events').innerHTML = trendHtml(d.eventsToday, d.eventsYesterday)
   const eventsPerSession = d.sessionsToday > 0 ? (d.eventsToday / d.sessionsToday).toFixed(1) : '—'
   document.getElementById('c-events-per').textContent = eventsPerSession
+  // WAU = count of unique days in last 7d that had at least 1 DAU (uses dau array)
+  const wauVal = dau.vals.slice(-7).filter(v => v > 0).length > 0
+    ? Math.round(dau.vals.slice(-7).reduce((a, b) => a + b, 0) / dau.vals.slice(-7).filter(v => v > 0).length)
+    : 0
+  const wauEl = document.getElementById('c-wau')
+  if (wauEl) wauEl.textContent = wauVal || '—'
+  // 30d total hours from session stats
+  const hours30El = document.getElementById('c-30d-hours')
+  if (hours30El) {
+    const totalSec = (d.sessionsPerDay || []).reduce((sum, r) => sum + (Number(r.total_seconds) || 0), 0)
+    hours30El.textContent = totalSec > 0 ? Math.round(totalSec / 3600) + 'h' : '—'
+  }
 
   mkChart('ch-dau', 'line', dau.labels, [{
     data: dau.vals, borderColor: '#7c6cff', borderWidth: 2,
@@ -2057,10 +2091,14 @@ function renderUsersTable(users) {
   const maxLvl = Math.max(...users.map(u => u.level ?? 1))
   const um = document.getElementById('user-mini')
   if (um && statsData) {
+    const avgLvl = users.length ? Math.round(users.reduce((s, u) => s + (u.level ?? 1), 0) / users.length) : 0
+    const streaking = users.filter(u => (u.streak_count ?? 0) >= 1).length
     um.innerHTML = `
       <div class="mini-card"><div class="lbl">Total Users</div><div class="val">${statsData.totalUsers}</div></div>
-      <div class="mini-card"><div class="lbl">Online Now</div><div class="val c-green" style="color:var(--green)">${statsData.onlineNow}</div></div>
+      <div class="mini-card"><div class="lbl">Online Now</div><div class="val" style="color:var(--green)">${statsData.onlineNow}</div></div>
       <div class="mini-card"><div class="lbl">Highest Level</div><div class="val">${maxLvl}</div></div>
+      <div class="mini-card"><div class="lbl">Avg Level</div><div class="val">${avgLvl}</div></div>
+      <div class="mini-card"><div class="lbl">Streaking</div><div class="val" style="color:var(--yellow)">${streaking}</div></div>
       <div class="mini-card"><div class="lbl">Shown</div><div class="val">${users.length}</div></div>
     `
   }
@@ -4907,6 +4945,7 @@ function fmtNum(n) {
     buildEmojiPicker()
     restoreCompact()
     restoreRefreshInterval()
+    startOnlinePoller()
     loadAll()
     loadAnnouncements()
   }
@@ -5223,8 +5262,8 @@ function iconBulkClear() {
 let pmUserId = null
 let pmData   = null
 
-const SKILL_NAMES = ['developer','designer','gamer','communicator','researcher','creator','learner','listener','farmer','warrior','crafter','chef']
-const SKILL_ICONS  = { developer:'💻', designer:'🎨', gamer:'🎮', communicator:'💬', researcher:'🔍', creator:'✏️', learner:'📚', listener:'🎧', farmer:'🌾', warrior:'⚔️', crafter:'⚒️', chef:'🍳' }
+const SKILL_NAMES = ['developer','designer','gamer','communicator','researcher','creator','learner','listener','farmer','warrior','crafter','chef','grindly']
+const SKILL_ICONS  = { developer:'💻', designer:'🎨', gamer:'🎮', communicator:'💬', researcher:'🔍', creator:'✏️', learner:'📚', listener:'🎧', farmer:'🌾', warrior:'⚔️', crafter:'⚒️', chef:'🍳', grindly:'🏠' }
 const CHEST_TYPES  = ['common_chest','rare_chest','epic_chest','legendary_chest']
 const PM_CHEST_LABELS = { common_chest:'Common', rare_chest:'Rare', epic_chest:'Epic', legendary_chest:'Legendary' }
 const CHEST_COLORS = { common_chest:'#aaa', rare_chest:'#06aed4', epic_chest:'#7c6cff', legendary_chest:'#ffd166' }
