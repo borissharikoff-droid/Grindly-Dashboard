@@ -1112,6 +1112,194 @@ app.get('/api/deep-stats', requireAuth, async (req, res) => {
   }
 })
 
+// ── Public Profile & Badge ────────────────────────────────────────────────────
+
+const SKILLS_META = {
+  developer:    { label: 'Developer',    color: '#3b82f6', icon: '💻' },
+  designer:     { label: 'Designer',     color: '#ec4899', icon: '🎨' },
+  gamer:        { label: 'Gamer',        color: '#8b5cf6', icon: '🎮' },
+  communicator: { label: 'Communicator', color: '#22c55e', icon: '💬' },
+  researcher:   { label: 'Researcher',   color: '#06b6d4', icon: '🔬' },
+  creator:      { label: 'Creator',      color: '#f97316', icon: '✏️' },
+  learner:      { label: 'Learner',      color: '#eab308', icon: '📚' },
+  listener:     { label: 'Listener',     color: '#f43f5e', icon: '🎧' },
+}
+
+function xpForLevel(l) { return Math.floor(Math.pow(l / 99, 2.2) * 3_600_000) }
+function xpProgress(level, totalXp) {
+  if (level >= 99) return 100
+  const lo = xpForLevel(level), hi = xpForLevel(level + 1)
+  return Math.round(((totalXp - lo) / (hi - lo)) * 100)
+}
+
+async function fetchPublicProfile(username) {
+  const { data: profile, error: pe } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, created_at')
+    .ilike('username', username)
+    .single()
+  if (pe || !profile) return null
+
+  const { data: skills } = await supabase
+    .from('user_skills')
+    .select('skill_id, level, total_xp, prestige_count')
+    .eq('user_id', profile.id)
+
+  return { profile, skills: skills ?? [] }
+}
+
+// SVG badge — for GitHub README / Twitter
+app.get('/badge/:username.svg', async (req, res) => {
+  const data = await fetchPublicProfile(req.params.username)
+  if (!data) return res.status(404).type('svg').send('<svg xmlns="http://www.w3.org/2000/svg"/>')
+
+  const { profile, skills } = data
+  const skillOrder = ['developer','designer','gamer','communicator','researcher','creator','learner','listener']
+  const skillMap = Object.fromEntries(skills.map(s => [s.skill_id, s]))
+
+  const totalLevel = skills.reduce((s, x) => s + (x.level || 0), 0)
+  const initials = (profile.username || '?').slice(0, 2).toUpperCase()
+
+  const W = 495, H = 195
+  const rows = skillOrder.map((id, i) => {
+    const meta = SKILLS_META[id] || { label: id, color: '#888', icon: '?' }
+    const s = skillMap[id]
+    const level = s?.level ?? 0
+    const pct = s ? xpProgress(level, s.total_xp) : 0
+    const col = i % 2, row = Math.floor(i / 2)
+    const x = col === 0 ? 18 : 258
+    const y = 78 + row * 28
+    const barW = 160, barFill = Math.round(barW * pct / 100)
+    return `
+      <text x="${x}" y="${y}" fill="${meta.color}" font-size="11" font-family="monospace" font-weight="bold">${meta.icon} ${meta.label}</text>
+      <rect x="${x}" y="${y + 4}" width="${barW}" height="5" rx="2" fill="#2b2d31"/>
+      <rect x="${x}" y="${y + 4}" width="${barFill}" height="5" rx="2" fill="${meta.color}" opacity="0.85"/>
+      <text x="${x + barW + 5}" y="${y + 9}" fill="#9ca3af" font-size="9" font-family="monospace">Lv${level}</text>`
+  }).join('')
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e2024"/>
+      <stop offset="100%" stop-color="#16181c"/>
+    </linearGradient>
+    <clipPath id="r"><rect width="${W}" height="${H}" rx="6"/></clipPath>
+  </defs>
+  <rect width="${W}" height="${H}" rx="6" fill="url(#bg)" clip-path="url(#r)"/>
+  <rect width="${W}" height="${H}" rx="6" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <!-- Avatar circle -->
+  <circle cx="32" cy="36" r="22" fill="#2b2d31" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  ${profile.avatar_url
+    ? `<image href="${profile.avatar_url}" x="10" y="14" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>`
+    : `<text x="32" y="41" text-anchor="middle" fill="#9ca3af" font-size="13" font-family="sans-serif" font-weight="bold">${initials}</text>`}
+  <!-- Username + total level -->
+  <text x="62" y="30" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold">${profile.username}</text>
+  <text x="62" y="48" fill="#5865F2" font-size="11" font-family="monospace">Total Level ${totalLevel}</text>
+  <!-- Divider -->
+  <line x1="18" y1="64" x2="${W - 18}" y2="64" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <!-- Skill bars -->
+  ${rows}
+  <!-- Footer -->
+  <text x="${W / 2}" y="${H - 8}" text-anchor="middle" fill="rgba(255,255,255,0.2)" font-size="9" font-family="sans-serif">grindly.app</text>
+</svg>`
+
+  res.setHeader('Content-Type', 'image/svg+xml')
+  res.setHeader('Cache-Control', 'public, max-age=3600')
+  res.send(svg)
+})
+
+// Public profile page
+app.get('/u/:username', async (req, res) => {
+  const data = await fetchPublicProfile(req.params.username)
+  if (!data) {
+    return res.status(404).send(`<!DOCTYPE html><html><head><title>Not found</title>
+      <style>body{background:#111214;color:#9ca3af;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}</style>
+      </head><body><p>Player not found.</p></body></html>`)
+  }
+
+  const { profile, skills } = data
+  const skillOrder = ['developer','designer','gamer','communicator','researcher','creator','learner','listener']
+  const skillMap = Object.fromEntries(skills.map(s => [s.skill_id, s]))
+  const totalLevel = skills.reduce((s, x) => s + (x.level || 0), 0)
+  const initials = (profile.username || '?').slice(0, 2).toUpperCase()
+  const badgeUrl = `${req.protocol}://${req.get('host')}/badge/${profile.username}.svg`
+
+  const skillCards = skillOrder.map(id => {
+    const meta = SKILLS_META[id] || { label: id, color: '#888', icon: '?' }
+    const s = skillMap[id]
+    const level = s?.level ?? 0
+    const pct = s ? xpProgress(level, s.total_xp) : 0
+    const prestige = s?.prestige_count > 0 ? `<span style="color:#f59e0b;font-size:11px">✦ ${s.prestige_count}</span>` : ''
+    return `<div style="background:#2b2d31;border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:10px 12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="color:${meta.color};font-size:13px;font-weight:600">${meta.icon} ${meta.label}</span>
+        <span style="color:#9ca3af;font-size:11px;font-family:monospace">Lv ${level} ${prestige}</span>
+      </div>
+      <div style="background:#1e2024;border-radius:2px;height:5px;overflow:hidden">
+        <div style="background:${meta.color};height:5px;width:${pct}%;border-radius:2px;opacity:0.85"></div>
+      </div>
+    </div>`
+  }).join('')
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>${profile.username} — Grindly</title>
+  <meta property="og:title" content="${profile.username} on Grindly"/>
+  <meta property="og:description" content="Total Level ${totalLevel} · Grindly productivity RPG"/>
+  <meta property="og:image" content="${badgeUrl}"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:image" content="${badgeUrl}"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#111214;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px}
+    .card{background:#1e2024;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:28px;width:100%;max-width:480px}
+    .avatar{width:72px;height:72px;border-radius:50%;background:#2b2d31;border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#9ca3af;overflow:hidden;flex-shrink:0}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .badge-wrap{margin-top:20px;background:#2b2d31;border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:12px;display:flex;align-items:center;gap:10px}
+    .copy-btn{background:#5865F2;color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:12px;cursor:pointer;flex-shrink:0;transition:background .15s}
+    .copy-btn:hover{background:#4752c4}
+    code{font-family:monospace;font-size:11px;color:#9ca3af;word-break:break-all;flex:1}
+    footer{margin-top:24px;color:rgba(255,255,255,0.2);font-size:12px}
+    a{color:#5865F2;text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div class="avatar">
+        ${profile.avatar_url
+          ? `<img src="${profile.avatar_url}" alt="${profile.username}"/>`
+          : initials}
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#fff">${profile.username}</div>
+        <div style="font-size:12px;color:#5865F2;font-family:monospace;margin-top:3px">Total Level ${totalLevel}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">Member since ${new Date(profile.created_at).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+      ${skillCards}
+    </div>
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:8px">GitHub README badge</div>
+    <div class="badge-wrap">
+      <code id="md">[![Grindly](${badgeUrl})](${req.protocol}://${req.get('host')}/u/${profile.username})</code>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('md').textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)">Copy</button>
+    </div>
+  </div>
+  <footer style="margin-top:20px"><a href="https://grindly.app">grindly.app</a> — productivity RPG</footer>
+</body>
+</html>`
+
+  res.setHeader('Cache-Control', 'public, max-age=300')
+  res.send(html)
+})
+
 // ── Static ────────────────────────────────────────────────────────────────────
 
 app.use(express.static(path.join(__dirname, 'public')))
