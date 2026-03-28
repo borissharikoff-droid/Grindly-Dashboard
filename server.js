@@ -597,6 +597,8 @@ app.post('/api/users/:id/inventory', requireAuth, async (req, res) => {
         { onConflict: 'user_id,item_id' }
       )
       if (error) return res.status(500).json({ error: error.message })
+      // Also insert an admin grant so the client picks it up even if local qty overwrites user_inventory
+      await supabase.from('admin_inventory_grants').insert({ user_id: uid, item_id, quantity: qty })
     }
     res.json({ ok: true, item_id, quantity: qty })
   } catch (err) {
