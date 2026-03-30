@@ -152,6 +152,10 @@ app.get('/api/stats', requireAuth, async (req, res) => {
         eventsYesterday,
         sessionsToday,
         sessionsYesterday,
+        platformStats,
+        versionDistribution,
+        sessionHistogram,
+        userSegments,
       ] = await Promise.all([
         count('profiles'),
         rpc('admin_dau_30d'),
@@ -169,6 +173,10 @@ app.get('/api/stats', requireAuth, async (req, res) => {
         countWhere('analytics_events', 'created_at', yesterdayStart.toISOString(), todayStart.toISOString()),
         countWhere('session_summaries', 'start_time', todayStart.toISOString()),
         countWhere('session_summaries', 'start_time', yesterdayStart.toISOString(), todayStart.toISOString()),
+        rpc('admin_platform_stats'),
+        rpc('admin_version_distribution'),
+        rpc('admin_session_histogram'),
+        rpc('admin_user_segments'),
       ])
 
       const todayStr     = todayStart.toISOString().slice(0, 10)
@@ -195,6 +203,10 @@ app.get('/api/stats', requireAuth, async (req, res) => {
         sessionsYesterday,
         dauToday,
         dauYesterday,
+        platformStats,
+        versionDistribution,
+        sessionHistogram,
+        userSegments,
       }
     })
     res.json({ ...data, onlineNow })
@@ -205,6 +217,22 @@ app.get('/api/stats', requireAuth, async (req, res) => {
 })
 
 // ── Users ─────────────────────────────────────────────────────────────────────
+
+// User segment classifier — single source of truth
+function classifyUser(profile) {
+  const segments = []
+  const now = Date.now()
+  const updatedAt = profile.updated_at ? new Date(profile.updated_at).getTime() : 0
+  const createdAt = profile.created_at ? new Date(profile.created_at).getTime() : 0
+  const dayMs = 24 * 60 * 60 * 1000
+
+  if (now - createdAt < 7 * dayMs)          segments.push('new')
+  if (now - updatedAt < dayMs)              segments.push('power')
+  if (now - updatedAt > 7 * dayMs && now - updatedAt < 30 * dayMs) segments.push('at_risk')
+  if (now - updatedAt >= 30 * dayMs)        segments.push('churned')
+
+  return segments
+}
 
 app.get('/api/users', requireAuth, async (req, res) => {
   try {
@@ -217,16 +245,38 @@ app.get('/api/users', requireAuth, async (req, res) => {
                      : sortParam === 'streak'   ? 'streak_count'
                      : sortParam === 'username' ? 'username'
                      : 'updated_at'
+
+    // Platform filter — allowlist only
+    const ALLOWED_PLATFORMS = ['win32', 'darwin', 'linux', 'unknown']
+    const platformFilter = req.query.platform
+    const usePlatformFilter = platformFilter && ALLOWED_PLATFORMS.includes(platformFilter)
+
+    // Segment filter
+    const segmentFilter = req.query.segment // power | new | at_risk | churned
+
     let q = supabase
       .from('profiles')
-      .select('id, username, level, xp, is_online, current_activity, streak_count, updated_at')
+      .select('id, username, level, xp, is_online, current_activity, streak_count, updated_at, created_at, platform, client_version')
       .order(sortCol, { ascending })
       .limit(lim)
     if (search)     q = q.ilike('username', `%${search}%`)
     if (onlineOnly) q = q.eq('is_online', true)
+    if (usePlatformFilter) {
+      if (platformFilter === 'unknown') q = q.is('platform', null)
+      else q = q.eq('platform', platformFilter)
+    }
+
     const { data, error } = await q
     if (error) return res.status(500).json({ error: error.message })
-    res.json(data ?? [])
+
+    let users = (data ?? []).map(u => ({ ...u, segments: classifyUser(u) }))
+
+    // Apply segment filter in-process (avoids complex DB query)
+    if (segmentFilter && ['power', 'new', 'at_risk', 'churned'].includes(segmentFilter)) {
+      users = users.filter(u => u.segments.includes(segmentFilter))
+    }
+
+    res.json(users)
   } catch (err) {
     res.status(500).json({ error: String(err) })
   }

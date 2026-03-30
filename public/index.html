@@ -263,6 +263,61 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .page{animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── Semantic color aliases (reduces 7-accent noise to 4 roles) ─────────────  */
+:root{
+  --accent:var(--green);
+  --accent2:var(--purple);
+  --danger:var(--red);
+  --warn:var(--yellow);
+}
+
+/* ── OS platform badge ──────────────────────────────────────────────────────  */
+.os-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.os-win{background:rgba(6,174,212,.12);color:#06aed4}
+.os-mac{background:rgba(124,108,255,.12);color:#a78bfa}
+.os-unk{background:rgba(136,136,170,.1);color:var(--muted2)}
+
+/* ── User segment badge ─────────────────────────────────────────────────────  */
+.seg-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;margin-right:2px}
+.seg-power{background:rgba(0,255,136,.12);color:var(--green)}
+.seg-new{background:rgba(6,174,212,.12);color:#06aed4}
+.seg-risk{background:rgba(255,107,53,.12);color:var(--orange)}
+.seg-churned{background:rgba(136,136,170,.1);color:var(--muted2)}
+
+/* ── Version rollout bar ────────────────────────────────────────────────────  */
+.ver-bar-wrap{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.ver-bar-row{display:grid;grid-template-columns:80px 1fr 40px;align-items:center;gap:8px}
+.ver-bar-label{color:var(--muted2);font-size:12px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ver-bar-track{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.ver-bar-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s ease}
+.ver-bar-pct{font-size:11px;color:var(--muted2);text-align:right}
+
+/* ── Session histogram ──────────────────────────────────────────────────────  */
+.hist-wrap{display:flex;align-items:flex-end;gap:6px;height:72px;margin-top:8px}
+.hist-bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.hist-bar{width:100%;background:rgba(124,108,255,.5);border-radius:4px 4px 0 0;transition:height .4s ease;min-height:2px}
+.hist-bar-col:hover .hist-bar{background:rgba(124,108,255,.85)}
+.hist-label{font-size:10px;color:var(--muted2);text-align:center;white-space:nowrap}
+.hist-count{font-size:10px;color:var(--muted2);text-align:center}
+
+/* ── Platform rows ──────────────────────────────────────────────────────────  */
+.platform-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.platform-row:last-child{border-bottom:none}
+.platform-row-name{flex:1;font-weight:500}
+.platform-row-bar-wrap{width:80px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.platform-row-bar{height:100%;border-radius:3px}
+.platform-row-count{font-size:12px;color:var(--muted2);min-width:36px;text-align:right}
+
+/* ── Segments overview ──────────────────────────────────────────────────────  */
+.seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:6px}
+.seg-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+.seg-card:hover{border-color:rgba(255,255,255,.12)}
+.seg-card .lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:4px}
+.seg-card .val{font-size:22px;font-weight:700}
+
+/* ── Heatmap tooltip ────────────────────────────────────────────────────────  */
+.hm-tooltip{position:fixed;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--text);pointer-events:none;z-index:999;white-space:nowrap;display:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+
 /* ── Player Drawer ─────────────────────────────────────────────────────────  */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;backdrop-filter:blur(2px)}
 .drawer-overlay.open{display:block}
@@ -444,6 +499,36 @@ tr:hover td{background:rgba(255,255,255,.018)}
           </div>
         </div>
       </div>
+
+      <!-- Platform + Versions + Session Histogram + User Segments -->
+      <div class="chart-grid g2" style="margin-top:14px">
+        <div class="chart-box">
+          <div class="box-title">Platform Distribution <span class="box-badge" id="ov-platform-total" style="background:rgba(6,174,212,.1);color:#06aed4"></span></div>
+          <div id="ov-platform-rows" style="margin-top:6px"></div>
+          <div style="margin-top:14px">
+            <div class="box-title" style="margin-bottom:8px">🍎 macOS Readiness</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font-size:28px;font-weight:700;color:#a78bfa" id="ov-mac-count">0</div>
+              <div style="font-size:12px;color:var(--muted2)">macOS users<br><span style="color:var(--muted);font-size:11px">ready for launch</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="box-title">Client Versions</div>
+          <div class="ver-bar-wrap" id="ov-version-bars"></div>
+        </div>
+      </div>
+
+      <div class="chart-grid g2" style="margin-top:14px">
+        <div class="chart-box">
+          <div class="box-title">Session Duration Distribution — 30 days</div>
+          <div class="hist-wrap" id="ov-histogram"></div>
+        </div>
+        <div class="chart-box">
+          <div class="box-title">User Segments <span style="font-size:11px;color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— click to filter Users tab</span></div>
+          <div class="seg-grid" id="ov-segments"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ── Analytics ─────────────────────────────────────────────────────── -->
@@ -599,8 +684,21 @@ tr:hover td{background:rgba(255,255,255,.018)}
         <div class="table-header">
           <h3>Users</h3>
           <div class="table-controls">
-            <input class="input" id="user-search" placeholder="Search username…" style="width:170px;padding:6px 10px" oninput="searchUsers()"/>
+            <input class="input" id="user-search" placeholder="Search username…" style="width:160px;padding:6px 10px" oninput="searchUsers()"/>
             <button class="btn btn-ghost btn-sm" id="online-filter" onclick="toggleOnlineFilter()" title="Show online only">🟢 Online</button>
+            <select class="interval-select" id="platform-filter" onchange="loadUsers()" title="Filter by OS">
+              <option value="">All OS</option>
+              <option value="win32">🪟 Windows</option>
+              <option value="darwin">🍎 macOS</option>
+              <option value="unknown">❓ Unknown</option>
+            </select>
+            <select class="interval-select" id="segment-filter" onchange="loadUsers()" title="Filter by segment">
+              <option value="">All users</option>
+              <option value="power">⚡ Active (24h)</option>
+              <option value="new">🌱 New (7d)</option>
+              <option value="at_risk">⚠️ At risk (7-30d)</option>
+              <option value="churned">💤 Churned (30d+)</option>
+            </select>
             <select class="interval-select" id="limit-select" onchange="loadUsers()" title="Row limit">
               <option value="50">50 rows</option>
               <option value="150" selected>150 rows</option>
@@ -615,10 +713,11 @@ tr:hover td{background:rgba(255,255,255,.018)}
             <th class="sortable" data-col="level"    onclick="sortBy('level')">Level</th>
             <th>XP Progress</th>
             <th class="sortable" data-col="streak"   onclick="sortBy('streak')">Streak</th>
-            <th>Activity</th>
+            <th>OS</th>
+            <th>Segments</th>
             <th class="sortable sort-desc" data-col="last_seen" onclick="sortBy('last_seen')">Last Seen</th>
           </tr></thead>
-          <tbody id="users-tbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody>
+          <tbody id="users-tbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1631,6 +1730,11 @@ function copyCard(cardEl, valId) {
   setTimeout(() => cardEl.classList.remove('copied'), 1200)
 }
 
+function copyUUID(uuid) {
+  navigator.clipboard?.writeText(uuid).catch(() => {})
+  pmShowToast('UUID copied!')
+}
+
 // ── Auto-refresh ──────────────────────────────────────────────────────────────
 
 function setRefreshInterval(seconds) {
@@ -1830,6 +1934,86 @@ function renderOverview(d) {
     borderRadius: 4,
   }])
 
+  // ── Platform distribution ────────────────────────────────────────────────
+  const platRows = document.getElementById('ov-platform-rows')
+  const platData = d.platformStats || []
+  const platTotal = platData.reduce((s, r) => s + Number(r.cnt), 0)
+  const macRow = platData.find(r => r.platform === 'darwin')
+  const macCount = macRow ? Number(macRow.cnt) : 0
+  const macEl = document.getElementById('ov-mac-count')
+  if (macEl) macEl.textContent = macCount
+  const platTotalEl = document.getElementById('ov-platform-total')
+  if (platTotalEl) platTotalEl.textContent = platTotal + ' users tracked'
+  if (platRows) {
+    const platMeta = { win32: { label: 'Windows', icon: '🪟', color: '#06aed4' }, darwin: { label: 'macOS', icon: '🍎', color: '#a78bfa' }, linux: { label: 'Linux', icon: '🐧', color: '#00ff88' }, unknown: { label: 'Unknown', icon: '❓', color: '#55557a' } }
+    platRows.innerHTML = platData.length ? platData.map(r => {
+      const meta = platMeta[r.platform] || { label: r.platform, icon: '💻', color: '#55557a' }
+      const pct = platTotal > 0 ? Math.round(Number(r.cnt) / platTotal * 100) : 0
+      return `<div class="platform-row">
+        <span style="font-size:16px">${meta.icon}</span>
+        <span class="platform-row-name">${meta.label}</span>
+        <div class="platform-row-bar-wrap"><div class="platform-row-bar" style="width:${pct}%;background:${meta.color}"></div></div>
+        <span class="platform-row-count">${Number(r.cnt).toLocaleString()}</span>
+        <span style="font-size:11px;color:var(--muted2)">${pct}%</span>
+      </div>`
+    }).join('') : '<div style="color:var(--muted);font-size:12px;padding:8px 0">No platform data yet — update client first</div>'
+  }
+
+  // ── Version distribution ─────────────────────────────────────────────────
+  const verEl = document.getElementById('ov-version-bars')
+  const verData = (d.versionDistribution || []).slice(0, 6)
+  const verTotal = verData.reduce((s, r) => s + Number(r.cnt), 0)
+  if (verEl) {
+    verEl.innerHTML = verData.length ? verData.map((r, i) => {
+      const pct = verTotal > 0 ? Math.round(Number(r.cnt) / verTotal * 100) : 0
+      const opacity = i === 0 ? 1 : Math.max(0.35, 1 - i * 0.15)
+      return `<div class="ver-bar-row">
+        <span class="ver-bar-label">v${esc(r.client_version)}</span>
+        <div class="ver-bar-track"><div class="ver-bar-fill" style="width:${pct}%;opacity:${opacity}"></div></div>
+        <span class="ver-bar-pct">${pct}%</span>
+      </div>`
+    }).join('') : '<div style="color:var(--muted);font-size:12px">No version data yet</div>'
+  }
+
+  // ── Session duration histogram ────────────────────────────────────────────
+  const histEl = document.getElementById('ov-histogram')
+  const histData = d.sessionHistogram || []
+  const histOrder = ['<5min', '5-15min', '15-60min', '60min+']
+  const histMax = histData.length ? Math.max(...histData.map(r => Number(r.cnt)), 1) : 1
+  if (histEl) {
+    histEl.innerHTML = histOrder.map(bucket => {
+      const row = histData.find(r => r.bucket === bucket) || { bucket, cnt: 0 }
+      const cnt = Number(row.cnt)
+      const h = Math.max(4, Math.round(cnt / histMax * 68))
+      return `<div class="hist-bar-col">
+        <div class="hist-count">${cnt > 0 ? cnt.toLocaleString() : ''}</div>
+        <div class="hist-bar" style="height:${h}px"></div>
+        <div class="hist-label">${bucket}</div>
+      </div>`
+    }).join('')
+  }
+
+  // ── User segments ────────────────────────────────────────────────────────
+  const segEl = document.getElementById('ov-segments')
+  const segData = d.userSegments || []
+  const segMeta = {
+    power_users: { label: 'Active (24h)', icon: '⚡', color: 'var(--green)', seg: 'power' },
+    new_users:   { label: 'New (7d)',      icon: '🌱', color: '#06aed4',      seg: 'new' },
+    at_risk:     { label: 'At Risk (7-30d)', icon: '⚠️', color: 'var(--orange)', seg: 'at_risk' },
+    churned:     { label: 'Churned (30d+)', icon: '💤', color: 'var(--muted2)', seg: 'churned' },
+  }
+  if (segEl) {
+    const segMap = {}
+    for (const r of segData) segMap[r.segment] = Number(r.cnt)
+    segEl.innerHTML = Object.entries(segMeta).map(([key, meta]) => {
+      const cnt = segMap[key] ?? 0
+      return `<div class="seg-card" onclick="jumpToSegment('${meta.seg}')" title="Click to filter Users tab">
+        <div class="lbl">${meta.icon} ${meta.label}</div>
+        <div class="val" style="color:${meta.color}">${cnt.toLocaleString()}</div>
+      </div>`
+    }).join('')
+  }
+
   // DAU vs New Users overlay
   if (charts['ch-overlay']) charts['ch-overlay'].destroy()
   var ctxOv = document.getElementById('ch-overlay')?.getContext('2d')
@@ -1912,7 +2096,11 @@ function renderAnalytics(d) {
       const intensity = cnt / maxH
       const cell = document.createElement('div')
       cell.className = 'hm-cell'
-      cell.title = `${h}:00 — ${cnt} events`
+      const tip = document.getElementById('hm-tooltip')
+      cell.addEventListener('mousemove', function(e) {
+        if (tip) { tip.style.display = 'block'; tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY - 28) + 'px'; tip.textContent = h + ':00 UTC — ' + cnt.toLocaleString() + ' events' }
+      })
+      cell.addEventListener('mouseleave', function() { if (tip) tip.style.display = 'none' })
       cell.style.background = intensity > 0
         ? `rgba(0, ${Math.round(80 + 175 * intensity)}, ${Math.round(40 + 96 * intensity)}, ${0.15 + intensity * 0.85})`
         : 'rgba(255,255,255,0.035)'
@@ -2039,12 +2227,26 @@ function sortBy(col) {
   loadUsers()
 }
 
+function jumpToSegment(seg) {
+  // Switch to Users tab and apply segment filter
+  const usersBtn = document.querySelector('.tab-btn[onclick*="users"]')
+  if (usersBtn) usersBtn.click()
+  setTimeout(function() {
+    const sf = document.getElementById('segment-filter')
+    if (sf) { sf.value = seg; loadUsers() }
+  }, 50)
+}
+
 async function loadUsers() {
-  const search = document.getElementById('user-search')?.value ?? ''
-  const limit  = document.getElementById('limit-select')?.value ?? '150'
+  const search   = document.getElementById('user-search')?.value ?? ''
+  const limit    = document.getElementById('limit-select')?.value ?? '150'
+  const platform = document.getElementById('platform-filter')?.value ?? ''
+  const segment  = document.getElementById('segment-filter')?.value ?? ''
   const params = new URLSearchParams({ sort: userSortCol, order: userSortAsc ? 'asc' : 'desc', limit })
-  if (search)     params.set('search', search)
+  if (search)    params.set('search', search)
   if (onlineOnly) params.set('online', '1')
+  if (platform)  params.set('platform', platform)
+  if (segment)   params.set('segment', segment)
   const data = await apiFetch('GET', '/api/users?' + params)
   if (Array.isArray(data)) { allUsers = data; renderUsersTable(data) }
 }
@@ -2056,12 +2258,14 @@ function searchUsers() {
 
 function exportCSV() {
   if (!allUsers.length) return
-  const header = ['username','level','xp','online','streak','activity','last_seen']
+  const header = ['username','level','xp','online','streak','platform','client_version','segments','last_seen']
   const rows = allUsers.map(u => [
     u.username ?? '', u.level ?? '', u.xp ?? '',
     isFreshOnline(u) ? 'yes' : 'no',
     u.streak_count ?? 0,
-    (u.current_activity ?? '').replace(/,/g,' '),
+    u.platform ?? 'unknown',
+    u.client_version ?? 'unknown',
+    (u.segments || []).join('|'),
     u.updated_at ?? '',
   ])
   const csv = [header, ...rows].map(r => r.join(',')).join('\n')
@@ -2081,10 +2285,26 @@ function isFreshOnline(u) {
   return Date.now() - Date.parse(u.updated_at) <= ONLINE_STALE_MS
 }
 
+function osBadge(platform) {
+  if (!platform || platform === 'unknown') return '<span class="os-badge os-unk">❓</span>'
+  if (platform === 'win32')  return '<span class="os-badge os-win">🪟 Win</span>'
+  if (platform === 'darwin') return '<span class="os-badge os-mac">🍎 Mac</span>'
+  return '<span class="os-badge os-unk">' + esc(platform) + '</span>'
+}
+
+function segBadges(segs) {
+  if (!segs || !segs.length) return ''
+  const map = { power: ['seg-power','⚡'], new: ['seg-new','New'], at_risk: ['seg-risk','Risk'], churned: ['seg-churned','Idle'] }
+  return segs.map(s => {
+    const m = map[s]; if (!m) return ''
+    return '<span class="seg-badge ' + m[0] + '">' + m[1] + '</span>'
+  }).join('')
+}
+
 function renderUsersTable(users) {
   const tbody = document.getElementById('users-tbody')
   if (!tbody) return
-  if (!users.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No users found</td></tr>'; return }
+  if (!users.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No users found</td></tr>'; return }
 
   // Mini stats
   const online = users.filter(isFreshOnline).length
@@ -2093,12 +2313,15 @@ function renderUsersTable(users) {
   if (um && statsData) {
     const avgLvl = users.length ? Math.round(users.reduce((s, u) => s + (u.level ?? 1), 0) / users.length) : 0
     const streaking = users.filter(u => (u.streak_count ?? 0) >= 1).length
+    const winCount = users.filter(u => u.platform === 'win32').length
+    const macCount = users.filter(u => u.platform === 'darwin').length
     um.innerHTML = `
       <div class="mini-card"><div class="lbl">Total Users</div><div class="val">${statsData.totalUsers}</div></div>
       <div class="mini-card"><div class="lbl">Online Now</div><div class="val" style="color:var(--green)">${statsData.onlineNow}</div></div>
-      <div class="mini-card"><div class="lbl">Highest Level</div><div class="val">${maxLvl}</div></div>
       <div class="mini-card"><div class="lbl">Avg Level</div><div class="val">${avgLvl}</div></div>
       <div class="mini-card"><div class="lbl">Streaking</div><div class="val" style="color:var(--yellow)">${streaking}</div></div>
+      <div class="mini-card"><div class="lbl">🪟 Windows</div><div class="val" style="color:#06aed4">${winCount}</div></div>
+      <div class="mini-card"><div class="lbl">🍎 macOS</div><div class="val" style="color:#a78bfa">${macCount}</div></div>
       <div class="mini-card"><div class="lbl">Shown</div><div class="val">${users.length}</div></div>
     `
   }
@@ -2125,7 +2348,8 @@ function renderUsersTable(users) {
         </div>
       </td>
       <td><span class="streak-badge">${u.streak_count > 0 ? '🔥 ' + u.streak_count + 'd' : '—'}</span></td>
-      <td><span class="activity-text">${esc(u.current_activity ?? '—')}</span></td>
+      <td>${osBadge(u.platform)}</td>
+      <td>${segBadges(u.segments)}</td>
       <td style="color:var(--muted2)">${fmtTime(u.updated_at)}</td>
     </tr>`
   }).join('')
@@ -5303,7 +5527,8 @@ function xpToLevel(xp) { return Math.min(99, Math.floor(99 * Math.pow(Math.max(0
 
 window.pmOpen = async function(userId, username) {
   pmUserId = userId
-  document.getElementById('pm-title').innerHTML = '🛠 ' + esc(username || 'Player')
+  document.getElementById('pm-title').innerHTML = '🛠 ' + esc(username || 'Player') +
+    ' <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 7px;margin-left:6px;font-weight:400" onclick="copyUUID(\'' + userId + '\')" title="Copy UUID">ID</button>'
   document.getElementById('pm-overlay').classList.add('open')
   document.getElementById('pm-drawer').classList.add('open')
   document.getElementById('pm-body').innerHTML = '<div style="text-align:center;padding:40px"><span class="spinner"></span></div>'
@@ -5527,6 +5752,7 @@ document.addEventListener('click', function(e) {
   </div>
 </div>
 <div class="pm-toast" id="pm-toast"></div>
+<div class="hm-tooltip" id="hm-tooltip"></div>
 
 </body>
 </html>
