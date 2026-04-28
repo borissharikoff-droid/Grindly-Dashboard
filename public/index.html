@@ -715,9 +715,10 @@ tr:hover td{background:rgba(255,255,255,.018)}
             <th class="sortable" data-col="streak"   onclick="sortBy('streak')">Streak</th>
             <th>OS</th>
             <th>Segments</th>
+            <th class="sortable" data-col="created_at" onclick="sortBy('created_at')">Joined</th>
             <th class="sortable sort-desc" data-col="last_seen" onclick="sortBy('last_seen')">Last Seen</th>
           </tr></thead>
-          <tbody id="users-tbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody>
+          <tbody id="users-tbody"><tr><td colspan="8" class="empty"><span class="spinner"></span></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1653,6 +1654,17 @@ function fmtTime(d) {
   return dt.toLocaleDateString()
 }
 
+function fmtDate(d) {
+  if (!d) return '—'
+  const dt = new Date(d)
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function ageDays(d) {
+  if (!d) return 0
+  return Math.floor((Date.now() - new Date(d).getTime()) / 86400000)
+}
+
 function trendHtml(today, yesterday) {
   if (yesterday == null || yesterday === 0) return '<span class="trend-neutral">—</span>'
   const pct = Math.round((today - yesterday) / yesterday * 100)
@@ -2258,7 +2270,7 @@ function searchUsers() {
 
 function exportCSV() {
   if (!allUsers.length) return
-  const header = ['username','level','xp','online','streak','platform','client_version','segments','last_seen']
+  const header = ['username','level','xp','online','streak','platform','client_version','segments','joined','last_seen']
   const rows = allUsers.map(u => [
     u.username ?? '', u.level ?? '', u.xp ?? '',
     isFreshOnline(u) ? 'yes' : 'no',
@@ -2266,6 +2278,7 @@ function exportCSV() {
     u.platform ?? 'unknown',
     u.client_version ?? 'unknown',
     (u.segments || []).join('|'),
+    u.created_at ? new Date(u.created_at).toISOString().slice(0,10) : '',
     u.updated_at ?? '',
   ])
   const csv = [header, ...rows].map(r => r.join(',')).join('\n')
@@ -2304,7 +2317,7 @@ function segBadges(segs) {
 function renderUsersTable(users) {
   const tbody = document.getElementById('users-tbody')
   if (!tbody) return
-  if (!users.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No users found</td></tr>'; return }
+  if (!users.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No users found</td></tr>'; return }
 
   // Mini stats
   const online = users.filter(isFreshOnline).length
@@ -2350,6 +2363,7 @@ function renderUsersTable(users) {
       <td><span class="streak-badge">${u.streak_count > 0 ? '🔥 ' + u.streak_count + 'd' : '—'}</span></td>
       <td>${osBadge(u.platform)}</td>
       <td>${segBadges(u.segments)}</td>
+      <td style="color:var(--muted2);white-space:nowrap">${u.created_at ? fmtDate(u.created_at) : '—'}</td>
       <td style="color:var(--muted2)">${fmtTime(u.updated_at)}</td>
     </tr>`
   }).join('')
@@ -5554,11 +5568,50 @@ function pmRender() {
   const p = d.profile
   const body = document.getElementById('pm-body')
 
+  // Compute derived analytics
+  const totalXP = d.skills.reduce((s, sk) => s + (sk.total_xp ?? 0), 0)
+  const topSkill = d.skills.length ? d.skills.reduce((a, b) => (b.total_xp ?? 0) > (a.total_xp ?? 0) ? b : a, d.skills[0]) : null
+  const accountAge = ageDays(p.created_at)
+  const totalItems = d.inventory.reduce((s, i) => s + (i.quantity ?? 0), 0)
+  const segments = p.segments || []
+  // Retention score: 0–100 based on streak/level/age
+  const retScore = Math.min(100, Math.round(
+    ((p.streak_count ?? 0) / Math.max(accountAge, 1)) * 40 +
+    Math.min((p.level ?? 0) / 99, 1) * 40 +
+    Math.min(totalXP / 3600000, 1) * 20
+  ))
+  const retColor = retScore >= 70 ? 'var(--green)' : retScore >= 40 ? 'var(--yellow)' : 'var(--red)'
+
   let html = '<div class="pm-info-grid">'
   html += '<div class="pm-info-card"><div class="lbl">Level</div><div class="val">' + (p.level ?? 0) + '</div></div>'
   html += '<div class="pm-info-card"><div class="lbl">Gold</div><div class="val" style="color:var(--yellow)">' + (p.gold ?? 0).toLocaleString() + '</div></div>'
   html += '<div class="pm-info-card"><div class="lbl">Streak</div><div class="val" style="color:var(--orange)">' + (p.streak_count ?? 0) + 'd</div></div>'
   html += '<div class="pm-info-card"><div class="lbl">Status</div><div class="val" style="font-size:13px;color:var(--muted2)">' + (p.is_online ? '<span style="color:var(--green)">Online</span>' : 'Offline') + '</div></div>'
+  html += '</div>'
+
+  // Profile analytics block
+  html += '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;font-size:12px">'
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px">'
+  html += '<div><span style="color:var(--muted2)">Registered</span><div style="color:var(--text);font-weight:600;margin-top:2px">' + fmtDate(p.created_at) + '</div></div>'
+  html += '<div><span style="color:var(--muted2)">Account age</span><div style="color:var(--text);font-weight:600;margin-top:2px">' + accountAge + ' days</div></div>'
+  html += '<div><span style="color:var(--muted2)">Last seen</span><div style="color:var(--text);font-weight:600;margin-top:2px">' + fmtTime(p.updated_at) + '</div></div>'
+  html += '<div><span style="color:var(--muted2)">Platform</span><div style="margin-top:2px">' + osBadge(p.platform) + (p.client_version ? ' <span style="color:var(--muted2)">v' + esc(p.client_version) + '</span>' : '') + '</div></div>'
+  html += '<div><span style="color:var(--muted2)">Total XP</span><div style="color:var(--purple);font-weight:600;margin-top:2px">' + totalXP.toLocaleString() + '</div></div>'
+  html += '<div><span style="color:var(--muted2)">Items owned</span><div style="color:var(--blue);font-weight:600;margin-top:2px">' + totalItems + ' (' + d.inventory.length + ' types)</div></div>'
+  html += '<div><span style="color:var(--muted2)">Achievements</span><div style="color:var(--text);font-weight:600;margin-top:2px">' + d.achievements.length + '</div></div>'
+  html += '<div><span style="color:var(--muted2)">Top skill</span><div style="color:var(--text);font-weight:600;margin-top:2px">' + (topSkill ? (SKILL_ICONS[topSkill.skill_id] || '⚡') + ' ' + (SKILL_LABELS[topSkill.skill_id] || topSkill.skill_id) + ' Lv' + (topSkill.level ?? 0) : '—') + '</div></div>'
+  html += '</div>'
+  if (segments.length) {
+    html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    html += '<span style="color:var(--muted2)">Segments:</span>'
+    html += segments.map(s => '<span class="seg-badge seg-' + s + '">' + s + '</span>').join('')
+    html += '</div>'
+  }
+  html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">'
+  html += '<span style="color:var(--muted2)">Retention score</span>'
+  html += '<div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="height:100%;width:' + retScore + '%;background:' + retColor + ';border-radius:3px;transition:width .3s"></div></div>'
+  html += '<span style="font-weight:700;color:' + retColor + ';min-width:32px;text-align:right">' + retScore + '</span>'
+  html += '</div>'
   html += '</div>'
 
   html += '<div class="drawer-section">'
