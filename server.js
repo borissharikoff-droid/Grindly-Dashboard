@@ -282,6 +282,55 @@ app.get('/api/users', requireAuth, async (req, res) => {
   }
 })
 
+// ── Recent Activity ───────────────────────────────────────────────────────────
+
+app.get('/api/recent-activity', requireAuth, async (req, res) => {
+  try {
+    const data = await cached('recent_activity', 60 * 1000, async () => {
+      const now = Date.now()
+      const h48  = new Date(now - 48 * 3600000).toISOString()
+      const d7   = new Date(now - 7  * 86400000).toISOString()
+      const d14  = new Date(now - 14 * 86400000).toISOString()
+
+      const [signupsRes, activeRes, atRiskRes, cnt7Res, cntPrev7Res] = await Promise.all([
+        supabase.from('profiles')
+          .select('id, username, level, platform, created_at, is_online')
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase.from('profiles')
+          .select('id, username, level, streak_count, updated_at, is_online')
+          .gte('updated_at', h48)
+          .order('updated_at', { ascending: false })
+          .limit(10),
+        supabase.from('profiles')
+          .select('id, username, level, streak_count, updated_at')
+          .lt('updated_at', d7)
+          .gte('updated_at', d14)
+          .order('updated_at', { ascending: false })
+          .limit(5),
+        supabase.from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', d7),
+        supabase.from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .lt('created_at', d7)
+          .gte('created_at', d14),
+      ])
+
+      return {
+        recentSignups:    signupsRes.data  ?? [],
+        recentActive:     activeRes.data   ?? [],
+        atRisk:           atRiskRes.data   ?? [],
+        newUsers7d:       cnt7Res.count    ?? 0,
+        newUsersPrev7d:   cntPrev7Res.count ?? 0,
+      }
+    })
+    res.json(data)
+  } catch (err) {
+    res.status(500).json({ error: String(err) })
+  }
+})
+
 // ── Announcements ─────────────────────────────────────────────────────────────
 
 app.get('/api/announcements', requireAuth, async (req, res) => {

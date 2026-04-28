@@ -308,6 +308,17 @@ tr:hover td{background:rgba(255,255,255,.018)}
 .platform-row-bar{height:100%;border-radius:3px}
 .platform-row-count{font-size:12px;color:var(--muted2);min-width:36px;text-align:right}
 
+/* ── Activity feed rows ─────────────────────────────────────────────────────  */
+.act-group{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px}
+.act-group:first-child{border-top:none;margin-top:0;padding-top:0}
+.act-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;border-radius:4px;transition:background .1s}
+.act-row:hover{background:rgba(255,255,255,.03)}
+.act-row:last-child{border-bottom:none}
+.act-name{font-weight:600;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act-meta{font-size:11px;color:var(--muted2);white-space:nowrap}
+.act-arrow{color:var(--muted);font-size:12px;flex-shrink:0}
+.act-empty{color:var(--muted);font-size:12px;padding:12px 0;text-align:center}
+
 /* ── Segments overview ──────────────────────────────────────────────────────  */
 .seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:6px}
 .seg-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
@@ -457,6 +468,28 @@ tr:hover td{background:rgba(255,255,255,.018)}
         </div>
       </div>
 
+      <!-- Recent Activity Feeds -->
+      <div id="ov-recent-activity" style="margin-bottom:14px">
+        <div class="chart-grid g2">
+          <div class="chart-box">
+            <div class="box-title">🌱 Recent Signups <span class="box-badge" id="ov-signups-badge" style="background:rgba(0,255,136,.12);color:var(--green)">0 this week</span></div>
+            <div id="ov-recent-signups-list"><div class="act-empty"><span class="spinner"></span></div></div>
+          </div>
+          <div class="chart-box">
+            <div class="box-title">⚡ Recently Active <span style="font-size:11px;color:var(--muted2);font-weight:400;text-transform:none;letter-spacing:0">— last 48h</span></div>
+            <div id="ov-recent-active-list"><div class="act-empty"><span class="spinner"></span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Churn Signal -->
+      <div id="ov-churn-signal" style="display:none;margin-bottom:14px">
+        <div class="chart-box" style="border-color:rgba(255,107,53,.2)">
+          <div class="box-title" style="color:var(--orange)">😶 Going Quiet <span class="box-badge" id="ov-churn-badge" style="background:rgba(255,107,53,.12);color:var(--orange)"></span></div>
+          <div id="ov-churn-list"></div>
+        </div>
+      </div>
+
       <!-- DAU + User Growth -->
       <div class="chart-grid g2">
         <div class="chart-box">
@@ -496,6 +529,7 @@ tr:hover td{background:rgba(255,255,255,.018)}
             <div class="card c-purple" style="padding:12px 14px"><div class="card-label">Events/Session</div><div class="card-val" id="c-events-per" style="font-size:22px">—</div><div class="card-trend trend-neutral">avg depth</div></div>
             <div class="card c-orange" style="padding:12px 14px"><div class="card-label">WAU (7d)</div><div class="card-val" id="c-wau" style="font-size:22px">—</div><div class="card-trend trend-neutral">weekly active</div></div>
             <div class="card c-pink" style="padding:12px 14px"><div class="card-label">30d Total Hours</div><div class="card-val" id="c-30d-hours" style="font-size:22px">—</div><div class="card-trend trend-neutral">last 30 days</div></div>
+            <div class="card c-green" style="padding:12px 14px"><div class="card-label">New 7d</div><div class="card-val" id="c-new-7d" style="font-size:22px">—</div><div class="card-trend" id="t-new-7d">vs prev 7d</div></div>
           </div>
         </div>
       </div>
@@ -1845,14 +1879,16 @@ function showTab(id, btn) {
 
 async function loadAll() {
   document.getElementById('last-refresh').textContent = 'Loading…'
-  const [stats] = await Promise.all([
+  const [stats, activity] = await Promise.all([
     apiFetch('GET', '/api/stats'),
+    apiFetch('GET', '/api/recent-activity'),
     loadUsers(),
   ])
   statsData = stats
   renderOverview(stats)
   renderAnalytics(stats)
   renderSkills(stats)
+  renderRecentActivity(activity || {})
   // Load alerts in background for overview widget
   loadAlerts()
   document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString()
@@ -1912,6 +1948,8 @@ function renderOverview(d) {
     const totalSec = (d.sessionsPerDay || []).reduce((sum, r) => sum + (Number(r.total_seconds) || 0), 0)
     hours30El.textContent = totalSec > 0 ? Math.round(totalSec / 3600) + 'h' : '—'
   }
+  // Growth velocity — filled later by renderRecentActivity when data arrives
+
 
   mkChart('ch-dau', 'line', dau.labels, [{
     data: dau.vals, borderColor: '#7c6cff', borderWidth: 2,
@@ -4889,6 +4927,97 @@ function renderOverviewAlerts() {
       '<span style="font-size:11px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(a.detail) + '</span>' +
     '</div>'
   }).join('')
+}
+
+// ─── Recent Activity ─────────────────────────────────────────────────────────
+
+function renderRecentActivity(d) {
+  const today     = new Date(); today.setHours(0,0,0,0)
+  const yesterday = new Date(today - 86400000)
+
+  function groupLabel(dateStr) {
+    const dt = new Date(dateStr)
+    if (dt >= today)     return 'TODAY'
+    if (dt >= yesterday) return 'YESTERDAY'
+    return 'EARLIER'
+  }
+
+  function renderFeed(items, listId, dateField, metaFn) {
+    const el = document.getElementById(listId)
+    if (!el) return
+    if (!items || !items.length) { el.innerHTML = '<div class="act-empty">No activity yet</div>'; return }
+    let html = ''
+    let lastGroup = null
+    for (const u of items) {
+      const group = groupLabel(u[dateField])
+      if (group !== lastGroup) {
+        html += '<div class="act-group">' + group + '</div>'
+        lastGroup = group
+      }
+      const uname = esc(u.username || '?')
+      const uid   = u.id || ''
+      html += '<div class="act-row" onclick="pmOpen(\'' + uid + '\',\'' + uname.replace(/'/g, "\\x27") + '\')">'
+      html += (u.is_online ? '<span class="dot-online"></span>' : '<span class="dot-offline"></span>')
+      html += '<span class="act-name">' + uname + '</span>'
+      html += '<span class="act-meta">' + metaFn(u) + '</span>'
+      html += '<span class="act-arrow">›</span>'
+      html += '</div>'
+    }
+    el.innerHTML = html
+  }
+
+  // Recent Signups
+  renderFeed(
+    d.recentSignups || [],
+    'ov-recent-signups-list',
+    'created_at',
+    u => 'Lv' + (u.level || 0) + ' · ' + fmtTime(u.created_at) + (u.platform ? ' · ' + (u.platform === 'win32' ? '🪟' : u.platform === 'darwin' ? '🍎' : '?') : '')
+  )
+
+  // Recently Active
+  renderFeed(
+    d.recentActive || [],
+    'ov-recent-active-list',
+    'updated_at',
+    u => 'Lv' + (u.level || 0) + (u.streak_count > 0 ? ' · 🔥' + u.streak_count + 'd' : '') + ' · ' + fmtTime(u.updated_at)
+  )
+
+  // Signups badge (7d count)
+  const badge7 = document.getElementById('ov-signups-badge')
+  if (badge7) badge7.textContent = (d.newUsers7d || 0) + ' this week'
+
+  // Growth velocity
+  const new7d = d.newUsers7d || 0
+  const prev7d = d.newUsersPrev7d || 0
+  const new7dEl = document.getElementById('c-new-7d')
+  const t7dEl   = document.getElementById('t-new-7d')
+  if (new7dEl) new7dEl.textContent = new7d
+  if (t7dEl) {
+    if (prev7d === 0) {
+      t7dEl.innerHTML = '<span class="trend-neutral">— no prev week data</span>'
+    } else {
+      t7dEl.innerHTML = trendHtml(new7d, prev7d)
+    }
+  }
+
+  // Churn signal
+  const atRisk = d.atRisk || []
+  const churnEl  = document.getElementById('ov-churn-signal')
+  const churnList = document.getElementById('ov-churn-list')
+  const churnBadge = document.getElementById('ov-churn-badge')
+  if (churnEl) churnEl.style.display = atRisk.length ? 'block' : 'none'
+  if (churnBadge) churnBadge.textContent = atRisk.length + (atRisk.length === 1 ? ' user' : ' users')
+  if (churnList && atRisk.length) {
+    churnList.innerHTML = atRisk.map(function(u) {
+      var uname = esc(u.username || '?')
+      return '<div class="act-row" onclick="pmOpen(\'' + u.id + '\',\'' + uname.replace(/'/g, "\\x27") + '\')">' +
+        '<span class="dot-offline"></span>' +
+        '<span class="act-name">' + uname + '</span>' +
+        '<span class="act-meta" style="color:var(--orange)">Lv' + (u.level || 0) + ' · last seen ' + fmtTime(u.updated_at) + '</span>' +
+        '<span class="act-arrow">›</span>' +
+        '</div>'
+    }).join('')
+  }
 }
 
 // ─── Deep Analytics ──────────────────────────────────────────────────────────
